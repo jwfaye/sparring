@@ -263,6 +263,7 @@ def main() -> None:
         log.info("Online grading: available, %s", st["model"])
     else:
         log.warning("Online grading: offline, %s", st["reason"])
+    log.info("Sparring, copyright (c) 2026 Joseph Faye, GNU AGPL v3 or later: see LICENSE")
     log.info("App: http://%s:%d/ (Ctrl+C to stop)", bind_host, port)
     try:
         server.serve_forever()
