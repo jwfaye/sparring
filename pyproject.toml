@@ -7,7 +7,7 @@ name = "sparring"
 version = "0.1.0"
 description = "Training partner for data science / ML engineer technical tests and interviews"
 readme = "README.md"
-license = "MIT"
+license = "AGPL-3.0-or-later"
 requires-python = ">=3.12"
 dependencies = []
 

@@ -225,5 +225,11 @@ report an issue: [SECURITY.md](SECURITY.md).
 
 ## License
 
-Code: MIT. Interview questions adapted from data-science-interviews (CC BY 4.0) and the AI engineering field guide,
-source kept on each question.
+Copyright (c) 2026 Joseph Faye.
+
+Sparring is free software under the [GNU Affero General Public License v3.0 or later](LICENSE). You may use,
+study, modify and redistribute it, provided that any distributed or network-hosted version is published under the
+same license, keeps this copyright notice, and displays it in its user interface (AGPL sections 5 and 13).
+
+Interview questions adapted from data-science-interviews (CC BY 4.0) and the AI engineering field guide, source kept
+on each question.
