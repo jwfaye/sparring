@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sparring</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<script src="js/theme-init.js"></script>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">Sparring</div>
+  <nav class="tabs">
+    <button class="tab active" data-view="exercises">Exercises</button>
+    <button class="tab" data-view="qcm">Quiz</button>
+    <button class="tab" data-view="theory">Interview</button>
+    <button class="tab" data-view="recap">Summary</button>
+  </nav>
+  <div class="exam" id="exam-box">
+    <label class="exam-label" title="Global countdown, exam style">Exam mode</label>
+    <input type="number" id="exam-minutes" min="5" max="240" step="5" value="45" title="Duration in minutes"><span class="muted">min</span>
+    <button id="exam-toggle" class="btn small">Start</button>
+    <span id="exam-clock" class="clock" title="Time left">45:00</span>
+  </div>
+  <div id="py-status" class="status loading">Loading Python…</div>
+  <button id="theme-toggle" class="btn small" title="Light / dark">Dark</button>
+</header>
+
+<div id="exam-banner" class="banner hidden">Time is up. You can keep going, but note where you were.</div>
+
+<main id="view-exercises" class="view">
+  <aside class="sidebar">
+    <div class="filters">
+      <select id="f-theme" title="Theme"><option value="">All themes</option></select>
+      <select id="f-difficulty" title="Difficulty">
+        <option value="">All difficulties</option>
+        <option value="easy">Easy</option>
+        <option value="medium">Medium</option>
+        <option value="hard">Hard</option>
+      </select>
+      <select id="f-language" title="Language">
+        <option value="">Python + SQL</option>
+        <option value="python">Python</option>
+        <option value="sql">SQL</option>
+      </select>
+      <button id="reshuffle" class="btn small" title="Reshuffle the exercises not done yet">Reshuffle</button>
+    </div>
+    <ol id="ex-list" class="ex-list"></ol>
+  </aside>
+
+  <section class="statement-pane">
+    <div id="statement" class="statement"></div>
+  </section>
+
+  <section class="editor-pane">
+    <div class="toolbar">
+      <button id="btn-run" class="btn primary" title="Ctrl+Enter">Run</button>
+      <button id="btn-check" class="btn success" title="Ctrl+Shift+Enter">Check</button>
+      <button id="btn-reset" class="btn" title="Back to the starter code">Reset</button>
+      <span class="spacer"></span>
+      <span id="ex-timer" class="ex-timer" title="Time spent on this exercise">0:00</span>
+      <button id="btn-prev" class="btn">Previous</button>
+      <button id="btn-next" class="btn">Next</button>
+    </div>
+    <div class="editor-wrap"><textarea id="editor"></textarea></div>
+    <div class="splitter" id="splitter" title="Drag to resize the output"></div>
+    <div class="output-pane collapsed" id="output-pane">
+      <div class="output-head" id="output-head" title="Click to collapse / expand">
+        <span><span id="output-caret">▸</span> <span id="output-title">Output</span></span>
+        <span class="muted small">Ctrl+Enter: run · Ctrl+Shift+Enter: check</span>
+      </div>
+      <pre id="output" class="output"></pre>
+      <div id="results" class="results"></div>
+    </div>
+  </section>
+</main>
+
+<main id="view-qcm" class="view hidden">
+  <div class="qcm">
+    <section id="qcm-home">
+      <div class="qcm-config">
+        <h2>Quiz</h2>
+        <div class="row">
+          <span class="muted">Themes</span>
+          <button id="qcm-all" class="btn small">All / none</button>
+        </div>
+        <div id="qcm-themes" class="chips"></div>
+        <div class="row">
+          <label>Number of questions
+            <select id="qcm-n">
+              <option value="10">10</option><option value="20">20</option><option value="40">40</option><option value="all">All</option>
+            </select>
+          </label>
+          <label><input type="checkbox" id="qcm-prioritize" checked> Prioritize my mistakes and unseen questions</label>
+          <button id="qcm-start" class="btn primary">Start</button>
+          <button id="qcm-review" class="btn warn">Review my mistakes</button>
+        </div>
+        <div id="qcm-msg" class="muted"></div>
+      </div>
+      <h3>History</h3>
+      <div id="qcm-stats-cards" class="cards"></div>
+      <table id="qcm-stats-themes" class="table"></table>
+      <div class="row"><h3>Recent sessions</h3><span class="spacer"></span><button id="qcm-reset-history" class="btn small danger">Clear quiz history</button></div>
+      <ul id="qcm-sessions" class="sessions"></ul>
+    </section>
+
+    <section id="qcm-quiz" class="hidden">
+      <div class="row quiz-head">
+        <span id="qcm-progress" class="progress"></span>
+        <span id="qcm-theme" class="badge"></span>
+        <span class="spacer"></span>
+        <span class="muted small">Keys 1-4: answer · Enter: next</span>
+        <button id="qcm-quit" class="btn small">Quit</button>
+      </div>
+      <div id="qcm-question" class="question md"></div>
+      <pre id="qcm-code" class="qcode cm-s-default hidden"></pre>
+      <div id="qcm-choices" class="choices"></div>
+      <div id="qcm-feedback" class="feedback hidden"></div>
+      <button id="qcm-next" class="btn primary hidden">Next</button>
+    </section>
+
+    <section id="qcm-end" class="hidden">
+      <h2>Result</h2>
+      <div id="qcm-score" class="score"></div>
+      <table id="qcm-end-themes" class="table"></table>
+      <h3>Missed questions</h3>
+      <div id="qcm-failed"></div>
+      <div class="row">
+        <button id="qcm-replay" class="btn warn">Replay the missed ones</button>
+        <button id="qcm-back" class="btn">Back to the quiz menu</button>
+      </div>
+    </section>
+  </div>
+</main>
+
+<main id="view-theory" class="view hidden">
+  <div class="qcm theory">
+    <section id="th-home">
+      <div class="qcm-config">
+        <h2>Theory interview</h2>
+        <div id="th-status" class="status-line"></div>
+        <div class="row"><span class="muted">Sections</span><button id="th-all" class="btn small">All / none</button></div>
+        <div id="th-sections"></div>
+        <div class="row">
+          <label><input type="checkbox" id="th-only-new" checked> Unanswered questions first</label>
+          <label>Timer
+            <select id="th-timer"><option value="0">none</option><option value="120">2 min</option><option value="180">3 min</option></select>
+          </label>
+          <button id="th-next" class="btn primary">Next question</button>
+        </div>
+        <div id="th-msg" class="muted"></div>
+      </div>
+      <div id="th-pending-help" class="notice hidden">Some answers are waiting to be graded. Ask me: <code>grade my pending interview answers</code> (or run <code>python -m tools.grade_pending</code> with an API key).</div>
+      <h3>Score history</h3>
+      <div id="th-cards" class="cards"></div>
+      <div id="th-weak" class="weak"></div>
+      <table id="th-themes" class="table"></table>
+      <h3>Recent answers</h3>
+      <ul id="th-history" class="sessions th-list"></ul>
+    </section>
+
+    <section id="th-question" class="hidden">
+      <div class="row quiz-head">
+        <span id="th-q-section" class="badge"></span>
+        <span id="th-q-source" class="muted small"></span>
+        <span class="spacer"></span>
+        <span id="th-clock" class="clock"></span>
+        <button id="th-back" class="btn small">Back</button>
+      </div>
+      <div id="th-q-fr" class="question"></div>
+      <div id="th-q-note"></div>
+      <textarea id="th-answer" class="answer" rows="9" placeholder="Answer as you would out loud: definition, how it works, when to use it, limits, example… (Ctrl+Enter to submit)"></textarea>
+      <div id="th-actions" class="row">
+        <button id="th-submit" class="btn success">Grade my answer</button>
+        <button id="th-skip" class="btn">Skip</button>
+      </div>
+      <div id="th-result" class="hidden"></div>
+      <div id="th-after" class="row hidden">
+        <button id="th-next2" class="btn primary">Next question</button>
+        <button id="th-regrade" class="btn warn hidden">Grade now</button>
+      </div>
+    </section>
+  </div>
+</main>
+
+<main id="view-recap" class="view hidden">
+  <div class="recap">
+    <div class="recap-head">
+      <h2>Summary</h2>
+      <div class="recap-actions">
+        <button id="btn-export" class="btn small">Export progress</button>
+        <button id="btn-reset-progress" class="btn small danger">Reset progress</button>
+      </div>
+    </div>
+    <div id="recap-summary" class="cards"></div>
+    <h3>By theme</h3>
+    <table id="recap-themes" class="table"></table>
+    <h3>By exercise</h3>
+    <table id="recap-exercises" class="table"></table>
+  </div>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/sql/sql.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/comment/comment.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/scroll/scrollpastend.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/runmode/runmode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/pyodide/v0.27.7/full/pyodide.js"></script>
+<script src="js/common.js"></script>
+<script src="js/app.js"></script>
+<script src="js/qcm.js"></script>
+<script src="js/theory.js"></script>
+</body>
+</html>

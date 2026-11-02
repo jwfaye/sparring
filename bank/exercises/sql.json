@@ -1,0 +1,774 @@
+[
+  {
+    "id": "sql-join-001",
+    "title": "Number of orders per customer, zeros included",
+    "theme": "sql-joins",
+    "difficulty": "easy",
+    "language": "sql",
+    "statement": "Tables `customers(id, name)` and `orders(id, customer_id, amount)`.\n\nWrite a query returning, for **each customer**, their number of orders (0 when they have none).\n\nColumns: `name`, `n_orders`. Sort: `n_orders` descending then `name` ascending.\n\nExpected result with the setup data:\n\n```\nname     n_orders\nAlami    3\nBernard  1\nChen     1\nDupont   0\n```\n",
+    "setup": "CREATE TABLE customers (id INTEGER PRIMARY KEY, name TEXT NOT NULL);\nCREATE TABLE orders (id INTEGER PRIMARY KEY, customer_id INTEGER, amount REAL);\nINSERT INTO customers VALUES (1, 'Alami'), (2, 'Bernard'), (3, 'Chen'), (4, 'Dupont');\nINSERT INTO orders VALUES (10, 1, 50.0), (11, 1, 20.0), (12, 3, 70.0), (13, 2, 15.0), (14, 1, 5.0);\n",
+    "starter": "-- Write your query here\nSELECT\n",
+    "tests": [
+      {
+        "name": "setup data",
+        "columns": [
+          "name",
+          "n_orders"
+        ],
+        "ordered": true,
+        "expected": [
+          [
+            "Alami",
+            3
+          ],
+          [
+            "Bernard",
+            1
+          ],
+          [
+            "Chen",
+            1
+          ],
+          [
+            "Dupont",
+            0
+          ]
+        ]
+      },
+      {
+        "name": "no order at all",
+        "setup": "CREATE TABLE customers (id INTEGER PRIMARY KEY, name TEXT NOT NULL);\nCREATE TABLE orders (id INTEGER PRIMARY KEY, customer_id INTEGER, amount REAL);\nINSERT INTO customers VALUES (1, 'B'), (2, 'A');\n",
+        "columns": [
+          "name",
+          "n_orders"
+        ],
+        "ordered": true,
+        "expected": [
+          [
+            "A",
+            0
+          ],
+          [
+            "B",
+            0
+          ]
+        ]
+      }
+    ],
+    "hints": [
+      "`LEFT JOIN` to keep the customers without orders.",
+      "`COUNT(column)` ignores NULLs, `COUNT(*)` does not."
+    ],
+    "solution": "SELECT c.name, COUNT(o.id) AS n_orders\nFROM customers c\nLEFT JOIN orders o ON o.customer_id = c.id\nGROUP BY c.id, c.name\nORDER BY n_orders DESC, c.name;\n"
+  },
+  {
+    "id": "sql-join-002",
+    "title": "Products never ordered",
+    "theme": "sql-joins",
+    "difficulty": "medium",
+    "language": "sql",
+    "statement": "Tables `products(id, name, category)` and `order_lines(id, product_id, quantity)`.\nThe `product_id` column may hold `NULL` (orphan lines).\n\nWrite a query returning the products that appear in **no** order line.\n\nColumns: `id`, `name`. Sort: `id` ascending.\n\nExpected result with the setup data:\n\n```\nid  name\n2   mouse\n5   sleeve\n```\n",
+    "setup": "CREATE TABLE products (id INTEGER PRIMARY KEY, name TEXT NOT NULL, category TEXT);\nCREATE TABLE order_lines (id INTEGER PRIMARY KEY, product_id INTEGER, quantity INTEGER);\nINSERT INTO products VALUES (1, 'keyboard', 'it'), (2, 'mouse', 'it'), (3, 'screen', 'it'), (4, 'cable', 'acc'), (5, 'sleeve', 'acc');\nINSERT INTO order_lines VALUES (1, 1, 2), (2, 1, 1), (3, 3, 1), (4, NULL, 5), (5, 4, 2);\n",
+    "starter": "-- Write your query here\nSELECT\n",
+    "tests": [
+      {
+        "name": "setup data (with a NULL product_id)",
+        "columns": [
+          "id",
+          "name"
+        ],
+        "ordered": true,
+        "expected": [
+          [
+            2,
+            "mouse"
+          ],
+          [
+            5,
+            "sleeve"
+          ]
+        ]
+      },
+      {
+        "name": "everything was ordered",
+        "setup": "CREATE TABLE products (id INTEGER PRIMARY KEY, name TEXT NOT NULL, category TEXT);\nCREATE TABLE order_lines (id INTEGER PRIMARY KEY, product_id INTEGER, quantity INTEGER);\nINSERT INTO products VALUES (1, 'a', 'x'), (2, 'b', 'x');\nINSERT INTO order_lines VALUES (1, 2, 1), (2, 1, 1);\n",
+        "columns": [
+          "id",
+          "name"
+        ],
+        "ordered": true,
+        "expected": []
+      }
+    ],
+    "hints": [
+      "`NOT IN (subquery)` returns nothing as soon as the subquery holds a NULL.",
+      "`NOT EXISTS` or `LEFT JOIN ... WHERE ... IS NULL`."
+    ],
+    "solution": "SELECT p.id, p.name\nFROM products p\nWHERE NOT EXISTS (SELECT 1 FROM order_lines l WHERE l.product_id = p.id)\nORDER BY p.id;\n"
+  },
+  {
+    "id": "sql-groupby-001",
+    "title": "Categories with sales above 100",
+    "theme": "sql-groupby",
+    "difficulty": "easy",
+    "language": "sql",
+    "statement": "Table `sales(id, category, amount)`.\n\nWrite a query returning the categories whose total sales are **strictly** above 100.\n\nColumns: `category`, `revenue` (total). Sort: `revenue` descending.\n\nExpected result with the setup data:\n\n```\ncategory   revenue\nfurniture  300.0\nit         110.0\n```\n",
+    "setup": "CREATE TABLE sales (id INTEGER PRIMARY KEY, category TEXT NOT NULL, amount REAL NOT NULL);\nINSERT INTO sales VALUES\n    (1, 'it', 60.0), (2, 'acc', 20.0), (3, 'it', 50.0), (4, 'furniture', 300.0),\n    (5, 'acc', 30.0), (6, 'stationery', 100.0), (7, 'acc', 40.0);\n",
+    "starter": "-- Write your query here\nSELECT\n",
+    "tests": [
+      {
+        "name": "setup data",
+        "columns": [
+          "category",
+          "revenue"
+        ],
+        "ordered": true,
+        "expected": [
+          [
+            "furniture",
+            300.0
+          ],
+          [
+            "it",
+            110.0
+          ]
+        ]
+      },
+      {
+        "name": "nobody above the threshold",
+        "setup": "CREATE TABLE sales (id INTEGER PRIMARY KEY, category TEXT NOT NULL, amount REAL NOT NULL);\nINSERT INTO sales VALUES (1, 'a', 99.5), (2, 'b', 100.0), (3, 'a', 0.5);\n",
+        "columns": [
+          "category",
+          "revenue"
+        ],
+        "ordered": true,
+        "expected": []
+      }
+    ],
+    "hints": [
+      "A condition on an aggregate goes in `HAVING`, not in `WHERE`."
+    ],
+    "solution": "SELECT category, SUM(amount) AS revenue\nFROM sales\nGROUP BY category\nHAVING SUM(amount) > 100\nORDER BY revenue DESC;\n"
+  },
+  {
+    "id": "sql-groupby-002",
+    "title": "Cancellation rate per store",
+    "theme": "sql-groupby",
+    "difficulty": "medium",
+    "language": "sql",
+    "statement": "Table `orders(id, store, status)` where `status` is `'delivered'`, `'cancelled'` or `'pending'`.\n\nWrite a query returning, for each store, the share of cancelled orders\n(number cancelled / total number), **rounded to 2 decimals**.\n\nColumns: `store`, `cancellation_rate`. Sort: `cancellation_rate` descending then `store` ascending.\n\nExpected result with the setup data:\n\n```\nstore  cancellation_rate\nLyon   0.67\nParis  0.25\nLille  0.0\n```\n",
+    "setup": "CREATE TABLE orders (id INTEGER PRIMARY KEY, store TEXT NOT NULL, status TEXT NOT NULL);\nINSERT INTO orders VALUES\n    (1, 'Paris', 'delivered'), (2, 'Paris', 'cancelled'), (3, 'Lyon', 'cancelled'), (4, 'Lille', 'delivered'),\n    (5, 'Paris', 'delivered'), (6, 'Lyon', 'delivered'), (7, 'Lyon', 'cancelled'), (8, 'Paris', 'pending'),\n    (9, 'Lille', 'pending');\n",
+    "starter": "-- Write your query here\nSELECT\n",
+    "tests": [
+      {
+        "name": "setup data",
+        "columns": [
+          "store",
+          "cancellation_rate"
+        ],
+        "ordered": true,
+        "expected": [
+          [
+            "Lyon",
+            0.67
+          ],
+          [
+            "Paris",
+            0.25
+          ],
+          [
+            "Lille",
+            0.0
+          ]
+        ]
+      },
+      {
+        "name": "everything cancelled / nothing cancelled",
+        "setup": "CREATE TABLE orders (id INTEGER PRIMARY KEY, store TEXT NOT NULL, status TEXT NOT NULL);\nINSERT INTO orders VALUES (1, 'A', 'cancelled'), (2, 'A', 'cancelled'), (3, 'B', 'delivered'), (4, 'C', 'cancelled'), (5, 'C', 'delivered'), (6, 'C', 'delivered');\n",
+        "columns": [
+          "store",
+          "cancellation_rate"
+        ],
+        "ordered": true,
+        "expected": [
+          [
+            "A",
+            1.0
+          ],
+          [
+            "C",
+            0.33
+          ],
+          [
+            "B",
+            0.0
+          ]
+        ]
+      }
+    ],
+    "hints": [
+      "`SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END)` counts the cancelled ones.",
+      "A division between two integers is an integer division: multiply by `1.0` before dividing."
+    ],
+    "solution": "SELECT store,\n       ROUND(SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) * 1.0 / COUNT(*), 2) AS cancellation_rate\nFROM orders\nGROUP BY store\nORDER BY cancellation_rate DESC, store;\n"
+  },
+  {
+    "id": "sql-window-002",
+    "title": "Latest order of each customer",
+    "theme": "sql-window",
+    "difficulty": "easy",
+    "language": "sql",
+    "statement": "Table `orders(id, customer, order_date, amount)`. A customer never has two orders on the same day.\n\nWrite a query returning, for each customer, their most recent order.\n\nColumns: `customer`, `order_date`, `amount`. Sort: `customer` ascending.\n\nExpected result with the setup data:\n\n```\ncustomer  order_date  amount\nana       2024-02-01  35.0\nbob       2024-01-10  15.0\ncid       2024-03-01  5.0\n```\n",
+    "setup": "CREATE TABLE orders (id INTEGER PRIMARY KEY, customer TEXT NOT NULL, order_date TEXT NOT NULL, amount REAL NOT NULL);\nINSERT INTO orders VALUES\n    (1, 'ana', '2024-01-05', 20.0), (2, 'bob', '2024-01-10', 15.0), (3, 'cid', '2024-03-01', 5.0),\n    (4, 'ana', '2024-02-01', 35.0), (5, 'bob', '2024-01-09', 50.0), (6, 'ana', '2024-01-20', 10.0);\n",
+    "starter": "-- Write your query here\nSELECT\n",
+    "tests": [
+      {
+        "name": "setup data",
+        "columns": [
+          "customer",
+          "order_date",
+          "amount"
+        ],
+        "ordered": true,
+        "expected": [
+          [
+            "ana",
+            "2024-02-01",
+            35.0
+          ],
+          [
+            "bob",
+            "2024-01-10",
+            15.0
+          ],
+          [
+            "cid",
+            "2024-03-01",
+            5.0
+          ]
+        ]
+      },
+      {
+        "name": "the largest id is not the most recent date",
+        "setup": "CREATE TABLE orders (id INTEGER PRIMARY KEY, customer TEXT NOT NULL, order_date TEXT NOT NULL, amount REAL NOT NULL);\nINSERT INTO orders VALUES (1, 'z', '2024-05-05', 1.0), (2, 'z', '2024-05-01', 2.0), (3, 'y', '2023-01-01', 3.0);\n",
+        "columns": [
+          "customer",
+          "order_date",
+          "amount"
+        ],
+        "ordered": true,
+        "expected": [
+          [
+            "y",
+            "2023-01-01",
+            3.0
+          ],
+          [
+            "z",
+            "2024-05-05",
+            1.0
+          ]
+        ]
+      }
+    ],
+    "hints": [
+      "`ROW_NUMBER() OVER (PARTITION BY customer ORDER BY order_date DESC)` then keep rank 1."
+    ],
+    "solution": "WITH ranked AS (\n    SELECT customer, order_date, amount,\n           ROW_NUMBER() OVER (PARTITION BY customer ORDER BY order_date DESC) AS rn\n    FROM orders\n)\nSELECT customer, order_date, amount\nFROM ranked\nWHERE rn = 1\nORDER BY customer;\n"
+  },
+  {
+    "id": "sql-window-003",
+    "title": "Month-over-month revenue change",
+    "theme": "sql-window",
+    "difficulty": "medium",
+    "language": "sql",
+    "statement": "Table `sales(id, month, amount)` with `month` in `YYYY-MM` format and several rows per month.\nSome months may be absent from the data.\n\nWrite a query returning, for each month present, the total `revenue` and `delta`: the difference\nwith the total of the **previous month present in the data** (`NULL` for the first month).\n\nColumns: `month`, `revenue`, `delta`. Sort: `month` ascending.\n\nExpected result with the setup data:\n\n```\nmonth    revenue  delta\n2024-01  150.0    NULL\n2024-02  120.0    -30.0\n2024-03  210.0    90.0\n2024-05  90.0     -120.0\n```\n",
+    "setup": "CREATE TABLE sales (id INTEGER PRIMARY KEY, month TEXT NOT NULL, amount REAL NOT NULL);\nINSERT INTO sales VALUES\n    (1, '2024-01', 100.0), (2, '2024-02', 120.0), (3, '2024-01', 50.0),\n    (4, '2024-03', 200.0), (5, '2024-05', 90.0), (6, '2024-03', 10.0);\n",
+    "starter": "-- Write your query here\nSELECT\n",
+    "tests": [
+      {
+        "name": "setup data",
+        "columns": [
+          "month",
+          "revenue",
+          "delta"
+        ],
+        "ordered": true,
+        "expected": [
+          [
+            "2024-01",
+            150.0,
+            null
+          ],
+          [
+            "2024-02",
+            120.0,
+            -30.0
+          ],
+          [
+            "2024-03",
+            210.0,
+            90.0
+          ],
+          [
+            "2024-05",
+            90.0,
+            -120.0
+          ]
+        ]
+      },
+      {
+        "name": "two months, rows out of order",
+        "setup": "CREATE TABLE sales (id INTEGER PRIMARY KEY, month TEXT NOT NULL, amount REAL NOT NULL);\nINSERT INTO sales VALUES (1, '2023-12', 1.5), (2, '2023-11', 4.0), (3, '2023-12', 2.5);\n",
+        "columns": [
+          "month",
+          "revenue",
+          "delta"
+        ],
+        "ordered": true,
+        "expected": [
+          [
+            "2023-11",
+            4.0,
+            null
+          ],
+          [
+            "2023-12",
+            4.0,
+            0.0
+          ]
+        ]
+      }
+    ],
+    "hints": [
+      "Aggregate by month first (CTE), then `LAG(revenue) OVER (ORDER BY month)`."
+    ],
+    "solution": "WITH monthly AS (\n    SELECT month, SUM(amount) AS revenue\n    FROM sales\n    GROUP BY month\n)\nSELECT month, revenue, revenue - LAG(revenue) OVER (ORDER BY month) AS delta\nFROM monthly\nORDER BY month;\n"
+  },
+  {
+    "id": "sql-window-004",
+    "title": "Running total of readings per sensor",
+    "theme": "sql-window",
+    "difficulty": "medium",
+    "language": "sql",
+    "statement": "Table `readings(id, sensor, ts, value)`, rows in any order.\n\nWrite a query returning each reading with `running_total`: the sum of the same sensor's values\nfrom the beginning up to and including that reading (chronological order).\n\nColumns: `sensor`, `ts`, `value`, `running_total`. Sort: `sensor` then `ts` ascending.\n\nExpected result with the setup data:\n\n```\nsensor  ts          value  running_total\ns1      2024-01-01  2.0    2.0\ns1      2024-01-02  3.0    5.0\ns1      2024-01-03  -1.0   4.0\ns2      2024-01-01  10.0   10.0\ns2      2024-01-02  5.0    15.0\n```\n",
+    "setup": "CREATE TABLE readings (id INTEGER PRIMARY KEY, sensor TEXT NOT NULL, ts TEXT NOT NULL, value REAL NOT NULL);\nINSERT INTO readings VALUES\n    (1, 's1', '2024-01-02', 3.0), (2, 's2', '2024-01-02', 5.0), (3, 's1', '2024-01-01', 2.0),\n    (4, 's1', '2024-01-03', -1.0), (5, 's2', '2024-01-01', 10.0);\n",
+    "starter": "-- Write your query here\nSELECT\n",
+    "tests": [
+      {
+        "name": "setup data",
+        "columns": [
+          "sensor",
+          "ts",
+          "value",
+          "running_total"
+        ],
+        "ordered": true,
+        "expected": [
+          [
+            "s1",
+            "2024-01-01",
+            2.0,
+            2.0
+          ],
+          [
+            "s1",
+            "2024-01-02",
+            3.0,
+            5.0
+          ],
+          [
+            "s1",
+            "2024-01-03",
+            -1.0,
+            4.0
+          ],
+          [
+            "s2",
+            "2024-01-01",
+            10.0,
+            10.0
+          ],
+          [
+            "s2",
+            "2024-01-02",
+            5.0,
+            15.0
+          ]
+        ]
+      },
+      {
+        "name": "one sensor, four readings",
+        "setup": "CREATE TABLE readings (id INTEGER PRIMARY KEY, sensor TEXT NOT NULL, ts TEXT NOT NULL, value REAL NOT NULL);\nINSERT INTO readings VALUES (1, 'k', '2024-03-04', 1.0), (2, 'k', '2024-03-01', 1.0), (3, 'k', '2024-03-03', -2.0), (4, 'k', '2024-03-02', 0.5);\n",
+        "columns": [
+          "sensor",
+          "ts",
+          "value",
+          "running_total"
+        ],
+        "ordered": true,
+        "expected": [
+          [
+            "k",
+            "2024-03-01",
+            1.0,
+            1.0
+          ],
+          [
+            "k",
+            "2024-03-02",
+            0.5,
+            1.5
+          ],
+          [
+            "k",
+            "2024-03-03",
+            -2.0,
+            -0.5
+          ],
+          [
+            "k",
+            "2024-03-04",
+            1.0,
+            0.5
+          ]
+        ]
+      }
+    ],
+    "hints": [
+      "`SUM(value) OVER (PARTITION BY sensor ORDER BY ts)` gives a running total."
+    ],
+    "solution": "SELECT sensor, ts, value,\n       SUM(value) OVER (PARTITION BY sensor ORDER BY ts ROWS UNBOUNDED PRECEDING) AS running_total\nFROM readings\nORDER BY sensor, ts;\n"
+  },
+  {
+    "id": "sql-window-005",
+    "title": "Streaks of consecutive active days",
+    "theme": "sql-window",
+    "difficulty": "hard",
+    "language": "sql",
+    "statement": "Table `activity(username, day)`: one row per day (`YYYY-MM-DD`) on which the user was active,\nwithout duplicates.\n\nWrite a query returning, for each user, each of their **streaks of consecutive days**\n(a streak stops as soon as a day is missing).\n\nColumns: `username`, `first_day`, `last_day`, `n_days`. Sort: `username` then `first_day` ascending.\n\nExpected result with the setup data:\n\n```\nusername  first_day   last_day    n_days\nana       2024-01-01  2024-01-03  3\nana       2024-01-05  2024-01-06  2\nbob       2024-01-10  2024-01-10  1\ncid       2024-01-01  2024-01-01  1\ncid       2024-01-03  2024-01-04  2\ncid       2024-02-28  2024-03-01  3\n```\n",
+    "setup": "CREATE TABLE activity (username TEXT NOT NULL, day TEXT NOT NULL);\nINSERT INTO activity VALUES\n    ('ana', '2024-01-02'), ('ana', '2024-01-01'), ('ana', '2024-01-03'), ('ana', '2024-01-05'), ('ana', '2024-01-06'),\n    ('bob', '2024-01-10'),\n    ('cid', '2024-01-01'), ('cid', '2024-01-03'), ('cid', '2024-01-04'), ('cid', '2024-02-28'), ('cid', '2024-02-29'), ('cid', '2024-03-01');\n",
+    "starter": "-- Write your query here\nSELECT\n",
+    "tests": [
+      {
+        "name": "setup data",
+        "columns": [
+          "username",
+          "first_day",
+          "last_day",
+          "n_days"
+        ],
+        "ordered": true,
+        "expected": [
+          [
+            "ana",
+            "2024-01-01",
+            "2024-01-03",
+            3
+          ],
+          [
+            "ana",
+            "2024-01-05",
+            "2024-01-06",
+            2
+          ],
+          [
+            "bob",
+            "2024-01-10",
+            "2024-01-10",
+            1
+          ],
+          [
+            "cid",
+            "2024-01-01",
+            "2024-01-01",
+            1
+          ],
+          [
+            "cid",
+            "2024-01-03",
+            "2024-01-04",
+            2
+          ],
+          [
+            "cid",
+            "2024-02-28",
+            "2024-03-01",
+            3
+          ]
+        ]
+      },
+      {
+        "name": "streak spanning two months",
+        "setup": "CREATE TABLE activity (username TEXT NOT NULL, day TEXT NOT NULL);\nINSERT INTO activity VALUES ('u', '2024-02-01'), ('u', '2024-01-30'), ('u', '2024-01-31'), ('u', '2024-02-05');\n",
+        "columns": [
+          "username",
+          "first_day",
+          "last_day",
+          "n_days"
+        ],
+        "ordered": true,
+        "expected": [
+          [
+            "u",
+            "2024-01-30",
+            "2024-02-01",
+            3
+          ],
+          [
+            "u",
+            "2024-02-05",
+            "2024-02-05",
+            1
+          ]
+        ]
+      }
+    ],
+    "hints": [
+      "Number each user's days with `ROW_NUMBER()`: within a consecutive streak, `day - number` is constant.",
+      "`DATE(day, '-' || n || ' days')` or `julianday(day) - n` computes that constant, then `GROUP BY` on it."
+    ],
+    "solution": "WITH numbered AS (\n    SELECT username, day,\n           DATE(day, '-' || ROW_NUMBER() OVER (PARTITION BY username ORDER BY day) || ' days') AS grp\n    FROM activity\n)\nSELECT username, MIN(day) AS first_day, MAX(day) AS last_day, COUNT(*) AS n_days\nFROM numbered\nGROUP BY username, grp\nORDER BY username, first_day;\n"
+  },
+  {
+    "id": "sql-cte-001",
+    "title": "Customers above the average total",
+    "theme": "sql-cte",
+    "difficulty": "medium",
+    "language": "sql",
+    "statement": "Table `orders(id, customer, amount)`.\n\nWrite a query returning the customers whose **total** of orders is strictly greater\nthan the **average of the per-customer totals**.\n\nColumns: `customer`, `total`. Sort: `total` descending.\n\nExpected result with the setup data:\n\n```\ncustomer  total\ncid       100.0\nana       80.0\n```\n",
+    "setup": "CREATE TABLE orders (id INTEGER PRIMARY KEY, customer TEXT NOT NULL, amount REAL NOT NULL);\nINSERT INTO orders VALUES\n    (1, 'ana', 50.0), (2, 'bob', 20.0), (3, 'cid', 100.0), (4, 'dan', 10.0), (5, 'ana', 30.0),\n    (6, 'dan', 10.0), (7, 'dan', 10.0), (8, 'dan', 10.0), (9, 'dan', 10.0);\n",
+    "starter": "-- Write your query here\nSELECT\n",
+    "tests": [
+      {
+        "name": "setup data",
+        "columns": [
+          "customer",
+          "total"
+        ],
+        "ordered": true,
+        "expected": [
+          [
+            "cid",
+            100.0
+          ],
+          [
+            "ana",
+            80.0
+          ]
+        ]
+      },
+      {
+        "name": "equal totals: nobody above the average",
+        "setup": "CREATE TABLE orders (id INTEGER PRIMARY KEY, customer TEXT NOT NULL, amount REAL NOT NULL);\nINSERT INTO orders VALUES (1, 'a', 10.0), (2, 'b', 5.0), (3, 'b', 5.0);\n",
+        "columns": [
+          "customer",
+          "total"
+        ],
+        "ordered": true,
+        "expected": []
+      }
+    ],
+    "hints": [
+      "The requested average is the average of the totals, not of the rows: compute the totals in a CTE and reuse it twice."
+    ],
+    "solution": "WITH totals AS (\n    SELECT customer, SUM(amount) AS total\n    FROM orders\n    GROUP BY customer\n)\nSELECT customer, total\nFROM totals\nWHERE total > (SELECT AVG(total) FROM totals)\nORDER BY total DESC;\n"
+  },
+  {
+    "id": "sql-cte-002",
+    "title": "Hierarchy level of each employee",
+    "theme": "sql-cte",
+    "difficulty": "hard",
+    "language": "sql",
+    "statement": "Table `employees(id, name, manager_id)`; `manager_id` is `NULL` for the top of the organization.\n\nWrite a query returning each employee's level in the org chart: 0 for the person\nwithout a manager, 1 for their direct reports, and so on.\n\nColumns: `name`, `level`. Sort: `level` then `name` ascending.\n\nExpected result with the setup data:\n\n```\nname   level\nAlice  0\nBruno  1\nChloe  1\nDavid  2\nFarid  2\nEmma   3\n```\n",
+    "setup": "CREATE TABLE employees (id INTEGER PRIMARY KEY, name TEXT NOT NULL, manager_id INTEGER);\nINSERT INTO employees VALUES (1, 'Alice', NULL), (2, 'Bruno', 1), (3, 'Chloe', 1), (4, 'David', 2), (5, 'Emma', 4), (6, 'Farid', 3);\n",
+    "starter": "-- Write your query here\nSELECT\n",
+    "tests": [
+      {
+        "name": "setup data",
+        "columns": [
+          "name",
+          "level"
+        ],
+        "ordered": true,
+        "expected": [
+          [
+            "Alice",
+            0
+          ],
+          [
+            "Bruno",
+            1
+          ],
+          [
+            "Chloe",
+            1
+          ],
+          [
+            "David",
+            2
+          ],
+          [
+            "Farid",
+            2
+          ],
+          [
+            "Emma",
+            3
+          ]
+        ]
+      },
+      {
+        "name": "five-level chain, ids out of order",
+        "setup": "CREATE TABLE employees (id INTEGER PRIMARY KEY, name TEXT NOT NULL, manager_id INTEGER);\nINSERT INTO employees VALUES (9, 'e', 7), (7, 'd', 3), (3, 'c', 5), (5, 'b', 1), (1, 'a', NULL);\n",
+        "columns": [
+          "name",
+          "level"
+        ],
+        "ordered": true,
+        "expected": [
+          [
+            "a",
+            0
+          ],
+          [
+            "b",
+            1
+          ],
+          [
+            "c",
+            2
+          ],
+          [
+            "d",
+            3
+          ],
+          [
+            "e",
+            4
+          ]
+        ]
+      }
+    ],
+    "hints": [
+      "`WITH RECURSIVE`: the anchor is the person without a manager (level 0), the recursive part joins `employees` on `manager_id`."
+    ],
+    "solution": "WITH RECURSIVE hierarchy AS (\n    SELECT id, name, 0 AS level\n    FROM employees\n    WHERE manager_id IS NULL\n    UNION ALL\n    SELECT e.id, e.name, h.level + 1\n    FROM employees e\n    JOIN hierarchy h ON e.manager_id = h.id\n)\nSELECT name, level\nFROM hierarchy\nORDER BY level, name;\n"
+  },
+  {
+    "id": "sql-sub-001",
+    "title": "Paid more than their department's average",
+    "theme": "sql-subqueries",
+    "difficulty": "easy",
+    "language": "sql",
+    "statement": "Table `employees(id, name, department, salary)`.\n\nWrite a query returning the employees whose salary is **strictly greater** than the average\nsalary of **their own** department.\n\nColumns: `name`, `department`, `salary`. Sort: `department` then `name` ascending.\n\nExpected result with the setup data:\n\n```\nname   department  salary\nAlice  Data        5200\nEmma   Sales       4100\n```\n",
+    "setup": "CREATE TABLE employees (id INTEGER PRIMARY KEY, name TEXT NOT NULL, department TEXT NOT NULL, salary INTEGER NOT NULL);\nINSERT INTO employees VALUES\n    (1, 'Alice', 'Data', 5200), (2, 'Bruno', 'Data', 4800), (3, 'Chloe', 'Data', 5000),\n    (4, 'David', 'Sales', 3900), (5, 'Emma', 'Sales', 4100), (6, 'Farid', 'HR', 3500);\n",
+    "starter": "-- Write your query here\nSELECT\n",
+    "tests": [
+      {
+        "name": "setup data",
+        "columns": [
+          "name",
+          "department",
+          "salary"
+        ],
+        "ordered": true,
+        "expected": [
+          [
+            "Alice",
+            "Data",
+            5200
+          ],
+          [
+            "Emma",
+            "Sales",
+            4100
+          ]
+        ]
+      },
+      {
+        "name": "misleading global average",
+        "setup": "CREATE TABLE employees (id INTEGER PRIMARY KEY, name TEXT NOT NULL, department TEXT NOT NULL, salary INTEGER NOT NULL);\nINSERT INTO employees VALUES (1, 'a', 'X', 100), (2, 'b', 'X', 100), (3, 'c', 'Y', 10), (4, 'd', 'Y', 20);\n",
+        "columns": [
+          "name",
+          "department",
+          "salary"
+        ],
+        "ordered": true,
+        "expected": [
+          [
+            "d",
+            "Y",
+            20
+          ]
+        ]
+      }
+    ],
+    "hints": [
+      "Correlated subquery: `salary > (SELECT AVG(salary) FROM employees e2 WHERE e2.department = e.department)`."
+    ],
+    "solution": "SELECT e.name, e.department, e.salary\nFROM employees e\nWHERE e.salary > (SELECT AVG(salary) FROM employees e2 WHERE e2.department = e.department)\nORDER BY e.department, e.name;\n"
+  },
+  {
+    "id": "sql-sub-002",
+    "title": "Second distinct salary per department",
+    "theme": "sql-subqueries",
+    "difficulty": "medium",
+    "language": "sql",
+    "statement": "Table `employees(id, name, department, salary)`.\n\nWrite a query returning, for **each department**, the second highest salary among the\ndepartment's **distinct** salaries, or `NULL` when the department has fewer than two distinct salaries.\n\nColumns: `department`, `second_salary`. Sort: `department` ascending.\n\nExpected result with the setup data:\n\n```\ndepartment  second_salary\nData        4800\nHR          NULL\nSales       3900\nSupport     NULL\n```\n",
+    "setup": "CREATE TABLE employees (id INTEGER PRIMARY KEY, name TEXT NOT NULL, department TEXT NOT NULL, salary INTEGER NOT NULL);\nINSERT INTO employees VALUES\n    (1, 'Alice', 'Data', 5200), (2, 'Bruno', 'Data', 4800), (3, 'Chloe', 'Data', 5200),\n    (4, 'David', 'Sales', 3900), (5, 'Emma', 'Sales', 4100), (6, 'Farid', 'HR', 3500),\n    (7, 'Gaelle', 'Sales', 4100), (8, 'Hugo', 'Support', 3000), (9, 'Ines', 'Support', 3000);\n",
+    "starter": "-- Write your query here\nSELECT\n",
+    "tests": [
+      {
+        "name": "setup data",
+        "columns": [
+          "department",
+          "second_salary"
+        ],
+        "ordered": true,
+        "expected": [
+          [
+            "Data",
+            4800
+          ],
+          [
+            "HR",
+            null
+          ],
+          [
+            "Sales",
+            3900
+          ],
+          [
+            "Support",
+            null
+          ]
+        ]
+      },
+      {
+        "name": "three distinct salaries, a duplicate at the top",
+        "setup": "CREATE TABLE employees (id INTEGER PRIMARY KEY, name TEXT NOT NULL, department TEXT NOT NULL, salary INTEGER NOT NULL);\nINSERT INTO employees VALUES (1, 'a', 'Z', 300), (2, 'b', 'Z', 300), (3, 'c', 'Z', 200), (4, 'd', 'Z', 100), (5, 'e', 'W', 50);\n",
+        "columns": [
+          "department",
+          "second_salary"
+        ],
+        "ordered": true,
+        "expected": [
+          [
+            "W",
+            null
+          ],
+          [
+            "Z",
+            200
+          ]
+        ]
+      }
+    ],
+    "hints": [
+      "The second distinct salary = the largest salary strictly below the department's maximum.",
+      "Start from the list of departments (`SELECT DISTINCT department`) to keep those without a second salary."
+    ],
+    "solution": "SELECT d.department,\n       (SELECT MAX(e.salary)\n        FROM employees e\n        WHERE e.department = d.department\n          AND e.salary < (SELECT MAX(m.salary) FROM employees m WHERE m.department = d.department)) AS second_salary\nFROM (SELECT DISTINCT department FROM employees) d\nORDER BY d.department;\n"
+  }
+]

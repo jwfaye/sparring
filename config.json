@@ -1,0 +1,13 @@
+{
+  "server": {
+    "host": "127.0.0.1",
+    "port": 8765
+  },
+  "grader": {
+    "backend": "auto",
+    "model": "claude-opus-5-5",
+    "effort": "medium",
+    "claude_bin": "claude",
+    "timeout_seconds": 240
+  }
+}

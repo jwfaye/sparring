@@ -1,0 +1,12 @@
+.venv/
+.venv-check/
+.idea/
+__pycache__/
+*.pyc
+.env
+data/theory/
+.ruff_cache/
+data/
+repoach.toml.local
+.pytest_cache/
+.mypy_cache/

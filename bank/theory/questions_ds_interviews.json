@@ -1,0 +1,2991 @@
+[
+  {
+    "id": "ds-supervised-machine-01",
+    "section": "Supervised machine learning",
+    "question": "What is supervised machine learning?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "easy",
+    "reference": "Learning a function that maps inputs X to a target y from labeled examples (x, y). Regression (numeric target) is distinguished from classification (discrete target). The model is fitted by minimizing a loss on the training data, then evaluated on never-seen data to measure generalization. Examples: linear regression, logistic regression, trees, forests, boosting, neural networks, k-NN.",
+    "key_points": [
+      "Labelled data (x, y); learn f: X -> y",
+      "Regression vs classification depending on the nature of the target",
+      "Loss minimization on training data, evaluation on unseen data (generalization)",
+      "Examples of models"
+    ],
+    "common_mistakes": [
+      "Confusing it with unsupervised learning (no labels)",
+      "Forgetting the notion of generalization"
+    ]
+  },
+  {
+    "id": "ds-linear-regression-01",
+    "section": "Linear regression",
+    "question": "What is regression? Which models can you use to solve a regression problem?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "easy",
+    "reference": "Regression is supervised learning of a continuous numeric target. Models: linear regression (and its regularized variants Ridge, Lasso, Elastic Net), polynomial regression, k-NN, decision trees and ensembles (random forest, gradient boosting), SVR, neural networks. The choice depends on the linearity of the relationship, data volume, interpretability and the need to extrapolate.",
+    "key_points": [
+      "Continuous numeric target, supervised",
+      "Linear and regularized models (Ridge, Lasso, Elastic Net)",
+      "Non-linear models: trees, forests, boosting, k-NN, networks",
+      "Selection criteria: linearity, volume, interpretability"
+    ],
+    "common_mistakes": [
+      "Reducing regression to linear regression",
+      "Confusing logistic regression (classification) with regression"
+    ]
+  },
+  {
+    "id": "ds-linear-regression-02",
+    "section": "Linear regression",
+    "question": "What is linear regression? When do we use it?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "easy",
+    "reference": "Model y = b0 + b1 x1 + ... + bn xn + e: the target is a linear combination of the variables, with coefficients estimated by least squares (minimizing the sum of squared residuals). One variable = simple regression, several = multiple. Use it when the relationship is approximately linear (or made linear by transformation), when you want an interpretable, fast model with little data, or as a baseline. It assumes independent, homoscedastic errors and no strong collinearity.",
+    "key_points": [
+      "Form: linear combination of the variables + noise",
+      "Least-squares estimation",
+      "Use: ~linear relationship, interpretability, baseline, little data",
+      "Assumptions to check"
+    ],
+    "common_mistakes": [
+      "Saying it only works with one variable",
+      "Believing linear = no possible transformation of the variables"
+    ]
+  },
+  {
+    "id": "ds-linear-regression-03",
+    "section": "Linear regression",
+    "question": "What are the main assumptions of linear regression?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Linearity of the relationship between variables and target; additivity (the effect of a variable is independent of the others, unless an explicit interaction); no strong multicollinearity between variables; errors that are independent (no autocorrelation), of constant variance (homoscedasticity) and approximately normal (mainly for confidence intervals and tests). Violations distort the coefficients, their interpretation or the inferences; check with the residuals (plots, tests) and fix with transformations, extra variables, regularization or robust models.",
+    "key_points": [
+      "Linearity and additivity",
+      "No strong multicollinearity",
+      "Independent, homoscedastic, ~normal errors",
+      "Residual diagnostics and remedies"
+    ],
+    "common_mistakes": [
+      "Requiring the variables or the target to be normal",
+      "Forgetting error independence (time series)"
+    ]
+  },
+  {
+    "id": "ds-linear-regression-04",
+    "section": "Linear regression",
+    "question": "What’s the normal distribution? Why do we care about it?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "easy",
+    "reference": "A symmetric, bell-shaped continuous distribution defined by its mean mu and standard deviation sigma; about 68% of values lie within +/-1 sigma, 95% within +/-2 sigma. It is central because of the central limit theorem: the mean of many independent variables tends to a normal whatever their distribution, which underpins confidence intervals, tests and the normal-error assumption in regression. Many methods are simpler or optimal under normality, but real data are often skewed.",
+    "key_points": [
+      "Definition: symmetric bell, parameters mu and sigma, 68-95-99.7 rule",
+      "Central limit theorem",
+      "Basis of confidence intervals, tests, error assumption",
+      "Real data are often not normal"
+    ],
+    "common_mistakes": [
+      "Saying all data are normal",
+      "Confusing normality of the data with normality of the errors"
+    ]
+  },
+  {
+    "id": "ds-linear-regression-05",
+    "section": "Linear regression",
+    "question": "How do we check if a variable follows the normal distribution?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Visually: histogram or density compared with the bell curve, and above all the Q-Q plot (observed vs theoretical quantiles aligned on a straight line). Descriptive statistics: skewness close to 0, kurtosis close to 3. Tests: Shapiro-Wilk (small samples), Kolmogorov-Smirnov / Anderson-Darling, knowing that with a lot of data the slightest deviation becomes 'significant'; visualization therefore comes first in practice.",
+    "key_points": [
+      "Histogram / density and Q-Q plot",
+      "Skewness and kurtosis",
+      "Tests (Shapiro-Wilk, KS, Anderson-Darling)",
+      "Limits of tests on large samples"
+    ],
+    "common_mistakes": [
+      "Relying only on a test's p-value",
+      "Confusing a Q-Q plot with a scatter plot"
+    ]
+  },
+  {
+    "id": "ds-linear-regression-06",
+    "section": "Linear regression",
+    "question": "What if we want to build a model for predicting prices? Are prices distributed normally? Do we need to do any pre-processing for prices?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "No: prices are positive, right-skewed with a long tail (a few very expensive items). Classic pre-processing: log-transform the target (or Box-Cox), which symmetrizes the distribution, stabilizes the variance and makes the model work in relative errors; examine and handle outliers (entry errors vs genuine extreme values), and also transform highly skewed features. Tree-based models are less sensitive, but the transformation stays useful when the metric is relative. Go back to the original scale to interpret.",
+    "key_points": [
+      "Positive, skewed prices with a right tail",
+      "Log / Box-Cox transformation of the target",
+      "Reasoned handling of outliers",
+      "Impact depends on the model and the metric"
+    ],
+    "common_mistakes": [
+      "Systematically dropping outliers without understanding them",
+      "Forgetting to go back to the original scale"
+    ]
+  },
+  {
+    "id": "ds-linear-regression-07",
+    "section": "Linear regression",
+    "question": "What methods for solving linear regression do you know?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Analytical solution through the normal equation b = (X^T X)^-1 X^T y, in practice via numerically stable decompositions (QR, SVD: what scikit-learn does) that avoid explicit inversion; gradient descent (batch, stochastic, mini-batch) when the data are too large for the closed form or for regularized variants; iterative methods such as iteratively reweighted least squares for generalized models. The closed form is exact but costs O(n p^2 + p^3); gradient descent is approximate but scales.",
+    "key_points": [
+      "Normal equation (closed form)",
+      "QR / SVD decompositions for numerical stability",
+      "Gradient descent and variants for large volumes",
+      "Accuracy / cost trade-off"
+    ],
+    "common_mistakes": [
+      "Believing X^T X is always inverted in practice",
+      "Ignoring the problem when X^T X is singular"
+    ]
+  },
+  {
+    "id": "ds-linear-regression-08",
+    "section": "Linear regression",
+    "question": "What is gradient descent? How does it work?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Iterative optimization algorithm: compute the gradient of the loss function with respect to the parameters (direction of steepest increase) and take a step in the opposite direction, theta <- theta - eta * grad L(theta), with a learning rate eta. Repeat until convergence (gradient ~0, stable loss). For a convex loss (least squares) you reach the global minimum; otherwise a local minimum or a saddle point. The learning rate controls speed and stability; variants (SGD, momentum, Adam) improve efficiency.",
+    "key_points": [
+      "Iterative update in the direction opposite to the gradient",
+      "Learning rate and convergence criterion",
+      "Convex -> global; non-convex -> local",
+      "Variants: SGD, momentum, Adam"
+    ],
+    "common_mistakes": [
+      "Flipping the sign (climbing the gradient)",
+      "Believing it always finds the global minimum"
+    ]
+  },
+  {
+    "id": "ds-linear-regression-09",
+    "section": "Linear regression",
+    "question": "What is the normal equation?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "The system obtained by setting the partial derivatives of the sum of squared residuals to zero: X^T X b = X^T y, hence b = (X^T X)^-1 X^T y when X^T X is invertible. It is the exact least-squares solution in one step, without a learning rate. It requires the columns of X to be linearly independent (otherwise a singular matrix; Ridge regularization adds lambda I) and costs O(p^3), which becomes prohibitive with many variables.",
+    "key_points": [
+      "Derivation: gradient of the sum of squares = 0",
+      "Formula b = (X^T X)^-1 X^T y",
+      "Condition: X^T X invertible (collinearity -> singularity, Ridge as a remedy)",
+      "O(p^3) cost"
+    ],
+    "common_mistakes": [
+      "Confusing it with the normal distribution",
+      "Forgetting the invertibility condition"
+    ]
+  },
+  {
+    "id": "ds-linear-regression-10",
+    "section": "Linear regression",
+    "question": "What is SGD — stochastic gradient descent? What’s the difference with the usual gradient descent?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Classic (batch) gradient descent computes the gradient over the whole training set at each update: exact but costly and slow on large volumes. SGD estimates the gradient on a single randomly drawn example (or a mini-batch): frequent, noisy, much cheaper updates that allow online learning and escaping some local minima; convergence is more erratic, hence learning-rate decay and momentum. Mini-batch is the standard compromise, especially for neural networks (GPU parallelism).",
+    "key_points": [
+      "Batch: gradient on all the data per update",
+      "SGD: one example (or mini-batch) per update, noisy estimate",
+      "Benefits: cost, scalability, online learning",
+      "Drawbacks: noise, need for step decay; mini-batch as a compromise"
+    ],
+    "common_mistakes": [
+      "Saying SGD is more accurate per iteration",
+      "Confusing epoch and iteration"
+    ]
+  },
+  {
+    "id": "ds-linear-regression-11",
+    "section": "Linear regression",
+    "question": "Which metrics for evaluating regression models do you know?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "easy",
+    "reference": "MSE (mean squared error) and its root RMSE, in the unit of the target and sensitive to large errors; MAE (mean absolute error), robust to outliers; MAPE or log errors for relative errors; R^2 (share of explained variance) and adjusted R^2 which penalizes the number of variables; median absolute error; error quantiles. The choice depends on the business cost of errors and the scale of the target.",
+    "key_points": [
+      "MSE / RMSE: sensitive to large errors",
+      "MAE: robust",
+      "Relative errors: MAPE, log error",
+      "R^2 and adjusted R^2",
+      "Choose by business cost"
+    ],
+    "common_mistakes": [
+      "Citing accuracy for a regression",
+      "Using R^2 alone as a predictive-performance metric"
+    ]
+  },
+  {
+    "id": "ds-linear-regression-12",
+    "section": "Linear regression",
+    "question": "What are MSE and RMSE?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "easy",
+    "reference": "MSE = mean of the squared differences between prediction and actual value; RMSE = its square root, expressed in the unit of the target and therefore more interpretable. Both strongly penalize large errors (square), which makes them sensitive to outliers; MSE is the natural loss of least squares (linked to maximum likelihood under Gaussian noise). RMSE >= MAE always; a large gap between the two signals extreme errors.",
+    "key_points": [
+      "Definitions and formulas",
+      "RMSE in the unit of the target",
+      "Sensitivity to large errors / outliers",
+      "Link with least squares; comparison with MAE"
+    ],
+    "common_mistakes": [
+      "Confusing MSE with variance",
+      "Comparing RMSE across targets of different scales"
+    ]
+  },
+  {
+    "id": "ds-linear-regression-13",
+    "section": "Linear regression",
+    "question": "What is the bias-variance trade-off?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "easy",
+    "reference": "The expected test error decomposes into bias^2 + variance + irreducible noise. Bias is the error due to a model too simple to capture the true relationship (underfitting); variance is the model's sensitivity to fluctuations of the training sample (overfitting). Increasing complexity reduces bias but increases variance, and vice versa: you look for the point where the sum is minimal, through validation. Levers: regularization, more data, ensembles (bagging reduces variance, boosting reduces bias), feature selection.",
+    "key_points": [
+      "Decomposition error = bias^2 + variance + noise",
+      "Bias <-> underfitting, variance <-> overfitting",
+      "Complexity: bias down, variance up",
+      "Find the optimum by validation; levers (regularization, data, ensembles)"
+    ],
+    "common_mistakes": [
+      "Confusing statistical bias with the bias term (intercept)",
+      "Believing both can be canceled"
+    ]
+  },
+  {
+    "id": "ds-validation-01",
+    "section": "Validation",
+    "question": "What is overfitting?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "easy",
+    "reference": "The model learns the particularities and noise of the training sample instead of the general structure: excellent performance on training, poor on new data. Signs: large train/validation gap, validation performance that degrades as complexity increases. Causes: model too flexible, too little data, too many variables, training too long. Remedies: more data, regularization, simpler model, early stopping, cross-validation, ensembles.",
+    "key_points": [
+      "Definition: memorizes the noise, generalizes poorly",
+      "Symptom: train / validation gap",
+      "Causes: complexity, little data, too many variables",
+      "Remedies: data, regularization, simplification, early stopping, validation"
+    ],
+    "common_mistakes": [
+      "Diagnosing from the training error alone",
+      "Confusing it with underfitting"
+    ]
+  },
+  {
+    "id": "ds-validation-02",
+    "section": "Validation",
+    "question": "How to validate your models?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "easy",
+    "reference": "Measure performance on data not used for training. Approaches: train / validation / test split (validation for hyperparameter choices, test for the final estimate, used only once); K-fold cross-validation for a more stable estimate with little data, often combined with a held-out test set; stratified variants (imbalanced classes), grouped (avoid leakage between related entities) or temporal (time series). All pre-processing is fitted on the training part only, and the metric must reflect the business goal.",
+    "key_points": [
+      "Evaluate on unseen data",
+      "Train / validation / test and the role of each",
+      "Cross-validation: stratified, grouped, temporal",
+      "Avoid leakage: pre-processing inside the training fold",
+      "Metric aligned with the business"
+    ],
+    "common_mistakes": [
+      "Choosing hyperparameters on the test set",
+      "Ignoring leakage (same customer in train and test)"
+    ]
+  },
+  {
+    "id": "ds-validation-03",
+    "section": "Validation",
+    "question": "Why do we need to split our data into three parts: train, validation, and test?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "easy",
+    "reference": "Training fits the parameters; validation compares models and hyperparameters (choices, early stopping); the test set, never used for any decision, gives an unbiased estimate of the final performance. If you select on the test set, its score becomes optimistic (you have 'learned' the test set through selection). When data are scarce, cross-validation replaces the validation set, but a test set is kept aside.",
+    "key_points": [
+      "Distinct roles: fit / choose / estimate",
+      "Selection bias when deciding on the test set",
+      "Test set used once, at the end",
+      "Cross-validation possible instead of the validation set"
+    ],
+    "common_mistakes": [
+      "Using validation and test interchangeably",
+      "Reusing the test set at every iteration"
+    ]
+  },
+  {
+    "id": "ds-validation-04",
+    "section": "Validation",
+    "question": "Can you explain how cross-validation works?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "easy",
+    "reference": "The training / validation split is repeated several times on different subsets and the scores are aggregated, to get a performance estimate less dependent on a single split and to use all the data. In K-fold, each observation is used once for validation. The result is a mean (and a standard deviation, which tells about stability) used to choose the model and the hyperparameters; the final model is then retrained on all the data.",
+    "key_points": [
+      "Several splits, aggregated scores",
+      "Reduces the variance of the estimate, uses all the data",
+      "Mean and standard deviation of the scores",
+      "Retrain on everything after the choice"
+    ],
+    "common_mistakes": [
+      "Keeping one of the fold models as the final model without retraining",
+      "Pre-processing before the split (leakage)"
+    ]
+  },
+  {
+    "id": "ds-validation-05",
+    "section": "Validation",
+    "question": "What is K-fold cross-validation?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "easy",
+    "reference": "The data are split into K folds of equal size; for i = 1..K, train on K-1 folds and validate on fold i; you get K scores and take their mean. Stratified to preserve class proportions; grouped to keep the observations of one entity together; unsuitable as is for time series (the split must respect order). K = 5 or 10 in practice; K = n is leave-one-out.",
+    "key_points": [
+      "K folds, K trainings, each fold validated once",
+      "Mean (and standard deviation) of the K scores",
+      "Variants: stratified, grouped, temporal",
+      "Usual values of K, leave-one-out"
+    ],
+    "common_mistakes": [
+      "Randomly shuffling a time series",
+      "Forgetting stratification on imbalanced classes"
+    ]
+  },
+  {
+    "id": "ds-validation-06",
+    "section": "Validation",
+    "question": "How do we choose K in K-fold cross-validation? What’s your favorite K?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "easy",
+    "reference": "Trade-off: a small K (3) gives smaller training sets (pessimistic bias) and few scores; a large K (up to leave-one-out) costs K trainings, and highly correlated models can give a high-variance estimate. K = 5 or 10 is the standard: enough models for a stable estimate, sufficient validation sets. Adapt to data size (5 on large volumes for cost, 10 on small ones), to stratification and to the need to repeat cross-validation to reduce noise.",
+    "key_points": [
+      "Small K: reduced training, pessimistic and noisy estimate",
+      "Large K / LOO: cost, variance of the estimate",
+      "Standard: 5 or 10, depending on volume and cost",
+      "Repetition and stratification"
+    ],
+    "common_mistakes": [
+      "Claiming the larger K, the better",
+      "Not justifying the choice"
+    ]
+  },
+  {
+    "id": "ds-classification-01",
+    "section": "Classification",
+    "question": "What is classification? Which models would you use to solve a classification problem?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "easy",
+    "reference": "Predicting a discrete target (class): binary, multi-class or multi-label. Models: logistic regression, k-NN, SVM, naive Bayes, trees and ensembles (random forest, gradient boosting), neural networks; one-vs-rest strategies for multi-class with binary models. The choice depends on data size, linearity, interpretability and the need for calibrated probabilities.",
+    "key_points": [
+      "Discrete target: binary, multi-class, multi-label",
+      "Range of linear and non-linear models",
+      "One-vs-rest / softmax for multi-class",
+      "Selection criteria (data, interpretability, probabilities)"
+    ],
+    "common_mistakes": [
+      "Forgetting the multi-class/multi-label case",
+      "Citing linear regression as a classifier"
+    ]
+  },
+  {
+    "id": "ds-classification-02",
+    "section": "Classification",
+    "question": "What is logistic regression? When do we need to use it?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "easy",
+    "reference": "Classification model (binary originally) that models the probability of the positive class as the sigmoid of a linear combination: p = sigma(b0 + sum bi xi). Coefficients are estimated by maximum likelihood (minimizing the log-loss), often with regularization. Use it for binary targets (churn, fraud, spam), when you want probabilities, an interpretable (log-odds) and fast model, or as a baseline; multinomial extension (softmax) for several classes.",
+    "key_points": [
+      "Probability = sigmoid of a linear combination",
+      "Estimation by maximum likelihood / log-loss",
+      "Uses: binary, probabilities, interpretability, baseline",
+      "Multinomial extension"
+    ],
+    "common_mistakes": [
+      "Presenting it as a regression model",
+      "Forgetting the notion of decision threshold"
+    ]
+  },
+  {
+    "id": "ds-classification-03",
+    "section": "Classification",
+    "question": "Is logistic regression a linear model? Why?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "easy",
+    "reference": "Yes: it is a generalized linear model. The logit (log of the odds p/(1-p)) is a linear function of the variables; the sigmoid only maps that output into [0, 1]. The decision boundary (p = 0.5, i.e. logit = 0) is a hyperplane in feature space. Non-linearities can be captured by adding terms (polynomials, interactions), but the model stays linear in its parameters.",
+    "key_points": [
+      "Linear in the logit (log-odds)",
+      "Sigmoid = link function, no learned non-linearity",
+      "Decision boundary = hyperplane",
+      "Non-linearity possible through transformed features"
+    ],
+    "common_mistakes": [
+      "Saying no because of the sigmoid",
+      "Confusing linear in the parameters with linear in the variables"
+    ]
+  },
+  {
+    "id": "ds-classification-04",
+    "section": "Classification",
+    "question": "What is sigmoid? What does it do?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "easy",
+    "reference": "sigma(x) = 1/(1+e^-x): S-shaped function mapping any real number into (0, 1), with sigma(0) = 0.5, increasing, symmetric (sigma(-x) = 1-sigma(x)), derivative sigma(1-sigma). In logistic regression it turns the linear output into a probability; in neural networks it is an activation (today mostly for binary outputs, since it saturates and makes the gradient vanish in hidden layers). Its inverse is the logit.",
+    "key_points": [
+      "Formula and S shape, output in (0, 1)",
+      "Properties: sigma(0) = 0.5, derivative sigma(1-sigma), inverse = logit",
+      "Role: convert a score into a probability",
+      "Limit: saturation / vanishing gradient in hidden layers"
+    ],
+    "common_mistakes": [
+      "Confusing it with softmax (multi-class)",
+      "Saying the output is exactly 0 or 1"
+    ]
+  },
+  {
+    "id": "ds-classification-05",
+    "section": "Classification",
+    "question": "How do we evaluate classification models?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "easy",
+    "reference": "With a confusion matrix and the derived metrics: accuracy, precision, recall, F1 (and their macro/micro averages in multi-class), specificity; threshold-independent metrics: ROC AUC, PR AUC; metrics on probabilities: log-loss, Brier, calibration. The choice depends on class imbalance and on the relative cost of false positives and false negatives; the decision threshold is set according to that cost, and evaluation is done on unseen data.",
+    "key_points": [
+      "Confusion matrix and derived metrics (accuracy, precision, recall, F1)",
+      "Threshold-independent metrics: ROC AUC, PR AUC",
+      "Probabilities: log-loss, calibration",
+      "Choice by imbalance and error costs; threshold"
+    ],
+    "common_mistakes": [
+      "Citing only accuracy",
+      "Forgetting the role of the threshold"
+    ]
+  },
+  {
+    "id": "ds-classification-06",
+    "section": "Classification",
+    "question": "What is accuracy?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "easy",
+    "reference": "The share of correct predictions: (TP + TN) / total. Simple and intuitive, it only makes sense when classes are roughly balanced and errors have the same cost; on imbalanced classes a trivial model can have high accuracy. It depends on the decision threshold.",
+    "key_points": [
+      "Formula (TP + TN) / total",
+      "Intuitive but misleading on imbalanced classes",
+      "Assumes equal error costs",
+      "Depends on the threshold"
+    ],
+    "common_mistakes": [
+      "Confusing it with precision",
+      "Using it alone on imbalanced data"
+    ]
+  },
+  {
+    "id": "ds-classification-07",
+    "section": "Classification",
+    "question": "Is accuracy always a good metric?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "easy",
+    "reference": "No. With imbalanced classes (95% / 5%), always predicting the majority class gives 95% accuracy with no value at all. It also ignores the cost difference between false positives and false negatives, and says nothing about the quality of the probabilities. Prefer precision, recall, F1, PR AUC, or a business-cost metric, and look at the confusion matrix. It remains acceptable when classes are balanced and errors symmetric.",
+    "key_points": [
+      "Misleading on imbalanced classes (constant-classifier example)",
+      "Ignores cost asymmetry",
+      "Alternatives: precision/recall/F1, PR AUC, business cost, confusion matrix",
+      "Acceptable when balanced and costs symmetric"
+    ],
+    "common_mistakes": [
+      "Answering yes",
+      "Not proposing an alternative"
+    ]
+  },
+  {
+    "id": "ds-classification-08",
+    "section": "Classification",
+    "question": "What is the confusion table? What are the cells in this table?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "easy",
+    "reference": "Table crossing actual class and predicted class. In binary: true positives (TP: actual positive, predicted positive), true negatives (TN), false positives (FP: actual negative predicted positive, type I error), false negatives (FN: actual positive predicted negative, type II error). Most metrics derive from it: accuracy, precision TP/(TP+FP), recall TP/(TP+FN), specificity TN/(TN+FP). In multi-class, a K x K matrix shows which classes get confused.",
+    "key_points": [
+      "Actual x predicted cross-table",
+      "TP, TN, FP, FN correctly defined",
+      "Derived metrics",
+      "Multi-class K x K version"
+    ],
+    "common_mistakes": [
+      "Swapping FP and FN",
+      "Forgetting that the cells depend on the threshold"
+    ]
+  },
+  {
+    "id": "ds-classification-09",
+    "section": "Classification",
+    "question": "What are precision, recall, and F1-score?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "easy",
+    "reference": "Precision = TP/(TP+FP): among predicted positives, the share of true positives (reliability of the alerts). Recall = TP/(TP+FN): among actual positives, the share found (coverage). F1 = 2PR/(P+R), the harmonic mean, which is high only when both are; F-beta weights towards recall (beta > 1) or precision. Favor precision when false positives are costly (legitimate email blocked as spam), recall when false negatives are costly (undetected disease).",
+    "key_points": [
+      "Precision: reliability of positive predictions",
+      "Recall: coverage of actual positives",
+      "F1: harmonic mean, F-beta",
+      "Choice by FP vs FN cost with examples"
+    ],
+    "common_mistakes": [
+      "Confusing precision with accuracy",
+      "Presenting F1 as an arithmetic mean"
+    ]
+  },
+  {
+    "id": "ds-classification-10",
+    "section": "Classification",
+    "question": "Precision-recall trade-off",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "For a given model, moving the decision threshold makes the two vary in opposite directions: lowering the threshold increases recall (more predicted positives) but adds false positives (precision down); raising it does the opposite. Only a perfectly separable problem allows 1 and 1. The operating point is chosen according to the cost of errors, visualized with the precision-recall curve, and the whole curve (not only the point) is improved by improving the model.",
+    "key_points": [
+      "The threshold moves the operating point",
+      "Low threshold -> recall up, precision down, and vice versa",
+      "Choice by business costs; PR curve",
+      "Improving the model moves the whole curve"
+    ],
+    "common_mistakes": [
+      "Believing both can be maximized independently",
+      "Keeping 0.5 as the threshold without thinking"
+    ]
+  },
+  {
+    "id": "ds-classification-11",
+    "section": "Classification",
+    "question": "What is the ROC curve? When to use it?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Curve of the true positive rate (recall) against the false positive rate FP/(FP+TN), drawn by varying the decision threshold from 1 to 0. The diagonal corresponds to chance, the top-left corner to perfection. It assesses the discrimination ability of a scoring model independently of the threshold, and allows comparing models or choosing a threshold. It is little sensitive to class imbalance, an advantage for comparison, but can look optimistic when positives are rare: the PR curve is then more informative.",
+    "key_points": [
+      "Axes: TPR vs FPR, one point per threshold",
+      "Diagonal = chance; AUC as a summary",
+      "Use: compare models, choose a threshold",
+      "Insensitive to imbalance -> optimistic when positives are rare (prefer PR)"
+    ],
+    "common_mistakes": [
+      "Putting precision on the y-axis",
+      "Saying it depends on a fixed threshold"
+    ]
+  },
+  {
+    "id": "ds-classification-12",
+    "section": "Classification",
+    "question": "What is AUC (AU ROC)? When to use it?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "The area under the ROC curve, between 0 and 1: the probability that a randomly drawn positive receives a higher score than a randomly drawn negative. 0.5 = chance, 1 = perfect separation. A ranking metric independent of the threshold and of class proportions, useful to compare models or track discrimination quality. It says nothing about probability calibration nor about behavior at the chosen threshold, and overstates quality when positives are very rare.",
+    "key_points": [
+      "Area under ROC; probabilistic interpretation (positive/negative pair)",
+      "0.5 chance, 1 perfect",
+      "Independent of threshold and prevalence",
+      "Limits: calibration, rare positives"
+    ],
+    "common_mistakes": [
+      "Interpreting AUC as an accuracy",
+      "Believing a high AUC guarantees good probabilities"
+    ]
+  },
+  {
+    "id": "ds-classification-13",
+    "section": "Classification",
+    "question": "How to interpret the AU ROC score?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "AUC = probability that the model ranks a randomly chosen positive above a randomly chosen negative. 0.5: no discrimination ability; 0.7-0.8: acceptable; 0.8-0.9: good; > 0.9: excellent (indicative thresholds, domain-dependent); < 0.5: worse than chance, scores inverted. Numerically, it is the area computed by the trapezoid rule over the (FPR, TPR) points. Always compare it with a baseline and complement it with the PR curve and a metric at the threshold.",
+    "key_points": [
+      "Probabilistic interpretation of the ranking",
+      "Indicative scale 0.5 -> 1 and the < 0.5 case",
+      "Computation as an area (trapezoids)",
+      "Complement with PR and threshold metrics"
+    ],
+    "common_mistakes": [
+      "Giving absolute thresholds without nuance",
+      "Confusing AUC with the rate of correct predictions"
+    ]
+  },
+  {
+    "id": "ds-classification-14",
+    "section": "Classification",
+    "question": "What is the PR (precision-recall) curve?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Curve of precision (y-axis) against recall (x-axis) obtained by varying the decision threshold. The baseline of a random classifier is horizontal at the prevalence of positives. It focuses on the positive class and is recommended when positives are rare or when true negatives are of no interest (fraud detection, information retrieval), where ROC looks too optimistic.",
+    "key_points": [
+      "Precision vs recall, one point per threshold",
+      "Baseline = prevalence",
+      "Focused on the positive class",
+      "Recommended under strong imbalance"
+    ],
+    "common_mistakes": [
+      "Confusing it with ROC",
+      "Believing the baseline is 0.5"
+    ]
+  },
+  {
+    "id": "ds-classification-15",
+    "section": "Classification",
+    "question": "What is the area under the PR curve? Is it a useful metric?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Like ROC AUC, it summarizes the PR curve over all thresholds into a score between the prevalence (chance) and 1; average precision (AP) is its usual estimate. A high PR AUC means high precision and recall simultaneously, hence few false positives and false negatives on the positive class. Useful to compare models on imbalanced problems; less standardized than ROC AUC (several computation methods, baseline depends on prevalence), so compare only on the same dataset.",
+    "key_points": [
+      "Summary of the PR curve over all thresholds; average precision",
+      "Baseline = prevalence, not 0.5",
+      "Useful on imbalanced problems",
+      "Comparable only on the same dataset"
+    ],
+    "common_mistakes": [
+      "Comparing PR AUCs across datasets of different prevalence",
+      "Forgetting it only looks at the positive class"
+    ]
+  },
+  {
+    "id": "ds-classification-16",
+    "section": "Classification",
+    "question": "In which cases AU PR is better than AU ROC?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "When the positive class is rare and the positives are what matters: ROC uses the false positive rate FP/(FP+TN), which the large number of true negatives keeps low even with many false positives, whereas precision TP/(TP+FP) collapses; PR therefore reveals the real difficulty. Also when true negatives are of no interest (search, fraud detection, rare diseases). ROC AUC fits better when classes are balanced or both error types matter equally.",
+    "key_points": [
+      "Rare positives: FPR stays low, precision drops",
+      "When only positives matter (fraud, search, rare diseases)",
+      "ROC for balanced classes or symmetric errors",
+      "Explanation through the FPR vs precision formulas"
+    ],
+    "common_mistakes": [
+      "Saying PR is always better",
+      "Not explaining the mechanism (many TN)"
+    ]
+  },
+  {
+    "id": "ds-classification-17",
+    "section": "Classification",
+    "question": "What do we do with categorical variables?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Encode them as numbers: one-hot (one binary column per category, no artificial order, but explosion with high cardinality), ordinal encoding when an order exists, label encoding acceptable for trees, target encoding (mean of the target per category, with regularization and out-of-fold computation to avoid leakage), hashing or grouping of rare categories, embeddings for networks. Some models (CatBoost, LightGBM) handle categories natively. Also handle unknown categories in production.",
+    "key_points": [
+      "One-hot vs ordinal vs label depending on the model and the order",
+      "Target encoding with precautions (leakage, regularization)",
+      "High cardinality: grouping, hashing, embeddings",
+      "Native support in some models; unknown categories"
+    ],
+    "common_mistakes": [
+      "Label encoding in a linear model",
+      "Target encoding computed on the whole dataset (leakage)"
+    ]
+  },
+  {
+    "id": "ds-classification-18",
+    "section": "Classification",
+    "question": "Why do we need one-hot encoding?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Numeric models (linear, k-NN, networks) interpret an integer as an ordered quantity: a 0/1/2/3 label encoding would imply that category 3 is 'more' than category 1 and at distance 2. One-hot creates one binary variable per category, which makes categories equidistant and allows one coefficient per category. Drawbacks: dimension explodes with cardinality (sparsity, collinearity with the intercept -> drop one column), hence the alternatives at high cardinality (target encoding, embeddings).",
+    "key_points": [
+      "An integer imposes an artificial order and distances",
+      "One-hot: one binary variable per category, one coefficient each",
+      "Needed for linear/k-NN/networks, less for trees",
+      "Limits: high cardinality, column to drop (dummy trap)"
+    ],
+    "common_mistakes": [
+      "Saying one-hot is mandatory for every model",
+      "Ignoring the dimension problem"
+    ]
+  },
+  {
+    "id": "ds-classification-19",
+    "section": "Classification",
+    "question": "What is \"curse of dimensionality\"?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "A set of phenomena that appear as the number of variables grows: the volume of the space grows exponentially, data become sparse, distances between points concentrate (the nearest neighbor is no longer much closer than the farthest), and the number of observations needed to estimate a model grows very fast. Consequences: degraded k-NN and clustering, overfitting, computational cost. Remedies: feature selection, dimensionality reduction (PCA), regularization, suitable models, more data.",
+    "key_points": [
+      "Exponential volume, sparse data",
+      "Distance concentration -> distance-based methods degraded",
+      "Growing data needs, overfitting",
+      "Remedies: selection, dimensionality reduction, regularization"
+    ],
+    "common_mistakes": [
+      "Reducing the problem to computation time",
+      "Forgetting the effect on distances"
+    ]
+  },
+  {
+    "id": "ds-regularization-01",
+    "section": "Regularization",
+    "question": "What happens to our linear regression model if we have three columns in our data: x, y, z — and z is a sum of x and y?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Perfect collinearity: column z is a linear combination of x and y, so X is not full rank, X^T X is singular and the normal equation has no unique solution: infinitely many coefficient sets give the same predictions, individual coefficients no longer mean anything. Implementations return an error, a pseudo-inverse (minimum-norm solution) or unstable coefficients. Remedies: drop the redundant variable, or regularize (Ridge makes X^T X + lambda I invertible).",
+    "key_points": [
+      "Perfect collinearity -> rank deficient, singular X^T X",
+      "No unique solution, non-identifiable coefficients",
+      "Behavior of implementations (error, pseudo-inverse)",
+      "Remedies: drop z or regularize"
+    ],
+    "common_mistakes": [
+      "Saying the model simply works less well",
+      "Not mentioning regularization as a remedy"
+    ]
+  },
+  {
+    "id": "ds-regularization-02",
+    "section": "Regularization",
+    "question": "What happens to our linear regression model if the column z in the data is a sum of columns x and y and some random noise?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Strong (not perfect) multicollinearity: X^T X is invertible but ill-conditioned. The coefficients of x, y and z become very unstable (large variance, change a lot from one sample to another, sometimes absurd signs), confidence intervals explode, even though overall predictions stay correct. Diagnosis: high VIF, correlations. Remedies: drop or combine variables, PCA, Ridge regularization (or Lasso which selects one).",
+    "key_points": [
+      "Multicollinearity: ill-conditioned matrix",
+      "Unstable coefficients, high variance, interpretation impossible",
+      "Overall predictions little affected",
+      "Diagnosis (VIF) and remedies (selection, PCA, Ridge/Lasso)"
+    ],
+    "common_mistakes": [
+      "Confusing it with perfect collinearity (singularity)",
+      "Believing the predictions are wrong"
+    ]
+  },
+  {
+    "id": "ds-regularization-03",
+    "section": "Regularization",
+    "question": "What is regularization? Why do we need it?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "easy",
+    "reference": "Adding to the loss function a term that penalizes model complexity (typically the size of the coefficients) to limit overfitting: you accept a little bias to reduce variance. In linear models: L1 (Lasso), L2 (Ridge), Elastic Net; more broadly: dropout, early stopping, tree depth constraints, data augmentation. Needed when there are many variables relative to observations, correlated variables or noise; the strength lambda is tuned by validation.",
+    "key_points": [
+      "Complexity penalty added to the loss",
+      "Goal: reduce variance / overfitting (at the price of some bias)",
+      "Forms: L1, L2, Elastic Net, and more broadly dropout, early stopping, constraints",
+      "Lambda chosen by validation"
+    ],
+    "common_mistakes": [
+      "Saying regularization always improves the training error",
+      "Limiting it to linear models"
+    ]
+  },
+  {
+    "id": "ds-regularization-04",
+    "section": "Regularization",
+    "question": "Which regularization techniques do you know?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Penalties on the coefficients: L1 (Lasso, sum of |w|, sparsity), L2 (Ridge, sum of w^2, shrinkage), Elastic Net (mix). For neural networks: weight decay (L2), dropout, early stopping, batch normalization (regularizing effect), data augmentation, injected noise. For trees: maximum depth, minimum observations per leaf, pruning, subsampling, learning rate in boosting. And in general: more data, Bayesian models (prior = regularization).",
+    "key_points": [
+      "L1, L2, Elastic Net",
+      "Networks: dropout, early stopping, weight decay, augmentation",
+      "Trees: structural constraints, pruning, shrinkage",
+      "General view: Bayesian prior, data"
+    ],
+    "common_mistakes": [
+      "Citing only L1 and L2",
+      "Confusing L1 and L2"
+    ]
+  },
+  {
+    "id": "ds-regularization-05",
+    "section": "Regularization",
+    "question": "What kind of regularization techniques are applicable to linear models?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Ridge (L2), Lasso (L1), Elastic Net (L1 + L2), plus less common variants (group Lasso for groups of variables, SLOPE, Dantzig selector). Model-selection criteria such as AIC/BIC play a similar role by penalizing the number of parameters. The choice: L2 for stability and multicollinearity, L1 for feature selection, Elastic Net for variables correlated in groups; always with normalized variables.",
+    "key_points": [
+      "Ridge, Lasso, Elastic Net",
+      "Variants: group Lasso, etc.; AIC/BIC as a penalty on the number of parameters",
+      "Choice by goal (stability vs selection)",
+      "Prior normalization"
+    ],
+    "common_mistakes": [
+      "Citing dropout for a linear model",
+      "Forgetting normalization"
+    ]
+  },
+  {
+    "id": "ds-regularization-06",
+    "section": "Regularization",
+    "question": "How does L2 regularization look like in a linear model?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Minimize sum (yi - yhat_i)^2 + lambda sum wj^2 (the intercept is generally excluded from the penalty). The solution has a closed form: b = (X^T X + lambda I)^-1 X^T y, which makes the matrix invertible even under collinearity. Coefficients are shrunk towards zero continuously, never exactly zero; correlated variables share the weight. lambda = 0 gives back least squares, lambda -> infinity pushes all coefficients towards 0.",
+    "key_points": [
+      "Objective: loss + lambda sum w^2",
+      "Closed form with (X^T X + lambda I)",
+      "Continuous shrinkage, never exactly zero",
+      "Effect of lambda and exclusion of the intercept"
+    ],
+    "common_mistakes": [
+      "Penalizing the intercept",
+      "Saying L2 sets coefficients to zero"
+    ]
+  },
+  {
+    "id": "ds-regularization-07",
+    "section": "Regularization",
+    "question": "How do we select the right regularization parameters?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "easy",
+    "reference": "By validation: sweep a grid of lambda values (often on a log scale) and keep the one that minimizes the cross-validation error; for Elastic Net also tune the L1/L2 ratio. Dedicated implementations (LassoCV, RidgeCV, regularization path) do it efficiently. Variant: the 'one standard error' rule which picks the simplest model within one standard error of the optimum. Never on the training error, which is always minimal at lambda = 0.",
+    "key_points": [
+      "Log grid of lambda evaluated by cross-validation",
+      "Dedicated tools (LassoCV, RidgeCV, regularization path)",
+      "One-standard-error rule for parsimony",
+      "Not on the training error"
+    ],
+    "common_mistakes": [
+      "Choosing lambda on the training set",
+      "Linear grid that is too narrow"
+    ]
+  },
+  {
+    "id": "ds-regularization-08",
+    "section": "Regularization",
+    "question": "What’s the effect of L2 regularization on the weights of a linear model?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "It shrinks all coefficients towards zero in proportion to their size (the quadratic penalty penalizes large weights more), without zeroing them. Correlated variables get their weight spread among them instead of one carrying a huge coefficient offset by another negative one. Result: less variance, more stable model, a little more bias. The effect depends on the scale of the variables, hence prior standardization.",
+    "key_points": [
+      "Proportional shrinkage, large weights more penalized",
+      "Never exactly zero",
+      "Weight spread among correlated variables",
+      "Variance down, bias up; requires normalized variables"
+    ],
+    "common_mistakes": [
+      "Confusing it with L1 sparsity",
+      "Forgetting the scale dependence"
+    ]
+  },
+  {
+    "id": "ds-regularization-09",
+    "section": "Regularization",
+    "question": "How L1 regularization looks like in a linear model?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Minimize sum (yi - yhat_i)^2 + lambda sum |wj|. The absolute-value penalty is not differentiable at zero, which produces sparse solutions: beyond some lambda, some coefficients become exactly zero (built-in feature selection). No closed form; solved by coordinate descent or proximal algorithms (LARS). Among correlated variables, Lasso tends to keep only one.",
+    "key_points": [
+      "Objective: loss + lambda sum |w|",
+      "Non-differentiable at 0 -> exactly zero coefficients, sparsity",
+      "No closed form; coordinate descent",
+      "Behavior with correlated variables"
+    ],
+    "common_mistakes": [
+      "Giving a closed form",
+      "Saying L1 and L2 have the same effect"
+    ]
+  },
+  {
+    "id": "ds-regularization-10",
+    "section": "Regularization",
+    "question": "What’s the difference between L2 and L1 regularization?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Penalty: L1 sum of absolute values, L2 sum of squares. Effect: L1 produces exactly-zero coefficients (feature selection, sparse model), L2 shrinks all coefficients without zeroing them and stabilizes under multicollinearity by spreading the weights. Computation: L2 has an analytical solution, L1 needs an iterative algorithm. Geometry: diamond constraint (L1, corners on the axes) vs circle (L2). Elastic Net combines both to get sparsity while handling groups of correlated variables.",
+    "key_points": [
+      "Penalties |w| vs w^2",
+      "L1: sparsity / selection; L2: shrinkage, multicollinearity",
+      "Computation: closed form for L2, iterative for L1",
+      "Geometric intuition; Elastic Net"
+    ],
+    "common_mistakes": [
+      "Swapping the effects",
+      "Forgetting the correlated-variables case"
+    ]
+  },
+  {
+    "id": "ds-regularization-11",
+    "section": "Regularization",
+    "question": "Can we have both L1 and L2 regularization components in a linear model?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Yes: Elastic Net minimizes the loss + lambda [alpha sum |w| + (1-alpha) sum w^2], with a mixing parameter alpha. You get the sparsity of L1 while keeping the stability of L2: correlated variables are selected or dropped together instead of keeping only one arbitrarily. Useful when p > n or with groups of correlated variables; two hyperparameters to tune by validation.",
+    "key_points": [
+      "Elastic Net: weighted combination L1 + L2",
+      "Benefits: sparsity + stability, groups of correlated variables",
+      "Use cases: p > n, correlated variables",
+      "Two hyperparameters (lambda, ratio)"
+    ],
+    "common_mistakes": [
+      "Answering no",
+      "Not explaining the benefit over Lasso alone"
+    ]
+  },
+  {
+    "id": "ds-regularization-12",
+    "section": "Regularization",
+    "question": "What’s the interpretation of the bias term in linear models?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "The intercept b0 is the prediction when all variables are zero; if the variables are centered, it is the mean of the target. It lets the line or hyperplane avoid passing through the origin; without it, the model is constrained and often poorly fitted. It has a business interpretation only when x = 0 is meaningful (otherwise it acts as an adjustment). In logistic regression it is the baseline log-odds. It is generally not regularized. Not to be confused with the bias of the bias-variance trade-off.",
+    "key_points": [
+      "Prediction at x = 0; mean of y if variables are centered",
+      "Allows not passing through the origin",
+      "Business interpretation only when x = 0 is meaningful",
+      "Not regularized; distinct from statistical bias"
+    ],
+    "common_mistakes": [
+      "Confusing the intercept with the bias of the bias-variance trade-off",
+      "Defining bias as 'prediction minus truth'"
+    ]
+  },
+  {
+    "id": "ds-regularization-13",
+    "section": "Regularization",
+    "question": "How do we interpret weights in linear models?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "A coefficient wj is the average change of the prediction when xj increases by one unit, the other variables held constant (the 'all else equal' interpretation, valid only without strong collinearity). In logistic regression, it is the change in log-odds; exp(wj) is the odds ratio. The sign gives the direction of the effect. To compare importance across variables, they must be standardized; and correlation is not causation.",
+    "key_points": [
+      "Change of yhat per unit of xj, others constant",
+      "Logistic: log-odds, odds ratio = exp(w)",
+      "Importance comparison only when standardized",
+      "Caution: collinearity, no causation"
+    ],
+    "common_mistakes": [
+      "Comparing weights of variables on different scales",
+      "Interpreting as a causal effect"
+    ]
+  },
+  {
+    "id": "ds-regularization-14",
+    "section": "Regularization",
+    "question": "If a weight for one variable is higher than for another — can we say that this variable is more important?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Only if the variables are on a comparable scale (standardized). Otherwise the weight depends on the unit: a variable in kilometers has a coefficient a thousand times smaller than the same in meters for the same effect. Even when standardized, weights are disturbed by multicollinearity. To judge importance, prefer standardized coefficients, permutation importance or SHAP, and keep statistical significance in mind (confidence interval).",
+    "key_points": [
+      "Yes only after standardization",
+      "Unit dependence (example)",
+      "Multicollinearity blurs the reading",
+      "Alternatives: permutation, SHAP, confidence intervals"
+    ],
+    "common_mistakes": [
+      "Answering yes unconditionally",
+      "Ignoring the scale effect"
+    ]
+  },
+  {
+    "id": "ds-regularization-15",
+    "section": "Regularization",
+    "question": "When do we need to perform feature normalization for linear models? When it’s okay not to do it?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Needed with regularization (L1/L2 penalize the coefficients, hence depend on scale), with gradient descent (much faster convergence when variables have comparable scales) and to compare coefficients with each other. You can skip it for ordinary least squares solved analytically: predictions are scale-invariant (only the coefficients change unit). Tree-based models do not need it. The scaler is fitted on the training data only.",
+    "key_points": [
+      "Mandatory: regularization, gradient descent, coefficient comparison",
+      "Optional: analytical OLS (invariant predictions)",
+      "Useless for trees",
+      "Fit the scaler on the training set only"
+    ],
+    "common_mistakes": [
+      "Saying normalization changes the predictions of an OLS",
+      "Normalizing on the whole dataset (leakage)"
+    ]
+  },
+  {
+    "id": "ds-feature-selection-01",
+    "section": "Feature selection",
+    "question": "What is feature selection? Why do we need it?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "easy",
+    "reference": "Choosing a subset of the available variables to train the model. Goals: reduce overfitting and variance (fewer dimensions, less noise), improve interpretability, speed up training and inference, reduce data collection cost and maintenance debt in production. Families: filters (correlation, mutual information, statistical tests), wrappers (stepwise selection, RFE), embedded methods (Lasso, tree importances). Do it inside cross-validation to avoid leakage.",
+    "key_points": [
+      "Definition: subset of variables",
+      "Why: overfitting, interpretability, cost, maintenance",
+      "Families: filter, wrapper, embedded",
+      "Select inside the validation loop"
+    ],
+    "common_mistakes": [
+      "Confusing it with dimensionality reduction (PCA creates new variables)",
+      "Selecting on the whole dataset before validating"
+    ]
+  },
+  {
+    "id": "ds-feature-selection-02",
+    "section": "Feature selection",
+    "question": "Is feature selection important for linear models?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Yes, particularly: a linear model without regularization fits one coefficient per variable, so useless variables add variance and noise, correlated variables make the coefficients unstable, and interpretation degrades. Removing irrelevant variables improves generalization and readability. In practice, L1 regularization performs built-in selection; combine it with correlation analysis, tests and domain knowledge.",
+    "key_points": [
+      "Yes: variance added by useless variables",
+      "Multicollinearity and interpretation",
+      "Lasso as built-in selection",
+      "Complement with correlation, tests, domain knowledge"
+    ],
+    "common_mistakes": [
+      "Saying linear models are insensitive to useless variables",
+      "Forgetting regularization as an answer"
+    ]
+  },
+  {
+    "id": "ds-feature-selection-03",
+    "section": "Feature selection",
+    "question": "Which feature selection techniques do you know?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Filters (model-independent): variance, correlation with the target, mutual information, chi-squared tests, ANOVA, missing-value threshold. Wrappers: forward/backward stepwise selection, recursive feature elimination (RFE), search with cross-validation. Embedded: Lasso / Elastic Net, tree and boosting importances, permutation importance, SHAP. More advanced: Boruta (comparison with random 'shadow' variables), stability selection. Note: PCA is dimensionality reduction, not selection.",
+    "key_points": [
+      "Filters: correlation, mutual information, tests",
+      "Wrappers: stepwise, RFE",
+      "Embedded: Lasso, tree importances, permutation, SHAP",
+      "Boruta / random reference variables; PCA != selection"
+    ],
+    "common_mistakes": [
+      "Citing PCA as a selection technique",
+      "Trusting impurity importances without verification"
+    ]
+  },
+  {
+    "id": "ds-feature-selection-04",
+    "section": "Feature selection",
+    "question": "Can we use L1 regularization for feature selection?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Yes: Lasso sets the coefficients of the least useful variables exactly to zero, the rest forms the selection; lambda is tuned by validation (the larger lambda, the fewer variables). Precautions: standardize first; among correlated variables, Lasso keeps one arbitrarily (Elastic Net or stability selection for more robustness); the selection is specific to the linear model and can miss non-linear effects; possibly retrain an unregularized model on the retained variables.",
+    "key_points": [
+      "Yes, exactly-zero coefficients",
+      "Lambda controls the number of variables, tuned by validation",
+      "Precautions: standardization, correlated variables, non-linear effects",
+      "Elastic Net / stability for robustness"
+    ],
+    "common_mistakes": [
+      "Answering no",
+      "Forgetting standardization"
+    ]
+  },
+  {
+    "id": "ds-feature-selection-05",
+    "section": "Feature selection",
+    "question": "Can we use L2 regularization for feature selection?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "No, not directly: the quadratic penalty shrinks the coefficients but never zeroes them; all variables stay in the model. You could set a threshold on standardized coefficients, but that is not real selection and it is unstable. L2 rather serves to stabilize the model against multicollinearity. To select, use L1 or Elastic Net.",
+    "key_points": [
+      "No: shrinkage without zeroing",
+      "Manual threshold possible but ad hoc",
+      "Role of L2: stability, multicollinearity",
+      "Use L1 / Elastic Net to select"
+    ],
+    "common_mistakes": [
+      "Answering yes",
+      "Confusing a small coefficient with a zero coefficient"
+    ]
+  },
+  {
+    "id": "ds-decision-trees-01",
+    "section": "Decision trees",
+    "question": "What are the decision trees?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "easy",
+    "reference": "Supervised model that recursively partitions the feature space with simple tests (xj <= threshold) organized as a tree: each internal node is a test, each branch an outcome, each leaf a prediction (majority class or mean). Works for classification and regression, with numeric and categorical variables, without normalization, and captures interactions and non-linearities. Very interpretable but unstable and prone to overfitting when unconstrained, hence its use in ensembles (forests, boosting).",
+    "key_points": [
+      "Recursive partition by single-variable tests",
+      "Nodes / branches / leaves; classification and regression",
+      "Benefits: interpretable, no normalization, non-linearities",
+      "Limits: overfitting, instability; basis of ensembles"
+    ],
+    "common_mistakes": [
+      "Limiting them to classification problems",
+      "Forgetting the tendency to overfit"
+    ]
+  },
+  {
+    "id": "ds-decision-trees-02",
+    "section": "Decision trees",
+    "question": "How do we train decision trees?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Greedy, recursive algorithm (CART): at the root, for each variable and each candidate threshold, compute the impurity reduction (Gini or entropy in classification, variance/MSE in regression) of the split into two children; keep the best split; repeat on each child until a stop criterion (maximum depth, minimum observations, purity, insufficient gain). Each leaf predicts the majority class or the mean. Post-pruning (cost-complexity) can simplify the tree.",
+    "key_points": [
+      "Greedy search for the best split (variable, threshold)",
+      "Criterion: impurity reduction (Gini, entropy, variance)",
+      "Recursion until the stop criteria",
+      "Leaf prediction; pruning"
+    ],
+    "common_mistakes": [
+      "Believing the tree is globally optimal",
+      "Forgetting the stop criteria"
+    ]
+  },
+  {
+    "id": "ds-decision-trees-03",
+    "section": "Decision trees",
+    "question": "What are the main parameters of the decision tree model?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "easy",
+    "reference": "Maximum depth; minimum number of observations to split a node and per leaf; maximum number of leaves; minimum impurity gain to split; impurity criterion (Gini, entropy, MSE/MAE); number of variables considered per split; pruning parameter (ccp_alpha); class weights. The first ones directly control overfitting (smaller tree = more bias, less variance) and are tuned by validation.",
+    "key_points": [
+      "max_depth, min_samples_split, min_samples_leaf, max_leaf_nodes",
+      "Impurity criterion",
+      "Pruning (ccp_alpha), class_weight",
+      "Link with the bias-variance trade-off"
+    ],
+    "common_mistakes": [
+      "Citing the learning rate (does not exist for a single tree)",
+      "Not explaining the effect on overfitting"
+    ]
+  },
+  {
+    "id": "ds-decision-trees-04",
+    "section": "Decision trees",
+    "question": "How do we handle categorical variables in decision trees?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Some implementations handle categories natively (LightGBM, CatBoost, R rpart, recent scikit-learn with max_categories) by searching the best partition of the categories. Otherwise encode: label/ordinal encoding is acceptable for trees (they can isolate categories with successive splits, the artificial order matters little); one-hot works but dilutes the variable into rare columns and biases importances; target encoding with precautions. Beware of high cardinality (overfitting on rare categories): group them.",
+    "key_points": [
+      "Native support in some libraries",
+      "Label/ordinal encoding acceptable for trees",
+      "One-hot possible but dilution and importance bias",
+      "High cardinality: grouping, careful target encoding"
+    ],
+    "common_mistakes": [
+      "Claiming one-hot is mandatory",
+      "Ignoring the risk of rare categories"
+    ]
+  },
+  {
+    "id": "ds-decision-trees-05",
+    "section": "Decision trees",
+    "question": "What are the benefits of a single decision tree compared to more complex models?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Full interpretability (you can read the rules and explain each prediction), fast training and inference, no pre-processing (no normalization, handling of categories and sometimes missing values), natural capture of interactions, easy deployment (business rules, SQL). Price: often lower performance, instability (small data changes -> different tree), overfitting. A good choice as a baseline, an exploration tool, or when explainability is a regulatory requirement.",
+    "key_points": [
+      "Interpretability and explainability of the rules",
+      "Speed, no pre-processing, interactions",
+      "Simple deployment",
+      "Limits: performance, instability"
+    ],
+    "common_mistakes": [
+      "Citing only interpretability",
+      "Forgetting the limits"
+    ]
+  },
+  {
+    "id": "ds-decision-trees-06",
+    "section": "Decision trees",
+    "question": "How can we know which features are more important for the decision tree model?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Impurity importance: the sum, weighted by the number of observations, of the impurity reductions brought by each variable across all its splits, normalized to 1. Fast but biased towards variables with many distinct values and computed on the training set. More reliable alternatives: permutation importance on a validation set (performance drop when the variable is shuffled), SHAP (contributions per prediction). For a single tree, the position in the tree (splits near the root) is also informative.",
+    "key_points": [
+      "Impurity importance (cumulative gain)",
+      "Biases: high-cardinality variables, computed on train",
+      "Permutation on validation, SHAP",
+      "Reading the tree (top splits)"
+    ],
+    "common_mistakes": [
+      "Taking impurity importance as the truth",
+      "Confusing importance with causality"
+    ]
+  },
+  {
+    "id": "ds-random-forest-01",
+    "section": "Random forest",
+    "question": "What is random forest?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "easy",
+    "reference": "Ensemble of many decision trees, each trained on a bootstrap sample of the data and with a random subset of variables at each split; the final prediction is the majority vote (classification) or the mean (regression). Averaging weakly correlated trees strongly reduces the variance of individual trees, which gives a robust model, little sensitive to hyperparameters, parallelisable, with a free error estimate (out-of-bag) and variable importances. Less interpretable than a tree, sometimes outperformed by boosting.",
+    "key_points": [
+      "Ensemble of trees: bagging + feature subsampling",
+      "Aggregation by vote / mean",
+      "Variance reduction through decorrelation",
+      "Benefits: robustness, OOB, importances, parallelism"
+    ],
+    "common_mistakes": [
+      "Describing sequentially trained trees (boosting)",
+      "Forgetting feature subsampling"
+    ]
+  },
+  {
+    "id": "ds-random-forest-02",
+    "section": "Random forest",
+    "question": "Why do we need randomization in random forest?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Averaging models reduces variance only if their errors are weakly correlated. Bootstrap (sampling observations with replacement) gives different trees; but trained on similar data, they would often pick the same dominant variable at the root and stay correlated. Drawing a random subset of variables at each split (about sqrt(p) in classification) forces diversity: each tree is a little worse, but the forest gains a lot. The two sources of randomness complement each other.",
+    "key_points": [
+      "Averaging reduces variance only if the trees are decorrelated",
+      "Bootstrap of the observations",
+      "Feature subsampling at each split (sqrt(p))",
+      "Trade-off: worse individual trees, better ensemble"
+    ],
+    "common_mistakes": [
+      "Mentioning only the bootstrap",
+      "Saying randomness is there to speed things up"
+    ]
+  },
+  {
+    "id": "ds-random-forest-03",
+    "section": "Random forest",
+    "question": "What are the main parameters of the random forest model?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Number of trees (n_estimators: more is better, with diminishing returns, linear cost); number of variables per split (max_features: controls decorrelation); tree parameters (maximum depth, min_samples_leaf, max_leaf_nodes: rarely needed, deep trees are the norm); bootstrap sample size (max_samples); impurity criterion; class weights; use of the out-of-bag score. The most influential are max_features and min_samples_leaf.",
+    "key_points": [
+      "n_estimators",
+      "max_features (decorrelation)",
+      "Tree constraints (depth, leaves)",
+      "Bootstrap (max_samples), class_weight, OOB"
+    ],
+    "common_mistakes": [
+      "Citing the learning rate",
+      "Believing more trees cause overfitting"
+    ]
+  },
+  {
+    "id": "ds-random-forest-04",
+    "section": "Random forest",
+    "question": "How do we select the depth of the trees in random forest?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "By default trees are grown fully (unlimited depth): the variance is absorbed by averaging, and this is often the best setting. Limit the depth or raise the minimum observations per leaf when data are noisy or scarce, to reduce time and memory, or when validation shows a gain. Tune by cross-validation (or OOB score) while watching the train/validation gap; min_samples_leaf is often a more natural lever than max_depth.",
+    "key_points": [
+      "Default: full trees, variance absorbed by the forest",
+      "Limit when noisy, little data, resource constraints",
+      "Tuning by validation / OOB",
+      "min_samples_leaf as an alternative"
+    ],
+    "common_mistakes": [
+      "Transposing single-tree logic (shallow depth)",
+      "Tuning without validation"
+    ]
+  },
+  {
+    "id": "ds-random-forest-05",
+    "section": "Random forest",
+    "question": "How do we know how many trees we need in random forest?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Performance improves then plateaus with the number of trees; adding trees does not cause overfitting, it only costs time and memory. Plot the error (OOB or validation) against the number of trees and stop at the plateau, typically a few hundred; more variables or classes require more trees to stabilize importances and probabilities. Measuring prediction stability between two seeds also helps.",
+    "key_points": [
+      "Error vs number of trees curve, plateau",
+      "No overfitting with more trees, only cost",
+      "Order of magnitude: hundreds",
+      "Stability of predictions/importances as a criterion"
+    ],
+    "common_mistakes": [
+      "Saying too many trees overfit",
+      "Giving a magic number without a method"
+    ]
+  },
+  {
+    "id": "ds-random-forest-06",
+    "section": "Random forest",
+    "question": "Is it easy to parallelize training of a random forest model? How can we do it?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Yes, trivially: trees are independent (each with its own bootstrap and feature subsampling), so they are trained in parallel on several cores (n_jobs=-1 in scikit-learn) or several machines (each node builds part of the trees, then they are merged). Prediction parallelizes the same way. Unlike boosting, where each tree depends on the previous one, parallelization requires no change to the algorithm; the limit is memory (data copied per process).",
+    "key_points": [
+      "Yes: independent trees",
+      "Multi-core (n_jobs) and distributed (tree partition, merge)",
+      "Prediction also parallelisable",
+      "Contrast with boosting; memory constraint"
+    ],
+    "common_mistakes": [
+      "Confusing it with boosting's intra-tree parallelization",
+      "Answering that it is hard"
+    ]
+  },
+  {
+    "id": "ds-random-forest-07",
+    "section": "Random forest",
+    "question": "What are the potential problems with many large trees?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Cost: memory (each full tree stores thousands of nodes), training time and above all prediction latency (all trees must be traversed), which hurts real-time or embedded use. Near-zero interpretability. On noisy data, very deep trees memorize the noise; the forest smooths it partly but not fully, and probabilities can be poorly calibrated. Diminishing returns: beyond the plateau, you pay without gaining. Remedies: limit depth or leaves, reduce the number of trees, compress the model.",
+    "key_points": [
+      "Memory and inference latency",
+      "Interpretability",
+      "Noise memorized by deep trees, calibration",
+      "Diminishing returns; remedies"
+    ],
+    "common_mistakes": [
+      "Claiming a forest can never overfit",
+      "Forgetting production latency"
+    ]
+  },
+  {
+    "id": "ds-random-forest-08",
+    "section": "Random forest",
+    "question": "What if instead of finding the best split, we randomly select a few splits and just select the best from them. Will it work?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "expert",
+    "reference": "That is the principle of Extremely Randomized Trees (ExtraTrees): for each candidate variable, the threshold is drawn at random instead of optimized, then the best of these random splits is kept. It works: each tree is more biased but the trees are even more decorrelated, the ensemble variance decreases, and training is faster (no threshold sorting). In practice performance is close to the random forest, sometimes better on noisy data, sometimes slightly worse.",
+    "key_points": [
+      "ExtraTrees principle: random thresholds",
+      "Effect: bias up per tree, decorrelation up, ensemble variance down",
+      "Faster training",
+      "Performance comparable to the random forest"
+    ],
+    "common_mistakes": [
+      "Answering that it cannot work",
+      "Not linking it to the bias-variance trade-off"
+    ]
+  },
+  {
+    "id": "ds-random-forest-09",
+    "section": "Random forest",
+    "question": "What happens when we have correlated features in our data?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Predictive performance is little affected (one or the other of the correlated variables is available depending on the subsampling), but importances become misleading: credit is shared between the correlated variables, each looking less important, and permutation importance is also biased (shuffling one leaves the information in the other). Redundant variables also inflate the chance that a variable of the group is drawn at each split, to the detriment of other variables. Remedies: group or remove duplicates, grouped permutation importance, SHAP with grouping.",
+    "key_points": [
+      "Predictions little affected",
+      "Diluted / misleading importances (impurity and permutation)",
+      "Correlated group over-represented in the draws",
+      "Remedies: deduplicate, grouped importances"
+    ],
+    "common_mistakes": [
+      "Saying the forest 'handles' correlations without consequence",
+      "Ignoring the effect on importances"
+    ]
+  },
+  {
+    "id": "ds-gradient-boosting-01",
+    "section": "Gradient boosting",
+    "question": "What is gradient boosting trees?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Ensemble method that builds trees sequentially: each new tree (usually shallow) is fitted on the negative gradient of the loss function with respect to the current predictions (the residuals for the squared loss), then added to the ensemble with a shrinkage factor (learning rate). The final model is a weighted sum of trees. It minimizes any differentiable loss (regression, classification, ranking), with regularization by shrinkage, subsampling, tree constraints. Implementations: XGBoost, LightGBM, CatBoost. Very strong on tabular data, more sensitive to hyperparameters than the forest.",
+    "key_points": [
+      "Sequential trees fitted on the loss gradient (residuals)",
+      "Shrinkage (learning rate) and sum of trees",
+      "Any differentiable loss; regularizations",
+      "Implementations; strengths and hyperparameter sensitivity"
+    ],
+    "common_mistakes": [
+      "Describing independent averaged trees",
+      "Confusing it with AdaBoost without mentioning the gradient"
+    ]
+  },
+  {
+    "id": "ds-gradient-boosting-02",
+    "section": "Gradient boosting",
+    "question": "What’s the difference between random forest and gradient boosting?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Forest: deep, independent trees, trained in parallel on bootstrap samples, aggregated by averaging -> reduces variance; robust, few settings, hard to overfit by adding trees. Boosting: shallow, sequential trees, each correcting the errors of the previous ones, combined by weighted sum -> reduces bias; often more accurate but sensitive to the number of trees, the learning rate, noise, and requires early stopping. The forest parallelizes across trees, boosting inside each tree.",
+    "key_points": [
+      "Parallel / independent vs sequential / corrective",
+      "Variance (bagging) vs bias (boosting)",
+      "Robustness and settings vs accuracy and sensitivity",
+      "Aggregation: mean vs weighted sum; parallelization"
+    ],
+    "common_mistakes": [
+      "Saying boosting is always better",
+      "Swapping variance/bias"
+    ]
+  },
+  {
+    "id": "ds-gradient-boosting-03",
+    "section": "Gradient boosting",
+    "question": "Is it possible to parallelize training of a gradient boosting model? How to do it?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Not across trees (each tree depends on the previous one), but inside each tree: the search for the best splits parallelizes over variables and over data blocks (histograms in LightGBM/XGBoost), on several cores or on GPU (tree_method gpu_hist / device cuda). In distributed mode, the data are partitioned and histogram statistics aggregated across machines (Spark, Dask). Cross-validation and hyperparameter search parallelize trivially.",
+    "key_points": [
+      "No parallelism across trees (sequential)",
+      "Intra-tree parallelism: splits, histograms, multi-core, GPU",
+      "Distributed by data partition and aggregation",
+      "External parallelism: CV, hyperparameter search"
+    ],
+    "common_mistakes": [
+      "Saying it is impossible",
+      "Confusing it with forest parallelization"
+    ]
+  },
+  {
+    "id": "ds-gradient-boosting-04",
+    "section": "Gradient boosting",
+    "question": "Feature importance in gradient boosting trees — what are possible options?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Internal importances: gain (total loss reduction brought by the splits on the variable, the most informative), frequency/weight (number of splits, biased towards continuous variables), cover. Permutation importance on a validation set: performance drop when the variable is shuffled, model-independent. SHAP (exact TreeSHAP for trees): contributions per prediction, aggregated into global importance, with the direction of the effect. Trick: add a random noise variable and drop those less important than it (Boruta).",
+    "key_points": [
+      "Internal importances: gain, frequency, cover and their biases",
+      "Permutation on validation",
+      "SHAP / TreeSHAP global and local",
+      "Reference noise variable"
+    ],
+    "common_mistakes": [
+      "Using split frequency as importance",
+      "Computing permutation on the training set"
+    ]
+  },
+  {
+    "id": "ds-gradient-boosting-05",
+    "section": "Gradient boosting",
+    "question": "Are there any differences between continuous and discrete variables when it comes to feature importance of gradient boosting models?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "expert",
+    "reference": "Yes: a continuous variable offers many possible split thresholds, so it is chosen more often and accumulates more gain, which inflates frequency importances and, to a lesser extent, gain importances; a binary or few-category variable can only be used once per branch. A one-hot categorical is split into columns whose importance gets diluted. For a fair comparison: permutation importance or SHAP, and group the columns of the same variable.",
+    "key_points": [
+      "Continuous: more possible splits -> inflated importances",
+      "Binary / few categories: limited use per branch",
+      "One-hot: dilution across columns",
+      "Remedies: permutation, SHAP, grouping"
+    ],
+    "common_mistakes": [
+      "Answering no",
+      "Not distinguishing the types of importance"
+    ]
+  },
+  {
+    "id": "ds-gradient-boosting-06",
+    "section": "Gradient boosting",
+    "question": "What are the main parameters in the gradient boosting model?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Number of trees (n_estimators) and learning rate (learning_rate), coupled: small rate + many trees + early stopping. Tree complexity: maximum depth or number of leaves, minimum observations per leaf. Regularization: row subsampling (subsample) and column subsampling (colsample), L1/L2 penalties on the leaves, gamma / minimum gain. Loss function suited to the task. The most influential: learning_rate, number of trees, depth, subsampling.",
+    "key_points": [
+      "learning_rate and n_estimators (coupled, early stopping)",
+      "Tree complexity: max_depth / num_leaves, min_samples_leaf",
+      "Row/column subsampling, L1/L2 penalties",
+      "Loss function"
+    ],
+    "common_mistakes": [
+      "Forgetting the learning rate",
+      "Tuning the number of trees without early stopping"
+    ]
+  },
+  {
+    "id": "ds-gradient-boosting-07",
+    "section": "Gradient boosting",
+    "question": "How do you approach tuning parameters in XGBoost or LightGBM?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "expert",
+    "reference": "Start from a reasonable baseline (learning_rate 0.05-0.1, depth 4-8 or 31-63 leaves, subsampling 0.8) with early stopping on a validation set to fix the number of trees. Then tune in order of impact: tree complexity (depth/leaves, min_child_weight), then row/column subsampling, then regularization (lambda, alpha, gamma), finally lower the learning rate and increase the trees. Use random or Bayesian search (Optuna) in cross-validation rather than an exhaustive grid, watch the train/validation gap, and check that gains are significant relative to noise.",
+    "key_points": [
+      "Baseline + early stopping for the number of trees",
+      "Order: tree complexity -> subsampling -> regularization -> learning rate",
+      "Random / Bayesian search in cross-validation",
+      "Watch overfitting and significance of gains"
+    ],
+    "common_mistakes": [
+      "Exhaustive grid search over every parameter",
+      "Tuning the number of trees by hand without early stopping"
+    ]
+  },
+  {
+    "id": "ds-gradient-boosting-08",
+    "section": "Gradient boosting",
+    "question": "How do you select the number of trees in the gradient boosting model?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "With early stopping: fix the learning rate, train with a large maximum number of trees while evaluating the loss on a validation set at each iteration, and stop when it no longer improves for n iterations (patience), keeping the best point. Unlike the forest, too many trees overfit. The optimal number depends on the learning rate (smaller -> more trees); in cross-validation, take the mean of the best points or retrain with that number on all the data.",
+    "key_points": [
+      "Early stopping on the validation loss with patience",
+      "Too many trees = overfitting (unlike the forest)",
+      "Dependence on the learning rate",
+      "Carry the optimal number over to the final retraining"
+    ],
+    "common_mistakes": [
+      "Choosing a fixed number without validation",
+      "Early stopping on the test set"
+    ]
+  },
+  {
+    "id": "ds-parameter-tuning-01",
+    "section": "Parameter tuning",
+    "question": "Which hyper-parameter tuning strategies (in general) do you know?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Manual tuning guided by experience; grid search (exhaustive over fixed values, exponential cost); random search (sampling the ranges, more efficient when few hyperparameters matter); Bayesian optimization (a surrogate model, e.g. Gaussian process or TPE in Optuna/hyperopt, that chooses the next trials from the previous ones); adaptive-budget methods (successive halving, Hyperband) that stop bad configurations early; evolutionary algorithms. Always evaluate in cross-validation, with a held-out test set, and log the trials.",
+    "key_points": [
+      "Manual, grid, random",
+      "Bayesian (surrogate, TPE/Optuna)",
+      "Successive halving / Hyperband",
+      "Evaluation in CV with a held-out test set"
+    ],
+    "common_mistakes": [
+      "Citing only the grid",
+      "Tuning on the test set"
+    ]
+  },
+  {
+    "id": "ds-parameter-tuning-02",
+    "section": "Parameter tuning",
+    "question": "What’s the difference between grid search parameter tuning strategy and random search? When to use one or another?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Grid search evaluates every combination of predefined values: simple, reproducible, exhaustive, but the cost explodes with the number of hyperparameters and it wastes trials on those without effect. Random search draws configurations from distributions: for the same budget, it explores more distinct values per hyperparameter and often finds better (Bergstra & Bengio). Grid: 1-2 hyperparameters with few values, need for exhaustiveness; random: more hyperparameters, continuous ranges, limited budget; beyond that, Bayesian optimization.",
+    "key_points": [
+      "Grid: exhaustive combinations, exponential cost",
+      "Random: sampling, more distinct values per dimension",
+      "Grid for few parameters; random otherwise",
+      "Bayesian as the next step"
+    ],
+    "common_mistakes": [
+      "Believing the grid necessarily finds better",
+      "Not mentioning dimension/budget"
+    ]
+  },
+  {
+    "id": "ds-neural-networks-01",
+    "section": "Neural networks",
+    "question": "What kind of problems neural nets can solve?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "easy",
+    "reference": "Problems where the input-output relationship is strongly non-linear and data are abundant, mainly unstructured: vision (classification, detection, segmentation), text (classification, translation, generation, LLMs), audio and speech, complex time series, large-scale recommender systems, reinforcement learning, image generation. They learn the representations themselves (no manual feature engineering). On modest-sized tabular data, boosted trees often remain better and cheaper.",
+    "key_points": [
+      "Complex non-linear relationships, abundant data",
+      "Unstructured data: image, text, audio",
+      "Representation learning",
+      "Limits: modest tabular data, cost, interpretability"
+    ],
+    "common_mistakes": [
+      "Presenting networks as universally superior",
+      "Forgetting the need for data and compute"
+    ]
+  },
+  {
+    "id": "ds-neural-networks-02",
+    "section": "Neural networks",
+    "question": "How does a usual fully-connected feed-forward neural network work?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "The inputs go through a sequence of layers; in each layer, each neuron computes a linear combination of all the outputs of the previous layer (weights + bias) then applies a non-linear activation (ReLU, etc.). The last layer produces the output (one value in regression, a softmax in classification). Training minimizes a loss by gradient descent, with gradients computed by backpropagation. The number of parameters grows as the product of consecutive layer sizes, hence the cost on high-dimensional inputs (images) and the interest of convolutions.",
+    "key_points": [
+      "Successive layers: linear combination + activation",
+      "Each neuron connected to the whole previous layer",
+      "Output layer suited to the task (linear, sigmoid, softmax)",
+      "Training: loss, backpropagation, gradient; parameter cost"
+    ],
+    "common_mistakes": [
+      "Forgetting the non-linear activation",
+      "Confusing it with a convolutional or recurrent network"
+    ]
+  },
+  {
+    "id": "ds-neural-networks-03",
+    "section": "Neural networks",
+    "question": "Why do we need activation functions?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "easy",
+    "reference": "Without a non-linear activation, a stack of linear layers reduces to a single linear transformation (product of matrices): the network could only represent linear functions, whatever its depth. Activations (ReLU, GELU, tanh, sigmoid) introduce the non-linearity that allows approximating arbitrary functions (universal approximation theorem) and composing hierarchical representations. Their choice also affects gradient propagation (saturation, dead neurons).",
+    "key_points": [
+      "Composition of linear layers = linear",
+      "Non-linearity -> approximation of complex functions",
+      "Hierarchical representations",
+      "Impact on gradients (saturation, ReLU)"
+    ],
+    "common_mistakes": [
+      "Saying they serve to normalize between 0 and 1",
+      "Forgetting the linear-composition argument"
+    ]
+  },
+  {
+    "id": "ds-neural-networks-04",
+    "section": "Neural networks",
+    "question": "What are the problems with sigmoid as an activation function?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Saturation: for large |x|, the derivative sigma(1-sigma) tends to 0 (maximum 0.25), so gradients backpropagated through several layers vanish and the first layers stop learning. Output not centered at zero (always positive), which biases the updates and slows convergence. Exponential computation more costly than ReLU. It remains useful at the output for a binary probability; in hidden layers ReLU and its variants are preferred, tanh being centered but still saturating.",
+    "key_points": [
+      "Saturation -> vanishing gradient (derivative <= 0.25)",
+      "Output not centered at 0",
+      "Computational cost",
+      "Use at the output only; ReLU/tanh alternatives"
+    ],
+    "common_mistakes": [
+      "Citing only the computational cost",
+      "Confusing vanishing and exploding gradients"
+    ]
+  },
+  {
+    "id": "ds-neural-networks-05",
+    "section": "Neural networks",
+    "question": "What is ReLU? How is it better than sigmoid or tanh?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "ReLU(x) = max(0, x). Benefits: no saturation for x > 0 (derivative 1), so gradients flow in deep networks; trivial computation; sparse activations. Drawbacks: zero derivative for x < 0, neurons can 'die' (always at 0) especially with a high learning rate; not centered. Variants: Leaky ReLU, PReLU, ELU, GELU/SiLU (standard in Transformers). Sigmoid and tanh saturate on both sides and strongly slow deep learning down.",
+    "key_points": [
+      "Definition max(0, x)",
+      "No saturation on the positive side -> stable gradients, simple",
+      "Dead neurons, not centered",
+      "Variants (Leaky, ELU, GELU)"
+    ],
+    "common_mistakes": [
+      "Saying ReLU is bounded",
+      "Ignoring the dead-neuron problem"
+    ]
+  },
+  {
+    "id": "ds-neural-networks-06",
+    "section": "Neural networks",
+    "question": "How we can initialize the weights of a neural network?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Randomly, with a scale adapted to the layer sizes to preserve the variance of activations and gradients from one layer to the next: Xavier/Glorot initialization (variance 1/n or 2/(n_in+n_out)) for tanh/sigmoid, He/Kaiming (variance 2/n_in) for ReLU. Too large: saturation or explosion; too small: signals and gradients that vanish. Biases can be initialized to zero. Frameworks apply these schemes by default; normalization (batch/layer norm) and residual connections make training less sensitive to initialization.",
+    "key_points": [
+      "Random to break symmetry",
+      "Controlled scale: Xavier/Glorot, He/Kaiming depending on the activation",
+      "Too large / too small -> explosion or vanishing",
+      "Biases at zero; role of normalization"
+    ],
+    "common_mistakes": [
+      "Proposing zeros",
+      "Ignoring the link between scale and activation"
+    ]
+  },
+  {
+    "id": "ds-neural-networks-07",
+    "section": "Neural networks",
+    "question": "What if we set all the weights of a neural network to 0?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "All neurons of the same layer receive the same inputs, produce the same output and receive exactly the same gradient: they stay identical at every update (symmetry problem). The network behaves as if it had one neuron per layer and cannot learn anything useful; with ReLU, activations are zero and so is the gradient. Random initialization breaks that symmetry; biases, however, can be zero.",
+    "key_points": [
+      "Symmetry: identical neurons, identical gradients",
+      "Capacity reduced to one neuron per layer",
+      "With ReLU: zero activations and gradients",
+      "Randomness needed on weights, not on biases"
+    ],
+    "common_mistakes": [
+      "Saying training is simply slower",
+      "Confusing it with bias initialization"
+    ]
+  },
+  {
+    "id": "ds-neural-networks-08",
+    "section": "Neural networks",
+    "question": "What regularization techniques for neural nets do you know?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Weight penalties: L2 / weight decay, more rarely L1. Dropout (random deactivation of neurons during training). Early stopping on the validation loss. Data augmentation (transformations, noise, mixup). Normalization (batch norm, layer norm) which has a regularizing effect and stabilizes. Capacity reduction (smaller architecture), weight sharing (convolutions), pre-training and transfer learning, label smoothing, ensembles. As always, more data remains the best regulariser.",
+    "key_points": [
+      "Weight decay / L2, L1",
+      "Dropout, early stopping",
+      "Data augmentation, label smoothing",
+      "Normalization, architecture, transfer learning"
+    ],
+    "common_mistakes": [
+      "Citing only dropout",
+      "Confusing batch norm with dropout"
+    ]
+  },
+  {
+    "id": "ds-neural-networks-09",
+    "section": "Neural networks",
+    "question": "What is dropout? Why is it useful? How does it work?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "At each training step, each neuron of a layer is set to zero with probability p (for example 0.5 in dense layers, 0.1-0.2 elsewhere); the remaining activations are scaled (inverted dropout) to preserve the expectation. At inference, all neurons are active without extra scaling. Effect: the network cannot rely on precise co-adaptations of neurons, it learns redundant and more robust representations; it amounts to training an implicit ensemble of sub-networks. Reduces overfitting at the price of slightly longer training.",
+    "key_points": [
+      "Random deactivation with probability p during training",
+      "Scaling (inverted dropout); everything active at inference",
+      "Prevents co-adaptations, implicit ensemble",
+      "Reduces overfitting, longer training"
+    ],
+    "common_mistakes": [
+      "Applying dropout at inference",
+      "Saying neurons are permanently removed"
+    ]
+  },
+  {
+    "id": "ds-optimization-neural-01",
+    "section": "Optimization in neural networks",
+    "question": "What is backpropagation? How does it work? Why do we need it?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Algorithm that efficiently computes the gradient of the loss with respect to all the network's parameters by applying the chain rule from the output to the input. Forward pass: compute the activations and the loss, storing intermediate values; backward pass: propagate the derivatives layer by layer, each layer multiplying the received gradient by its local derivative. Its cost is of the same order as the forward pass, versus a prohibitive cost with finite differences. The gradients feed the optimiser (SGD, Adam). Frameworks implement it through automatic differentiation.",
+    "key_points": [
+      "Gradient computation by the chain rule, from output to input",
+      "Forward pass (storing activations) then backward pass",
+      "Efficiency: cost comparable to the forward pass",
+      "Feeds the optimiser; autodiff in frameworks"
+    ],
+    "common_mistakes": [
+      "Confusing backpropagation with gradient descent",
+      "Describing the weight update as part of backpropagation"
+    ]
+  },
+  {
+    "id": "ds-optimization-neural-02",
+    "section": "Optimization in neural networks",
+    "question": "Which optimization techniques for training neural nets do you know?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Mini-batch gradient descent (SGD) as the base; SGD with momentum and Nesterov to smooth and accelerate; per-parameter adaptive methods: Adagrad, RMSprop, Adam / AdamW (first and second moments, decoupled weight decay), Adafactor, LAMB for very large batches. On top of that, learning-rate schedules (warm-up, step or cosine decay), gradient clipping, mixed precision and gradient accumulation. AdamW is the common default; SGD + momentum remains competitive in vision.",
+    "key_points": [
+      "Mini-batch SGD, momentum, Nesterov",
+      "Adaptive: Adagrad, RMSprop, Adam/AdamW",
+      "Rate scheduling, warm-up, clipping",
+      "Usual choices: AdamW by default, SGD+momentum in vision"
+    ],
+    "common_mistakes": [
+      "Claiming Adam is always the best",
+      "Forgetting learning-rate scheduling"
+    ]
+  },
+  {
+    "id": "ds-optimization-neural-03",
+    "section": "Optimization in neural networks",
+    "question": "How do we use SGD (stochastic gradient descent) for training a neural net?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Shuffle the data, split them into mini-batches; for each batch: forward pass, computation of the mean loss, backpropagation to get the gradients, weight update theta <- theta - eta * g (with optional momentum). One epoch = one pass over all the data; repeat for several epochs while tracking the validation loss (early stopping) and decaying the learning rate. The mini-batch (32-512) trades off a noisy gradient estimate (useful for generalization) against GPU efficiency. SGD noise helps escape saddle points.",
+    "key_points": [
+      "Shuffled mini-batches; forward pass, loss, backpropagation, update",
+      "Epochs, validation tracking, rate decay",
+      "Batch size: noise vs GPU efficiency",
+      "Momentum; role of noise"
+    ],
+    "common_mistakes": [
+      "Describing an update on the whole dataset",
+      "Forgetting to shuffle the data between epochs"
+    ]
+  },
+  {
+    "id": "ds-optimization-neural-04",
+    "section": "Optimization in neural networks",
+    "question": "What’s the learning rate?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "easy",
+    "reference": "The hyperparameter eta that multiplies the gradient in the parameter update: it sets the step size at each iteration. Too large, training oscillates or diverges; too small, it is slow and can get stuck. It is usually the most important hyperparameter; it is chosen by search (log scale, range test) and varied during training (warm-up, decay). Adaptive optimisers adjust an effective step per parameter but still have a base rate.",
+    "key_points": [
+      "Step size in the update theta <- theta - eta grad L",
+      "Too large: divergence; too small: slowness",
+      "Most sensitive hyperparameter, log-scale search",
+      "Scheduling (warm-up, decay)"
+    ],
+    "common_mistakes": [
+      "Confusing it with the number of epochs",
+      "Believing Adam has no learning rate"
+    ]
+  },
+  {
+    "id": "ds-optimization-neural-05",
+    "section": "Optimization in neural networks",
+    "question": "What happens when the learning rate is too large? Too small?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "easy",
+    "reference": "Too large: the steps overshoot the minimum, the loss oscillates, stalls at a high level or diverges (NaN); the model can also converge to a coarse solution. Too small: very slow convergence, risk of staying stuck on a plateau or in a poor local minimum, costly training; sometimes a loss decreasing so slowly that it looks like a bug. Diagnose with the loss curve; remedy: rate sweep, warm-up then decay, gradient clipping.",
+    "key_points": [
+      "Too large: oscillation, divergence, coarse solution",
+      "Too small: slowness, plateaus, cost",
+      "Reading the loss curve",
+      "Remedies: sweep, warm-up, decay, clipping"
+    ],
+    "common_mistakes": [
+      "Saying too small = overfitting",
+      "Not mentioning divergence"
+    ]
+  },
+  {
+    "id": "ds-optimization-neural-06",
+    "section": "Optimization in neural networks",
+    "question": "How to set the learning rate?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Start from the optimiser's usual values (about 1e-3 for Adam, 1e-2 to 1e-1 for SGD with momentum), sweep on a log scale over a few epochs and look at the loss curve; or run a learning-rate range test and take a value slightly below the point where the loss starts rising again. Adjust with the batch size (larger batch -> larger rate), use a warm-up then a decay (cosine, steps, reduce on plateau). Validate on the validation loss, not only the training loss.",
+    "key_points": [
+      "Typical starting values per optimiser",
+      "Log sweep / range test, reading the loss",
+      "Link with batch size",
+      "Warm-up and scheduling, validation"
+    ],
+    "common_mistakes": [
+      "Giving a universal value",
+      "Tuning without looking at the validation curve"
+    ]
+  },
+  {
+    "id": "ds-optimization-neural-07",
+    "section": "Optimization in neural networks",
+    "question": "What is Adam? What’s the main difference between Adam and SGD?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Adam (Adaptive Moment Estimation) keeps, for each parameter, a moving average of the gradient (first moment, like momentum) and a moving average of the squared gradient (second moment), corrected for the initial bias, and updates with a step eta * m_hat / (sqrt(v_hat) + eps): the effective step is adapted per parameter, large for rare gradients, small for strong ones. SGD applies the same rate to all parameters (possibly with momentum). Adam converges fast and needs little tuning; SGD with momentum can generalize better on some tasks (vision). AdamW decouples the weight decay and is the current default.",
+    "key_points": [
+      "First and second moments per parameter, bias correction",
+      "Adaptive step per parameter vs global step for SGD",
+      "Adam: fast convergence, robust; SGD: sometimes better generalization",
+      "AdamW"
+    ],
+    "common_mistakes": [
+      "Saying Adam has no learning rate",
+      "Confusing Adam with plain momentum"
+    ]
+  },
+  {
+    "id": "ds-optimization-neural-08",
+    "section": "Optimization in neural networks",
+    "question": "When would you use Adam and when SGD?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Adam/AdamW by default: Transformers, NLP, prototyping, sparse or ill-conditioned gradients, little time to tune; it converges fast and tolerates a poorly chosen rate. SGD with momentum (and rate scheduling): convolutional vision and situations where you seek the best final generalization and can tune carefully; sometimes preferred for its simplicity and lower memory. In practice test both on a validation set; the difference is often smaller than the effect of a good learning-rate setting.",
+    "key_points": [
+      "Adam/AdamW: default, NLP/Transformers, speed, robustness",
+      "SGD + momentum: vision, generalization, careful tuning",
+      "Memory and simplicity",
+      "Decide by validation; the rate matters more than the choice"
+    ],
+    "common_mistakes": [
+      "Categorical answer without context",
+      "Forgetting AdamW"
+    ]
+  },
+  {
+    "id": "ds-optimization-neural-09",
+    "section": "Optimization in neural networks",
+    "question": "Do we want to have a constant learning rate or we better change it throughout training?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Vary it: a short warm-up at the start (to avoid instability while weights and Adam statistics are poorly initialized), then a high rate to progress fast, then a decay (steps, cosine, exponential, reduce on plateau) to refine without oscillating around the minimum. Cycles (one-cycle, warm restarts) sometimes help. A constant rate converges less well or must be small, hence slow. Frameworks provide schedulers (StepLR, CosineAnnealing, ReduceLROnPlateau).",
+    "key_points": [
+      "Vary: warm-up, high phase, decay",
+      "Why: stability at the start, precision at the end",
+      "Schemes: steps, cosine, plateau, cycles",
+      "Constant rate: poor compromise"
+    ],
+    "common_mistakes": [
+      "Answering constant",
+      "Forgetting the warm-up"
+    ]
+  },
+  {
+    "id": "ds-optimization-neural-10",
+    "section": "Optimization in neural networks",
+    "question": "How do we decide when to stop training a neural net?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "easy",
+    "reference": "Track the validation loss (or metric) at each epoch: stop when it no longer improves for a given number of epochs (patience) and restore the weights of the best point (early stopping). The training loss keeps decreasing and is not a criterion. Complements: time/compute budget, schedule reaching its end, loss convergence. Early stopping acts as regularization.",
+    "key_points": [
+      "Validation loss + patience, restore the best point",
+      "Training loss irrelevant",
+      "Budget and end of schedule as secondary criteria",
+      "Regularizing effect"
+    ],
+    "common_mistakes": [
+      "Stopping when the training loss is zero",
+      "Keeping the weights of the last epoch"
+    ]
+  },
+  {
+    "id": "ds-optimization-neural-11",
+    "section": "Optimization in neural networks",
+    "question": "What is model checkpointing?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Periodically saving the complete training state (weights, optimiser state, scheduler, epoch, random generator) to disk. Allows resuming after a crash or interruption (long trainings, preemptible instances), keeping the best model according to validation (linked to early stopping), comparing epochs and serving or fine-tuning an intermediate model. Good practice: frequency adapted to the cost, file rotation, versioning and metadata.",
+    "key_points": [
+      "Saving the complete state (weights, optimiser, scheduler, epoch)",
+      "Resume after crash, preemptible instances",
+      "Keeping the best model",
+      "Good practice: frequency, rotation, metadata"
+    ],
+    "common_mistakes": [
+      "Saving only the weights (not the optimiser)",
+      "Confusing it with gradient checkpointing (memory saving)"
+    ]
+  },
+  {
+    "id": "ds-optimization-neural-12",
+    "section": "Optimization in neural networks",
+    "question": "Can you tell us how you approach the model training process?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "1) Frame: goal, metric aligned with the business, simple baseline. 2) Data: cleaning, train/validation/test split without leakage, pre-processing fitted on train, distribution analysis. 3) Quick first model, check that it can overfit a small subset (sanity check), then train while tracking validation loss and metric. 4) Iterate: diagnose bias vs variance, regularize (dropout, weight decay, early stopping, augmentation), tune hyperparameters (learning rate first), compare architectures. 5) Evaluate once on the test set, analyze errors, document and version (data, code, seeds, checkpoints). 6) Prepare deployment and monitoring.",
+    "key_points": [
+      "Framing: metric, baseline",
+      "Clean data, leak-free split, pre-processing on train",
+      "Sanity checks, train/validation tracking, bias-variance diagnosis",
+      "Iteration: regularization, hyperparameters, architectures",
+      "Single final test, error analysis, reproducibility, deployment"
+    ],
+    "common_mistakes": [
+      "Starting with a complex model without a baseline",
+      "Forgetting error analysis and reproducibility"
+    ]
+  },
+  {
+    "id": "ds-neural-networks-10",
+    "section": "Neural networks for computer vision",
+    "question": "How we can use neural nets for computer vision?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "With convolutional networks (CNNs) and, more recently, Vision Transformers: convolution layers extract local patterns (edges, textures) then, deeper, increasingly abstract structures, with pooling to reduce resolution, then dense layers or a head suited to the task: classification, detection (boxes), segmentation (masks), pose estimation, generation. In practice you start from a model pre-trained on ImageNet and fine-tune it (transfer learning), with data augmentation.",
+    "key_points": [
+      "CNNs (convolution + pooling) and Vision Transformers",
+      "Hierarchy of learned features",
+      "Heads by task: classification, detection, segmentation",
+      "Transfer learning and augmentation"
+    ],
+    "common_mistakes": [
+      "Proposing a dense network on the pixels",
+      "Forgetting pre-training"
+    ]
+  },
+  {
+    "id": "ds-neural-networks-11",
+    "section": "Neural networks for computer vision",
+    "question": "What’s a convolutional layer?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "A layer that slides small kernels (filters, e.g. 3x3) over the image and computes at each position a weighted sum of the neighboring pixels (over all channels), producing one feature map per filter. The kernel weights are shared over the whole image: few parameters, detection of the same pattern everywhere (translation equivariance), exploitation of locality. Hyperparameters: kernel size, number of filters, stride, padding, dilation. Stacked, the layers widen the receptive field and build hierarchical features.",
+    "key_points": [
+      "Sliding kernels, local weighted sum, one map per filter",
+      "Weight sharing -> few parameters, translation equivariance",
+      "Hyperparameters: size, number of filters, stride, padding",
+      "Receptive field growing with depth"
+    ],
+    "common_mistakes": [
+      "Describing a dense layer",
+      "Confusing number of filters with kernel size"
+    ]
+  },
+  {
+    "id": "ds-neural-networks-12",
+    "section": "Neural networks for computer vision",
+    "question": "Why do we actually need convolutions? Can’t we use fully-connected layers for that?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "A dense layer on a 224x224x3 image would connect each neuron to the 150,000 pixels: millions of parameters per neuron, overfitting and no use of the spatial structure. Convolutions impose two priors suited to images: locality (a pixel depends on its neighbors) and weight sharing (a pattern is useful everywhere), which drastically reduces parameters, brings translation equivariance and allows learning with less data. Dense layers can be used, but they are inefficient; Vision Transformers replace convolution with attention over patches, with a lot of data.",
+    "key_points": [
+      "Parameter explosion of dense layers on images",
+      "Priors: locality and weight sharing",
+      "Translation equivariance, data efficiency",
+      "Alternatives: ViT with large data"
+    ],
+    "common_mistakes": [
+      "Saying a dense layer cannot process an image",
+      "Forgetting weight sharing"
+    ]
+  },
+  {
+    "id": "ds-neural-networks-13",
+    "section": "Neural networks for computer vision",
+    "question": "What’s pooling in CNN? Why do we need it?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Subsampling operation that aggregates a small window (typically 2x2) of the feature map into one value (max or mean), reducing the spatial resolution. Effects: less compute and memory for the following layers, wider receptive field, slight invariance to small translations, reduced overfitting. It has no parameters. Modern alternatives: stride-2 convolutions, global average pooling at the end of the network to replace dense layers.",
+    "key_points": [
+      "Local aggregation (max/mean), resolution reduction",
+      "Less compute, wider receptive field",
+      "Invariance to small translations",
+      "No parameters; alternatives (stride, global pooling)"
+    ],
+    "common_mistakes": [
+      "Saying pooling learns weights",
+      "Confusing pooling with convolution"
+    ]
+  },
+  {
+    "id": "ds-neural-networks-14",
+    "section": "Neural networks for computer vision",
+    "question": "How does max pooling work? Are there other pooling techniques?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "A window (often 2x2 with stride 2) slides over the map and the maximum value of each window is kept: the N x N map becomes N/2 x N/2; only the strongest activation (the presence of the pattern) is preserved. Others: average pooling (mean, smoother), global average/max pooling (one value per channel over the whole map, for the final classification), min pooling (rare), stochastic pooling, and strided convolutions as a learned replacement. Windows beyond 3x3 are rare because they lose too much information.",
+    "key_points": [
+      "Sliding window, maximum kept, resolution halved",
+      "Preserves the presence of the pattern",
+      "Average, global pooling, strided convolutions",
+      "Usual sizes"
+    ],
+    "common_mistakes": [
+      "Confusing max and average",
+      "Forgetting global average pooling"
+    ]
+  },
+  {
+    "id": "ds-neural-networks-15",
+    "section": "Neural networks for computer vision",
+    "question": "Are CNNs resistant to rotations? What happens to the predictions of a CNN if an image is rotated?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "expert",
+    "reference": "Not by construction: convolutions are equivariant to translations, not to rotations; a network trained on upright images can change its prediction on a rotated image (the classic duck/rabbit example). Robustness is learned through data augmentation with rotations (and flips, scales), through rotation-equivariant architectures (group-equivariant CNNs), or by normalizing the orientation upstream. Robustness therefore depends on the training data.",
+    "key_points": [
+      "Translation equivariance only",
+      "Unstable predictions under rotation without suitable training",
+      "Augmentation with rotations; equivariant architectures",
+      "Orientation normalization in pre-processing"
+    ],
+    "common_mistakes": [
+      "Answering yes",
+      "Confusing translation and rotation invariance"
+    ]
+  },
+  {
+    "id": "ds-neural-networks-16",
+    "section": "Neural networks for computer vision",
+    "question": "What are augmentations? Why do we need them?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "easy",
+    "reference": "Transformations applied to the training examples that preserve the label (rotation, cropping, flipping, brightness change, noise, mixup...) to generate artificial diversity. They increase the effective size of the dataset, inject desired invariances, reduce overfitting and improve robustness to real variations (lighting, orientation). Applied on the fly during training, not at evaluation (except test-time augmentation). They must remain plausible for the domain.",
+    "key_points": [
+      "Label-preserving transformations",
+      "Diversity, invariances, regularization",
+      "On the fly during training; not in validation",
+      "Plausibility for the domain"
+    ],
+    "common_mistakes": [
+      "Applying augmentations to the validation set",
+      "Using transformations that change the label (flipping a 6 into a 9)"
+    ]
+  },
+  {
+    "id": "ds-neural-networks-17",
+    "section": "Neural networks for computer vision",
+    "question": "What kind of augmentations do you know?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "easy",
+    "reference": "Geometric: rotation, horizontal/vertical flip, random crop, translation, scaling, shear, elastic deformation. Photometric: brightness, contrast, saturation, hue, grayscale, blur, Gaussian noise, JPEG. Occlusion: cutout, random erasing. Mixing: mixup, CutMix. Learned policies: AutoAugment, RandAugment. Beyond images: noise and time shift for audio, synonyms, back-translation or masking for text, jitter and windows for time series.",
+    "key_points": [
+      "Geometric",
+      "Photometric",
+      "Occlusion and mixing (cutout, mixup, CutMix)",
+      "Learned policies; augmentations beyond images"
+    ],
+    "common_mistakes": [
+      "Citing PCA as an augmentation",
+      "Limiting yourself to rotations and flips"
+    ]
+  },
+  {
+    "id": "ds-neural-networks-18",
+    "section": "Neural networks for computer vision",
+    "question": "How to choose which augmentations to use?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "According to the real invariances of the task and the variations expected in production: horizontal flip for natural photos but not for digits or text; brightness changes if lighting varies; full rotations for aerial images; no deformation that would change the label (medical lesions). Look at production data and the model's errors to target the gaps, then validate empirically: each augmentation must improve the validation metric (ablations), and the intensity is tuned.",
+    "key_points": [
+      "Domain invariances and variations expected in production",
+      "Do not alter the label",
+      "Target the observed errors",
+      "Empirical validation and intensity tuning"
+    ],
+    "common_mistakes": [
+      "Applying every possible augmentation",
+      "Ignoring the semantics of the label"
+    ]
+  },
+  {
+    "id": "ds-neural-networks-19",
+    "section": "Neural networks for computer vision",
+    "question": "What kind of CNN architectures for classification do you know?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "expert",
+    "reference": "LeNet and AlexNet (origins), VGG (stacks of 3x3), Inception/GoogLeNet (multi-scale branches), ResNet (residual connections, very deep networks), DenseNet (dense connections), Xception and MobileNet (separable convolutions, embedded), SqueezeNet and EfficientNet (parameter/compute efficiency, compound scaling), ConvNeXt (modernized CNN), and on the attention side Vision Transformers (ViT, Swin). ResNet and EfficientNet remain solid practical choices for transfer learning.",
+    "key_points": [
+      "Historical: LeNet, AlexNet, VGG, Inception",
+      "ResNet and residual connections; DenseNet",
+      "Efficient: MobileNet, EfficientNet, SqueezeNet",
+      "Modern: ConvNeXt, ViT/Swin"
+    ],
+    "common_mistakes": [
+      "Confusing classification and detection architectures (YOLO)",
+      "Not knowing what ResNet brings"
+    ]
+  },
+  {
+    "id": "ds-neural-networks-20",
+    "section": "Neural networks for computer vision",
+    "question": "What is transfer learning? How does it work?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Reusing a model pre-trained on a large source task (ImageNet, text corpus) for a target task with less data: the first layers have learned generic reusable features (edges, textures, syntax). Two modes: feature extraction (freeze the network and train a new head) or fine-tuning (retrain all or part with a small learning rate, often progressively by layers). Gains: less data, fast convergence, better performance; provided the domains are close enough.",
+    "key_points": [
+      "Reuse of a pre-trained model; generic features",
+      "Extraction (frozen layers + new head) vs fine-tuning (small rate)",
+      "Gains in data, time, performance",
+      "Condition: closeness of the domains"
+    ],
+    "common_mistakes": [
+      "Describing a plain copy of the model without adaptation",
+      "Fine-tuning with a high learning rate"
+    ]
+  },
+  {
+    "id": "ds-neural-networks-21",
+    "section": "Neural networks for computer vision",
+    "question": "What is object detection? Do you know any architectures for that?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "expert",
+    "reference": "Locating and classifying several objects in an image: predicting for each a bounding box and a class. Two families: two-stage (R-CNN, Fast/Faster R-CNN: region proposals then classification, accurate), one-stage (YOLO, SSD, RetinaNet: direct prediction on a grid, fast, real time); more recently anchor-free (CenterNet, FCOS) and Transformer-based (DETR). Evaluated by mAP at different IoU thresholds.",
+    "key_points": [
+      "Boxes + classes for several objects",
+      "Two-stage (Faster R-CNN) vs one-stage (YOLO, SSD, RetinaNet)",
+      "Anchor-free, DETR",
+      "mAP / IoU metric"
+    ],
+    "common_mistakes": [
+      "Confusing it with image classification",
+      "Ignoring the metric"
+    ]
+  },
+  {
+    "id": "ds-neural-networks-22",
+    "section": "Neural networks for computer vision",
+    "question": "What is object segmentation? Do you know any architectures for that?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "expert",
+    "reference": "Assigning a class to each pixel. Semantic segmentation: classes without distinguishing instances (U-Net, FCN, DeepLab with dilated convolutions, SegFormer); instance segmentation: one mask per object (Mask R-CNN, which adds a mask branch to detection); panoptic: combination of both; foundation models such as Segment Anything. Encoder-decoder architectures with skip connections to recover resolution. Evaluated by IoU / Dice.",
+    "key_points": [
+      "Pixel-by-pixel classification",
+      "Semantic (U-Net, DeepLab) vs instance (Mask R-CNN) vs panoptic",
+      "Encoder-decoder with skip connections",
+      "IoU / Dice metrics"
+    ],
+    "common_mistakes": [
+      "Confusing segmentation with detection",
+      "Forgetting the semantic / instance distinction"
+    ]
+  },
+  {
+    "id": "ds-text-classification-01",
+    "section": "Text classification",
+    "question": "How can we use machine learning for text classification?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Turn the text into a numeric representation then train a classifier. Representations: bag of words / TF-IDF (possibly n-grams) with a linear model (logistic regression, SVM) or naive Bayes; averaged word embeddings; or fine-tuning a pre-trained model (BERT and derivatives) which gives the best results today; an LLM in zero/few-shot to start without data. Pre-processing: tokenization, lowercasing, accent handling, stop words depending on the case. Evaluate with per-class precision/recall/F1, handle imbalance.",
+    "key_points": [
+      "Vectorization: bag of words/TF-IDF, embeddings, pre-trained models",
+      "Suitable classifier (linear on sparse, fine-tuning on a transformer)",
+      "Pre-processing and tokenization",
+      "Per-class evaluation, imbalance; zero-shot LLM as an option"
+    ],
+    "common_mistakes": [
+      "Forgetting the vectorization step",
+      "Proposing gradient boosting on a huge bag of words"
+    ]
+  },
+  {
+    "id": "ds-text-classification-02",
+    "section": "Text classification",
+    "question": "What is bag of words? How we can use it for text classification?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Representation of a document by the vector of counts (or presence, or TF-IDF) of each word of the vocabulary, ignoring order. The vocabulary is built on the training corpus (CountVectorizer), you get a sparse documents x words matrix, and you train a linear classifier or naive Bayes on it. Simple, fast, interpretable (one weight per word), very effective as a baseline; loses order and context, large sparse vocabulary.",
+    "key_points": [
+      "Vector of counts per word, order ignored",
+      "Vocabulary learned on train, sparse matrix",
+      "Linear classifier / naive Bayes",
+      "Strengths (simple, interpretable) and limits (order, dimension)"
+    ],
+    "common_mistakes": [
+      "Building the vocabulary on the test set",
+      "Saying the bag of words captures context"
+    ]
+  },
+  {
+    "id": "ds-text-classification-03",
+    "section": "Text classification",
+    "question": "What are the advantages and disadvantages of bag of words?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Benefits: simple to understand and implement, fast, interpretable, works well with linear models even on small corpora, solid baseline. Drawbacks: loss of order and context (negations, expressions), large vocabulary and very sparse vectors (memory, curse of dimensionality), no notion of similarity between words (orthogonal synonyms), sensitivity to typos and variants, out-of-vocabulary words in production. N-grams, TF-IDF and embeddings fix part of these limits.",
+    "key_points": [
+      "Simple, fast, interpretable, good baseline",
+      "Loss of order and context",
+      "High dimension, sparse, out of vocabulary",
+      "No semantic similarity between words; remedies"
+    ],
+    "common_mistakes": [
+      "Giving only one drawback",
+      "Forgetting the synonym problem"
+    ]
+  },
+  {
+    "id": "ds-text-classification-04",
+    "section": "Text classification",
+    "question": "What are N-grams? How can we use them?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Sequences of n consecutive elements (words or characters): unigrams, bigrams ('not good'), trigrams. Added to the bag of words, they capture some local order and expressions (negation, compound nouns); character n-grams give robustness to typos, morphology and languages without spaces. Uses: classification, statistical language models, language detection, search. Cost: exploding vocabulary (filter by minimum frequency, hashing).",
+    "key_points": [
+      "Definition: sequences of n words or characters",
+      "Capture local order, expressions, negation",
+      "Character n-grams: robustness to typos",
+      "Vocabulary explosion -> filtering, hashing"
+    ],
+    "common_mistakes": [
+      "Confusing n-grams with embeddings",
+      "Ignoring the cost in dimension"
+    ]
+  },
+  {
+    "id": "ds-text-classification-05",
+    "section": "Text classification",
+    "question": "How large should be N for our bag of words when using N-grams?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "In practice 1 to 2 or 3 for words: bigrams bring most of the gain (negations, expressions), trigrams a little more on large corpora, beyond that n-grams become too rare to generalize and the vocabulary explodes. For characters, 3 to 5. Choose by cross-validation while combining the orders (ngram_range=(1,2)) and filtering by minimum frequency; small corpus -> small N.",
+    "key_points": [
+      "Words: 1-2, sometimes 3; characters: 3-5",
+      "Diminishing returns and rarity beyond",
+      "Combine the orders (1 to N) and filter by frequency",
+      "Choose by validation according to corpus size"
+    ],
+    "common_mistakes": [
+      "Proposing a high N without considering rarity",
+      "Using a single order instead of a range"
+    ]
+  },
+  {
+    "id": "ds-text-classification-06",
+    "section": "Text classification",
+    "question": "What is TF-IDF? How is it useful for text classification?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Weight of a term in a document: TF (term frequency in the document, often normalized) x IDF = log(N / number of documents containing the term). Words present everywhere ('the', 'of') get an IDF close to zero, rare and discriminative words are promoted. With L2 normalization of the vectors, it is a standard representation for linear classification and search (cosine similarity); it often improves on raw counts, especially without stop-word removal.",
+    "key_points": [
+      "TF x IDF, formula and intuition",
+      "Dampens words frequent everywhere, promotes discriminative ones",
+      "Normalization and cosine similarity",
+      "Gain over raw counts"
+    ],
+    "common_mistakes": [
+      "Swapping TF and IDF",
+      "Saying TF-IDF captures meaning"
+    ]
+  },
+  {
+    "id": "ds-text-classification-07",
+    "section": "Text classification",
+    "question": "Which model would you use for text classification with bag of words features?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "A linear model: logistic regression or linear SVM, with regularization, which handle high-dimensional sparse matrices very well, are fast and interpretable; multinomial naive Bayes as an even faster baseline, effective on small corpora. Trees and boosting are poorly suited (slow, inefficient on thousands of sparse columns). A simple network (fastText) is an alternative. With more data and compute, move to pre-trained models.",
+    "key_points": [
+      "Regularized logistic regression / linear SVM",
+      "Naive Bayes as a baseline",
+      "Why not trees on sparse data",
+      "fastText; transformers with more resources"
+    ],
+    "common_mistakes": [
+      "Listing representations (Word2Vec, BERT) instead of models",
+      "Proposing a random forest by default"
+    ]
+  },
+  {
+    "id": "ds-text-classification-08",
+    "section": "Text classification",
+    "question": "Would you prefer gradient boosting trees model or logistic regression when doing text classification with bag of words?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Logistic regression. The bag of words gives tens of thousands of sparse, binary or near-binary columns; a linear model exploits them directly, trains in seconds and regularizes easily. Boosting has to search for splits on each sparse column, is slow, captures combinations of rare words poorly and generally brings no accuracy gain. Boosting becomes interesting again when the dimension is reduced (embeddings, projected TF-IDF) or when text is mixed with tabular variables.",
+    "key_points": [
+      "Logistic regression: high sparse dimension, speed, regularization",
+      "Boosting: slow and inefficient on sparse data",
+      "Exception: dense representations or mixed data"
+    ],
+    "common_mistakes": [
+      "Choosing boosting because it is 'more powerful'",
+      "Not justifying by the sparse nature of the data"
+    ]
+  },
+  {
+    "id": "ds-text-classification-09",
+    "section": "Text classification",
+    "question": "What are word embeddings? Why are they useful? Do you know Word2Vec?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Dense low-dimensional vectors (50-300) representing each word, learned so that words appearing in similar contexts have close vectors; they capture semantic and syntactic relations (king - man + woman ~ queen). Useful because they give a similarity between words, reduce the dimension and transfer knowledge from a large corpus to a small task. Word2Vec learns them with a shallow network: CBOW (predict the word from the context) or skip-gram (predict the context from the word), with negative sampling. Limit: one vector per word, independent of context (unlike BERT).",
+    "key_points": [
+      "Dense vectors, close words = close contexts",
+      "Semantic similarity, dimensionality reduction, transfer",
+      "Word2Vec: CBOW and skip-gram, negative sampling",
+      "Limit: not contextual"
+    ],
+    "common_mistakes": [
+      "Confusing them with one-hot",
+      "Saying Word2Vec is a deep or contextual model"
+    ]
+  },
+  {
+    "id": "ds-text-classification-10",
+    "section": "Text classification",
+    "question": "Do you know any other ways to get word embeddings?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "expert",
+    "reference": "GloVe (factorization of global co-occurrence statistics), fastText (subwords: handles out-of-vocabulary words and morphology), contextual embeddings from language models (ELMo, BERT and derivatives, where a word's vector depends on the sentence), embedding layers learned end to end with the task, and sentence/document embeddings (Sentence-BERT, API embedding models) for search and RAG. Historically also LSA/SVD on the term-document matrix.",
+    "key_points": [
+      "GloVe, fastText (subwords)",
+      "Contextual: ELMo, BERT",
+      "Learned with the task",
+      "Sentence/document embeddings; LSA"
+    ],
+    "common_mistakes": [
+      "Citing only Word2Vec",
+      "Confusing word embeddings with sentence embeddings"
+    ]
+  },
+  {
+    "id": "ds-text-classification-11",
+    "section": "Text classification",
+    "question": "If you have a sentence with multiple words, you may need to combine multiple word embeddings into one. How would you do it?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "From simplest to most elaborate: mean (or sum, max) of the word vectors; weighted mean by IDF or by a smoothed weighting (SIF) with removal of the first principal component; concatenation of mean and max; sequential models (LSTM, CNN) or a Transformer that produce a contextual representation ([CLS] token or mean pooling), ideally trained for sentence similarity (Sentence-BERT). The mean loses order but remains a surprisingly solid baseline.",
+    "key_points": [
+      "Mean / sum / max of the vectors",
+      "IDF or SIF weighting",
+      "Sequential models or Transformer (CLS, mean pooling)",
+      "Sentence-BERT; the mean as a baseline"
+    ],
+    "common_mistakes": [
+      "Proposing to concatenate the vectors word by word (variable size)",
+      "Ignoring the loss of order of the mean"
+    ]
+  },
+  {
+    "id": "ds-text-classification-12",
+    "section": "Text classification",
+    "question": "Would you prefer gradient boosting trees model or logistic regression when doing text classification with embeddings?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "With embeddings, the features are dense and of moderate dimension (a few hundred), and the relationships with the class are often non-linear: gradient boosting (or a small network) becomes competitive, even better, especially when embeddings are mixed with tabular variables. Logistic regression remains a fast baseline, and can be enough when the embeddings are of good quality and the task linearly separable. Test both in validation; fine-tuning the embedding model often beats both.",
+    "key_points": [
+      "Dense and low dimension -> boosting relevant",
+      "Non-linearities, mixing with tabular variables",
+      "Logistic regression as a fast baseline",
+      "Validate; fine-tuning the source model often superior"
+    ],
+    "common_mistakes": [
+      "Answering as for the bag of words",
+      "Not mentioning validation"
+    ]
+  },
+  {
+    "id": "ds-text-classification-13",
+    "section": "Text classification",
+    "question": "How can you use neural nets for text classification?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "expert",
+    "reference": "Tokenize the text, convert it into a sequence of ids, pass it through an embedding layer (learned or pre-trained), then an encoder: 1D CNN over n-grams, bidirectional RNN/LSTM, or Transformer; aggregate into a vector (pooling, [CLS]) and finish with a dense layer + softmax, trained with cross-entropy. The dominant approach is fine-tuning a pre-trained model (BERT, RoBERTa, DistilBERT) with a small learning rate; regularization by dropout, early stopping; watch imbalance and maximum sequence length.",
+    "key_points": [
+      "Tokenization -> embeddings -> encoder (CNN, LSTM, Transformer) -> pooling -> softmax",
+      "Fine-tuning a pre-trained model as the standard",
+      "Cross-entropy, dropout, early stopping",
+      "Constraints: length, imbalance"
+    ],
+    "common_mistakes": [
+      "Giving a list of applications instead of the method",
+      "Forgetting pre-training"
+    ]
+  },
+  {
+    "id": "ds-text-classification-14",
+    "section": "Text classification",
+    "question": "How can we use CNN for text classification?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "expert",
+    "reference": "The sentence is represented as a matrix (length x embedding dimension) and 1D convolutions are applied with filters 2 to 5 words wide, which detect local patterns equivalent to learned n-grams, wherever they appear; a global max pooling over time keeps the strongest presence of each pattern; the outputs of the different widths are concatenated then passed to a dense layer with softmax (Kim's architecture, 2014). Fast, parallelisable, effective for polarity and topics; captures long dependencies less well than LSTM/Transformer.",
+    "key_points": [
+      "Embedding matrix, 1D convolutions of various widths",
+      "Filters = learned n-grams, position-invariant",
+      "Global max pooling then dense + softmax",
+      "Strengths (speed) and limits (long dependencies)"
+    ],
+    "common_mistakes": [
+      "Describing 2D convolutions as in images without justification",
+      "Confusing it with a CNN on an image of the text"
+    ]
+  },
+  {
+    "id": "ds-clustering-01",
+    "section": "Clustering",
+    "question": "What is unsupervised learning?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "easy",
+    "reference": "Learning structure in data without labels: grouping similar observations (clustering: K-means, DBSCAN, hierarchical), reducing dimension (PCA, t-SNE, UMAP, autoencoders), estimating densities, detecting anomalies, learning representations (self-supervision). There is no ground truth: evaluation relies on internal criteria (silhouette), stability, visualization and business usefulness. Often an exploration or pre-processing step before supervised learning.",
+    "key_points": [
+      "No labels: structure, groups, dimensions, density, anomalies",
+      "Examples of algorithms",
+      "Evaluation without ground truth: internal criteria, stability, usefulness",
+      "Exploratory / pre-processing role"
+    ],
+    "common_mistakes": [
+      "Reducing it to clustering alone",
+      "Saying an accuracy can be measured"
+    ]
+  },
+  {
+    "id": "ds-clustering-02",
+    "section": "Clustering",
+    "question": "What is clustering? When do we need it?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "easy",
+    "reference": "Partitioning observations into groups such that members of a group are similar to each other and different from the others, according to a distance or a similarity. Needs: customer or user segmentation, grouping documents or images, anomaly detection (isolated points), data compression or summary, feature creation for a supervised model, exploration before labeling. The result depends on the choice of variables, their scale, the distance and the algorithm; it is validated by internal criteria and business sense.",
+    "key_points": [
+      "Homogeneous, separated groups according to a distance",
+      "Use cases: segmentation, grouping, anomalies, exploration",
+      "Sensitivity to variables, scale, distance",
+      "Internal and business validation"
+    ],
+    "common_mistakes": [
+      "Forgetting to normalize the variables",
+      "Presenting clustering as objective rather than exploratory"
+    ]
+  },
+  {
+    "id": "ds-clustering-03",
+    "section": "Clustering",
+    "question": "Do you know how K-means works?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Choose K and initialize K centroids (k-means++ for a good spread). Alternate: assign each point to the nearest centroid (Euclidean distance), then recompute each centroid as the mean of its points; until assignments no longer change. The algorithm minimizes inertia (sum of squared intra-cluster distances) and converges to a local optimum, hence several initializations. Assumes convex clusters of comparable sizes; sensitive to scale and outliers; K to choose.",
+    "key_points": [
+      "Initialization (k-means++), then alternating assignment / mean recomputation",
+      "Objective: intra-cluster inertia; local optimum, several restarts",
+      "Assumptions: convex clusters, similar sizes, Euclidean distance",
+      "Sensitivities: scale, outliers, choice of K"
+    ],
+    "common_mistakes": [
+      "Swapping the steps or forgetting convergence",
+      "Believing K-means finds the global optimum"
+    ]
+  },
+  {
+    "id": "ds-clustering-04",
+    "section": "Clustering",
+    "question": "How to select K for K-means?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Elbow method: plot inertia against K and spot the point where the gain becomes marginal (often ambiguous). Mean silhouette score (cohesion vs separation, between -1 and 1): maximize. Gap statistic (comparison with reference data without structure), stability criteria (clusters reproducible across subsamples), information criteria for Gaussian mixtures (BIC). And above all business knowledge: the number of actionable segments, the readability of the groups. Visualize (PCA/UMAP) to judge.",
+    "key_points": [
+      "Elbow on inertia",
+      "Silhouette",
+      "Gap statistic, stability, BIC (GMM)",
+      "Business constraint and visualization"
+    ],
+    "common_mistakes": [
+      "Citing only the elbow",
+      "Forgetting the business criterion"
+    ]
+  },
+  {
+    "id": "ds-clustering-05",
+    "section": "Clustering",
+    "question": "What are the other clustering algorithms do you know?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "K-medoids / PAM (actual medoid rather than mean, robust), agglomerative hierarchical clustering (progressive merging, dendrogram, choice of linkage criterion) or divisive, DBSCAN and HDBSCAN (density, arbitrary shapes, noise), Gaussian mixtures (probabilistic clusters, elliptical shapes, EM), mean shift, spectral clustering (similarity graph, non-convex clusters), BIRCH for very large volumes, and time-series or text clustering with suitable distances.",
+    "key_points": [
+      "K-medoids, hierarchical (dendrogram, linkage)",
+      "Density: DBSCAN, HDBSCAN",
+      "Gaussian mixtures (EM), spectral",
+      "Choice by cluster shape, noise, volume"
+    ],
+    "common_mistakes": [
+      "Knowing only K-means",
+      "Confusing hierarchical with K-means"
+    ]
+  },
+  {
+    "id": "ds-clustering-06",
+    "section": "Clustering",
+    "question": "Do you know how DBScan works?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Two parameters: eps (neighborhood radius) and minPts (minimum number of points within that radius). A point with at least minPts neighbors is a core point; a point in the neighborhood of a core point without being one is a border point; the others are noise. Clusters are the sets of density-connected points (chains of core points at distance <= eps). Result: number of clusters determined automatically, arbitrary shapes, noise isolated; sensitive to eps (heterogeneous densities); HDBSCAN lifts that limit.",
+    "key_points": [
+      "Parameters eps and minPts",
+      "Core, border, noise points",
+      "Clusters = density-connected components",
+      "Strengths (implicit K, shapes, noise) and limit (varying densities)"
+    ],
+    "common_mistakes": [
+      "Saying DBSCAN requires K",
+      "Forgetting the notion of core point"
+    ]
+  },
+  {
+    "id": "ds-clustering-07",
+    "section": "Clustering",
+    "question": "When would you choose K-means and when DBScan?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "K-means: globular clusters of comparable sizes, large volume (near-linear complexity), need for interpretable centroids or to assign new points, K known or estimable. DBSCAN: arbitrary-shaped clusters, noise/outliers to isolate, unknown number of clusters, spatial data; avoid when densities vary strongly (prefer HDBSCAN), in very high dimension (uninformative distances) or on huge volumes without a spatial index. When in doubt, try both and compare silhouette and business sense.",
+    "key_points": [
+      "K-means: globular, volume, centroids, known K",
+      "DBSCAN: arbitrary shapes, noise, unknown K",
+      "DBSCAN limits: varying densities, high dimension",
+      "Compare empirically"
+    ],
+    "common_mistakes": [
+      "Presenting DBSCAN as always superior",
+      "Ignoring computational cost"
+    ]
+  },
+  {
+    "id": "ds-dimensionality-reduction-01",
+    "section": "Dimensionality reduction",
+    "question": "What is the curse of dimensionality? Why do we care about it?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "As the number of dimensions grows, the volume of the space grows exponentially: data become sparse, distances between points concentrate (all points look roughly equidistant), and exponentially more observations are needed to cover the space. Consequences: distance-based methods (k-NN, clustering) unreliable, model overfitting, computational cost, visualization impossible. We care in order to choose remedies: feature selection, dimensionality reduction (PCA, UMAP), regularization, models suited to sparse data.",
+    "key_points": [
+      "Exponential volume, sparse data",
+      "Distance concentration",
+      "Effects: degraded k-NN/clustering, overfitting, cost",
+      "Remedies"
+    ],
+    "common_mistakes": [
+      "Reducing it to computation time",
+      "Forgetting the effect on distances"
+    ]
+  },
+  {
+    "id": "ds-dimensionality-reduction-02",
+    "section": "Dimensionality reduction",
+    "question": "Do you know any dimensionality reduction techniques?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Linear: PCA (maximum variance), SVD / LSA, factor analysis, ICA, LDA (supervised, class separation), random projections. Non-linear: t-SNE and UMAP (visualization, neighborhood preservation), kernel PCA, Isomap, autoencoders (learned representation). For text: LSA, embeddings. Distinct from feature selection (which keeps original variables). The choice depends on the goal: compression, visualization, supervised pre-processing, denoising.",
+    "key_points": [
+      "Linear: PCA, SVD, LDA, random projections",
+      "Non-linear: t-SNE, UMAP, kernel PCA, autoencoders",
+      "Difference from feature selection",
+      "Choice by goal"
+    ],
+    "common_mistakes": [
+      "Confusing LDA (discriminant) with LDA (topic modeling)",
+      "Using t-SNE as pre-processing for a model"
+    ]
+  },
+  {
+    "id": "ds-dimensionality-reduction-03",
+    "section": "Dimensionality reduction",
+    "question": "What’s singular value decomposition? How is it typically used for machine learning?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Any matrix X (n x p) factorises as X = U S V^T with U and V orthogonal and S diagonal with decreasing singular values. Truncating to the first k components gives the best rank-k approximation (Eckart-Young). Uses: PCA (SVD of the centered matrix: V gives the components, s^2/(n-1) the variances), LSA for text, compression and denoising, recommender systems (factorization of the users x items matrix, approximated by ALS/SGD on the known entries), stable least-squares solving, pseudo-inverse. Choose k by explained variance or scree plot.",
+    "key_points": [
+      "Factorization U S V^T, singular values",
+      "Truncation = best rank-k approximation",
+      "Uses: PCA, LSA, compression, recommendation, least squares",
+      "Choice of k"
+    ],
+    "common_mistakes": [
+      "Mixing up singular values and eigenvalues without the link (s^2 = eigenvalues of X^T X)",
+      "Saying PCA is 'a kind of SVD' without mentioning centering"
+    ]
+  },
+  {
+    "id": "ds-ranking-search-01",
+    "section": "Ranking and search",
+    "question": "What is the ranking problem? Which models can you use to solve them?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Ordering a set of items (documents, products) by relevance for a query or a user, the goal being the quality of the order at the top of the list rather than an absolute prediction. Approaches: pointwise (predict a relevance score per query-document pair with a regressor/classifier), pairwise (learn to order pairs: RankNet, LambdaRank, RankSVM), listwise (directly optimize a list metric: LambdaMART, ListNet). Models: gradient boosting (LambdaMART is the industry standard), neural networks, bi-encoders and cross-encoders for text. The typical pipeline has two stages: fast retrieval then reranking.",
+    "key_points": [
+      "Goal: order by relevance, focus on the top of the list",
+      "Pointwise / pairwise / listwise",
+      "Models: LambdaMART (boosting), networks, cross-encoders",
+      "Retrieval + reranking architecture"
+    ],
+    "common_mistakes": [
+      "Treating ranking as plain binary classification without discussing the order",
+      "Forgetting the two-stage approach"
+    ]
+  },
+  {
+    "id": "ds-ranking-search-02",
+    "section": "Ranking and search",
+    "question": "What are good unsupervised baselines for text information retrieval?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "BM25 (and TF-IDF with cosine similarity) on an inverted index: robust, fast, still hard to beat on lexical matches; improved by tokenization, lemmatization, weighted fields (title vs body) and query expansion. Dense search with pre-trained embeddings (Sentence-BERT, embedding models) and a vector index for semantic similarity. Hybrid search (RRF fusion of both) is a strong baseline without any training data. Evaluate on an annotated query set (nDCG, recall@k).",
+    "key_points": [
+      "BM25 / TF-IDF cosine on an inverted index",
+      "Pre-trained embeddings + vector index",
+      "Hybrid with RRF fusion",
+      "Lexical improvements; nDCG/recall evaluation"
+    ],
+    "common_mistakes": [
+      "Forgetting BM25",
+      "Assuming dense search always dominates"
+    ]
+  },
+  {
+    "id": "ds-ranking-search-03",
+    "section": "Ranking and search",
+    "question": "How would you evaluate your ranking algorithms? Which offline metrics would you use?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "With a query set and relevance judgments (annotated or derived from clicks). Metrics: precision@k and recall@k, MRR (rank of the first relevant result), MAP (mean precision over the relevant positions), nDCG@k (position-weighted gain with graded relevance, the most used), hit rate. Compare with the baseline on the same queries, look per segment (rare, long queries), and keep in mind the biases of click-derived judgments. Complement with online evaluation (A/B, interleaving).",
+    "key_points": [
+      "Query set with relevance judgments",
+      "P@k, R@k, MRR, MAP, nDCG@k",
+      "Comparison with the baseline per segment",
+      "Click biases; online complement"
+    ],
+    "common_mistakes": [
+      "Using accuracy or global AUC",
+      "Ignoring position weighting"
+    ]
+  },
+  {
+    "id": "ds-ranking-search-04",
+    "section": "Ranking and search",
+    "question": "What is precision and recall at k?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Metrics computed on the top k results of a list. Precision@k = number of relevant results in the top k / k; recall@k = number of relevant results in the top k / total number of relevant results for the query. Example: 3 relevant products exist, 2 are in the top 5 -> P@5 = 2/5 = 40%, R@5 = 2/3 ~ 67%. They ignore the order inside the top k (hence MAP and nDCG) and are averaged over queries.",
+    "key_points": [
+      "Definitions on the top k",
+      "Numerical example",
+      "Ignore the order inside the top k",
+      "Averaged over queries"
+    ],
+    "common_mistakes": [
+      "Dividing recall by k",
+      "Confusing it with global precision"
+    ]
+  },
+  {
+    "id": "ds-ranking-search-05",
+    "section": "Ranking and search",
+    "question": "What is mean average precision at k?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "For one query, average precision@k is the mean of the precision@i values computed at each position i <= k where a relevant result appears (divided by the number of relevant items, or by min(k, number of relevant items)): it rewards relevant results placed early. MAP@k is the mean of AP@k over all queries. It accounts for order unlike P@k, but assumes binary relevance; nDCG generalizes to graded relevance.",
+    "key_points": [
+      "AP@k: mean of the precisions at the positions of relevant items",
+      "Rewards relevant items placed early",
+      "MAP@k: mean over queries",
+      "Binary relevance; nDCG for graded"
+    ],
+    "common_mistakes": [
+      "Confusing it with the mean of P@k",
+      "Forgetting that it depends on the order"
+    ]
+  },
+  {
+    "id": "ds-ranking-search-06",
+    "section": "Ranking and search",
+    "question": "How can we use machine learning for search?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Learning to rank: a first retrieval stage (BM25, embeddings) produces candidates; a learned model reranks them from features of the query, the document and their interaction (lexical scores, semantic similarity, popularity, freshness, user signals), trained on relevance judgments or clicks with a pairwise/listwise objective (LambdaMART, neural cross-encoder). ML also serves query understanding (correction, intent classification, expansion), dense-search embeddings, personalization and diversification. Evaluate offline (nDCG) then online (A/B).",
+    "key_points": [
+      "Retrieval -> learned reranking pipeline",
+      "Query/document/interaction features, pairwise/listwise models",
+      "Query understanding, dense search, personalization",
+      "Offline and online evaluation"
+    ],
+    "common_mistakes": [
+      "Applying a learned model to the whole corpus without prior retrieval",
+      "Forgetting the source of the labels"
+    ]
+  },
+  {
+    "id": "ds-ranking-search-07",
+    "section": "Ranking and search",
+    "question": "How can we get training data for our ranking algorithms?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Explicit judgments: human annotators rating the relevance of query-document pairs on a scale (costly, reliable, guidelines needed), possibly assisted by a calibrated LLM judge. Implicit feedback: click logs, purchases, dwell time, converted into preferences with bias correction (position, presentation). Public datasets (MS MARCO) for pre-training. Positive/negative pairs built by sampling (hard negatives from BM25). Mix the sources and validate on a clean annotated set.",
+    "key_points": [
+      "Human annotation with guidelines (and LLM judge)",
+      "Clicks and implicit signals with debiasing",
+      "Public datasets, hard negatives",
+      "Validation on an annotated set"
+    ],
+    "common_mistakes": [
+      "Taking clicks as ground truth without correction",
+      "Not planning an annotated set"
+    ]
+  },
+  {
+    "id": "ds-ranking-search-08",
+    "section": "Ranking and search",
+    "question": "Can we formulate the search problem as a classification problem? How?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Yes, in the pointwise approach: each (query, document) pair becomes an example with a relevant / not relevant (or graded) label, a classifier predicts a relevance probability and documents are sorted by that score. It is simple and compatible with every model, but the classification loss does not reflect the quality of the order (errors at the top of the list cost more), hence the pairwise (classify pairs: which document is better) and listwise formulations. In practice pointwise is a good baseline, often beaten by LambdaMART.",
+    "key_points": [
+      "Pointwise: relevance label per pair, sort by score",
+      "Simple, standard models",
+      "Limit: the loss ignores order and position",
+      "Pairwise / listwise as alternatives"
+    ],
+    "common_mistakes": [
+      "Answering no",
+      "Not seeing the limit of the approach"
+    ]
+  },
+  {
+    "id": "ds-ranking-search-09",
+    "section": "Ranking and search",
+    "question": "How can we use clicks data as the training data for ranking algorithms?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "expert",
+    "reference": "Clicks are a biased implicit signal: position bias (people click more at the top), presentation bias, trust bias, and no clicks on what was not shown. Approaches: relative preferences (a clicked document below an unclicked one is preferred, pairwise model), click models that estimate attention-corrected relevance (cascade, position-based), inverse propensity scoring weighting by the probability of being seen (estimated by interventions or swaps), satisfaction signals (reading time, conversion, last click). Always validate on annotated judgments.",
+    "key_points": [
+      "Click biases: position, presentation, non-exposure",
+      "Pairwise preferences from clicked lists",
+      "Click models and inverse propensity scoring",
+      "Satisfaction signals; annotated validation"
+    ],
+    "common_mistakes": [
+      "Using click = relevant directly",
+      "Ignoring documents that were never shown"
+    ]
+  },
+  {
+    "id": "ds-ranking-search-10",
+    "section": "Ranking and search",
+    "question": "Do you know how to use gradient boosting trees for ranking?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "expert",
+    "reference": "With LambdaMART: gradient boosting of trees whose gradients (lambdas) are computed by pairs of documents of the same query and weighted by the nDCG change that swapping the two documents would cause; the model thus directly optimizes a list metric. Implementations (XGBoost rank:ndcg, LightGBM lambdarank, CatBoost YetiRank) take groups (one query = one group), graded relevance labels and query-document features. Usual boosting hyperparameters; evaluation by nDCG@k on a validation set grouped by query.",
+    "key_points": [
+      "LambdaMART: pairwise gradients weighted by delta nDCG",
+      "Data in groups per query, graded relevance",
+      "XGBoost / LightGBM / CatBoost implementations",
+      "Grouped validation, nDCG"
+    ],
+    "common_mistakes": [
+      "Training a pointwise regressor and calling it LambdaMART",
+      "Mixing documents of the same query between train and validation"
+    ]
+  },
+  {
+    "id": "ds-ranking-search-11",
+    "section": "Ranking and search",
+    "question": "How do you do an online evaluation of a new ranking algorithm?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "A/B test: randomly split users between the old and the new ranking and compare metrics (CTR, conversion rate, reformulations, abandonment, time to first click, revenue), with sample size and statistical test defined in advance, while monitoring guardrails (latency, revenue). Interleaving: merge the two lists in the same page and attribute clicks to each algorithm; much more sensitive, hence faster, but only measures relative preference. Progressive rollout and analysis per segment.",
+    "key_points": [
+      "A/B with business metrics and guardrails, statistical power",
+      "Interleaving: high sensitivity, relative preference",
+      "Progressive rollout, segments",
+      "Link with offline evaluation"
+    ],
+    "common_mistakes": [
+      "Concluding after a few days without a statistical test",
+      "Measuring only CTR"
+    ]
+  },
+  {
+    "id": "ds-recommender-systems-01",
+    "section": "Recommender systems",
+    "question": "What is a recommender system?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "easy",
+    "reference": "A system that proposes to each user the items (products, films, content) most likely to interest them, from their history, other users' behavior and item attributes. Families: collaborative filtering (similarity between users or items, matrix factorization), content-based (attributes), hybrid, and two-tower neural models; candidate generation then ranking architecture. Business goals: engagement, sales, discovery, diversity; evaluated offline (precision@k, nDCG) and online (A/B).",
+    "key_points": [
+      "Suggest relevant items per user",
+      "Collaborative, content, hybrid, two-tower",
+      "Candidates + ranking",
+      "Goals and evaluation"
+    ],
+    "common_mistakes": [
+      "Citing only one family",
+      "Forgetting evaluation"
+    ]
+  },
+  {
+    "id": "ds-recommender-systems-02",
+    "section": "Recommender systems",
+    "question": "What are good baselines when building a recommender system?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Popularity (most viewed/purchased items, possibly per segment or period), recency, 'customers who bought X also bought Y' (co-occurrences, item-item), mean ratings with user and item biases, k-NN on items or users, simple matrix factorization (ALS). These baselines are fast, robust to cold start for popularity, and set the level to beat; a complex model that does not beat them in A/B is not justified. Also think about qualitative criteria: relevance, novelty, diversity.",
+    "key_points": [
+      "Popularity (global, per segment), recency",
+      "Item-item co-occurrences, k-NN",
+      "User/item biases, simple factorization",
+      "Level to beat; qualitative criteria"
+    ],
+    "common_mistakes": [
+      "Starting with a neural network",
+      "Forgetting popularity"
+    ]
+  },
+  {
+    "id": "ds-recommender-systems-03",
+    "section": "Recommender systems",
+    "question": "What is collaborative filtering?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Predicting a user's interest in an item from the interactions (ratings, clicks, purchases) of all users, without describing the content of the items: 'those who liked what you like also liked...'. Variants: memory-based (user-user or item-item k-NN with cosine/Pearson similarity, weighted mean of ratings after per-user centering) and model-based (matrix factorization: users and items projected into a latent space, ALS, SGD, SVD++, or networks). Strengths: only needs the interaction matrix, improves with usage; limits: sparse matrix, cold start, popularity bias.",
+    "key_points": [
+      "Prediction from others' interactions, without content",
+      "Memory: user/item neighbors, centering",
+      "Model: matrix factorization (latent factors)",
+      "Limits: sparsity, cold start, popularity"
+    ],
+    "common_mistakes": [
+      "Confusing it with content-based filtering",
+      "Forgetting matrix factorization"
+    ]
+  },
+  {
+    "id": "ds-recommender-systems-04",
+    "section": "Recommender systems",
+    "question": "How we can incorporate implicit feedback (clicks, etc) into our recommender systems?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Implicit feedback has no explicit negatives: the absence of interaction can mean disinterest or non-exposure, and the intensity (number of clicks, duration) reflects confidence rather than a rating. Approaches: confidence-weighted matrix factorization (Hu, Koren & Volinsky, implicit ALS: all unobserved pairs count as weak negatives), pairwise learning (BPR: an interacted item is preferred over a sampled non-interacted one), two-tower models with negative sampling, correction of position and exposure biases, and weighting of actions by value (purchase > click).",
+    "key_points": [
+      "No explicit negatives, intensity = confidence",
+      "Confidence-weighted implicit ALS",
+      "BPR / negative sampling, two-tower",
+      "Debias exposure/position, weight the actions"
+    ],
+    "common_mistakes": [
+      "Treating the absence of interaction as a certain 0 rating",
+      "Ignoring exposure bias"
+    ]
+  },
+  {
+    "id": "ds-recommender-systems-05",
+    "section": "Recommender systems",
+    "question": "What is the cold start problem?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "The inability of collaborative filtering to recommend when interactions are missing: new user (no history, so no similarity nor latent factors), new item (nobody has rated or clicked it yet, it cannot be recommended collaboratively), or even a new system without data. Consequences: generic or absent recommendations, new items invisible (popularity vicious circle).",
+    "key_points": [
+      "Missing interactions -> collaborative filtering inoperative",
+      "Cases: new user, new item, new system",
+      "Consequences: generic recommendations, new items invisible"
+    ],
+    "common_mistakes": [
+      "Citing only one of the two cases",
+      "Confusing it with the service's slow start-up"
+    ]
+  },
+  {
+    "id": "ds-recommender-systems-06",
+    "section": "Recommender systems",
+    "question": "Possible approaches to solving the cold start problem?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "expert",
+    "reference": "New item: content-based recommendation (attributes, description, text/image embeddings) or hybrid models combining content and collaboration; exploration (show the new item to a sample of users, bandits); editorial promotion. New user: onboarding questionnaire about tastes, demographic or contextual data, popularity per segment, recommendations based on the current session, bandits to learn fast. In every case, switch progressively to collaborative filtering as interactions arrive.",
+    "key_points": [
+      "Items: content / hybrid, exploration, editorial",
+      "Users: onboarding, demographics, session, popularity per segment",
+      "Bandits / exploration",
+      "Transition to collaborative filtering"
+    ],
+    "common_mistakes": [
+      "Proposing only popularity",
+      "Ignoring exploration"
+    ]
+  },
+  {
+    "id": "ds-time-series-01",
+    "section": "Time series",
+    "question": "What is a time series?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "easy",
+    "reference": "A sequence of observations ordered in time, generally at regular intervals (daily sales, hourly temperature, traffic per minute). Its particularity: observations are dependent (autocorrelation) and the series may show trend, seasonality, cycles and noise; the order is information, methods assuming independence do not apply as is. Tasks: forecasting, anomaly detection, decomposition, series classification.",
+    "key_points": [
+      "Observations ordered in time, regular step",
+      "Temporal dependence / autocorrelation",
+      "Components: trend, seasonality, cycle, noise",
+      "Associated tasks"
+    ],
+    "common_mistakes": [
+      "Ignoring the dependence between observations",
+      "Confusing seasonality and cycle"
+    ]
+  },
+  {
+    "id": "ds-time-series-02",
+    "section": "Time series",
+    "question": "How is time series different from the usual regression problem?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "easy",
+    "reference": "In classic regression the observations are assumed independent and identically distributed, and y is predicted from explanatory variables. In time series, observations are correlated in time, the target depends on its own past values, and the distribution can change (non-stationarity, trend, seasonality). Consequences: lagged variables and rolling windows, validation respecting temporal order (no random shuffling), metrics per horizon, and dedicated models (ARIMA, exponential smoothing) or adaptation of classic models with temporal features.",
+    "key_points": [
+      "Assumed independence vs autocorrelation",
+      "Target depends on its past, non-stationarity",
+      "Temporal validation, no shuffling",
+      "Lagged features, dedicated models"
+    ],
+    "common_mistakes": [
+      "Saying explanatory variables cannot be used",
+      "Using random cross-validation"
+    ]
+  },
+  {
+    "id": "ds-time-series-03",
+    "section": "Time series",
+    "question": "Which models do you know for solving time series problems?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Baselines: naive (last value), seasonal naive, moving average. Exponential smoothing: simple, Holt (trend), Holt-Winters (trend + seasonality), ETS. ARIMA/SARIMA models (autoregression, differencing, moving average) and with exogenous variables (SARIMAX), vector models (VAR). Decomposition (STL) and Prophet. Machine learning on temporal features (lags, windows, calendar): regression, gradient boosting. Deep learning: RNN/LSTM, TCN, temporal Transformers, N-BEATS; foundation models for series. Choose by volume, seasonalities, horizon, exogenous variables.",
+    "key_points": [
+      "Naive baselines",
+      "Exponential smoothing (Holt, Holt-Winters)",
+      "ARIMA/SARIMA(X), decomposition, Prophet",
+      "ML on temporal features, deep learning"
+    ],
+    "common_mistakes": [
+      "Forgetting the naive baselines",
+      "Citing only deep learning"
+    ]
+  },
+  {
+    "id": "ds-time-series-04",
+    "section": "Time series",
+    "question": "If there’s a trend in our series, how we can remove it? And why would we want to do it?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Methods: differencing (y_t - y_{t-1}, possibly seasonal), regressing the series on time then working on the residuals, decomposition (STL) to isolate trend and seasonality, log transformation for a multiplicative trend, or explicit modeling (Holt, ARIMA with differencing term d). Why: many models (ARIMA, autocorrelations, tests) assume stationarity (constant mean and variance); without it estimates and forecasts are biased, and spurious correlations appear between trending series. The trend is reintegrated for the final forecast.",
+    "key_points": [
+      "Differencing, regression on time, decomposition, log",
+      "Explicit modeling (Holt, ARIMA d)",
+      "Why: stationarity required, spurious correlations",
+      "Reintegrate the trend in the forecast"
+    ],
+    "common_mistakes": [
+      "Not reintegrating the trend",
+      "Confusing trend and seasonality"
+    ]
+  },
+  {
+    "id": "ds-time-series-05",
+    "section": "Time series",
+    "question": "You have a series with only one variable “y” measured at time t. How do predict “y” at time t+1? Which approaches would you use?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Exploit autocorrelation: start with baselines (last value, seasonal naive), then univariate models: exponential smoothing (Holt-Winters if seasonal), ARIMA/SARIMA after ACF/PACF analysis and differencing, or a machine learning model on features built from the past (lags y_{t-1..t-k}, rolling means, calendar). Validate with a temporal split (rolling origin) on the one-step-ahead error, compare with the baselines, and forecast with an uncertainty interval.",
+    "key_points": [
+      "Naive baselines first",
+      "Univariate models: exponential smoothing, ARIMA (ACF/PACF)",
+      "ML on lags and rolling windows",
+      "Temporal validation, uncertainty interval"
+    ],
+    "common_mistakes": [
+      "Skipping the baselines",
+      "Using future information in the features"
+    ]
+  },
+  {
+    "id": "ds-time-series-06",
+    "section": "Time series",
+    "question": "You have a series with a variable “y” and a set of features. How do you predict “y” at t+1? Which approaches would you use?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Combine the past of y and the exogenous variables: ARIMAX/SARIMAX models or dynamic regression, or more commonly a machine learning model (gradient boosting, regularized regression) on features: lags and rolling statistics of y, exogenous variables known at forecast time (beware of using future values; if a variable is only known afterwards, forecast it or lag it), calendar, events. Deep learning (LSTM, Transformers) with lots of data and series. Temporal-split validation, comparison with univariate models to check that the variables add something.",
+    "key_points": [
+      "SARIMAX / dynamic regression",
+      "ML on lags of y + exogenous + calendar",
+      "Availability of exogenous variables at forecast time (leakage)",
+      "Temporal validation, comparison with univariate"
+    ],
+    "common_mistakes": [
+      "Using exogenous variables measured at t+1",
+      "Forgetting the past of y"
+    ]
+  },
+  {
+    "id": "ds-time-series-07",
+    "section": "Time series",
+    "question": "What are the problems with using trees for solving time series problems?",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+    "difficulty": "medium",
+    "reference": "Trees predict with leaf means: they cannot extrapolate beyond the range of training values, so they miss a rising trend or never-seen levels (they plateau). They have no notion of order: lags, windows and calendar variables must be built explicitly, and leakage avoided. Remedies: remove the trend first (predict differences or ratios, detrend then reintegrate), combine with a linear model, or use models that extrapolate. Once these precautions are taken, gradient boosting performs very well.",
+    "key_points": [
+      "No extrapolation outside the training range",
+      "No notion of order: explicit features, leakage",
+      "Remedies: detrend, differences, linear hybridization",
+      "Still performs well with these precautions"
+    ],
+    "common_mistakes": [
+      "Saying trees cannot be used",
+      "Forgetting the extrapolation problem"
+    ]
+  }
+]

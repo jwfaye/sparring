@@ -1,0 +1,813 @@
+[
+  {
+    "id": "qcm-py-001",
+    "theme": "python",
+    "question": "What does this program print?",
+    "choices": [
+      "3",
+      "4",
+      "Error: list modified during iteration",
+      "[1, 2, 3]"
+    ],
+    "answer": 1,
+    "explanation": "`b = a` does not copy the list: both names refer to the **same** object. Modifying through `b` therefore modifies `a`. For an independent copy: `b = a.copy()` or `list(a)`.",
+    "source": "generated (verified by execution)",
+    "code": "a = [1, 2, 3]\nb = a\nb.append(4)\nprint(len(a))\n",
+    "language": "python",
+    "check": {
+      "type": "python_stdout"
+    }
+  },
+  {
+    "id": "qcm-py-002",
+    "theme": "python",
+    "question": "What does this program print?",
+    "choices": [
+      "[2]",
+      "[1, 2]",
+      "[[1], [2]]",
+      "Error: missing argument"
+    ],
+    "answer": 1,
+    "explanation": "The default value `items=[]` is evaluated **only once**, when the function is defined: the same list is reused on every call without an argument. Correct idiom: `items=None` then `if items is None: items = []`.",
+    "source": "generated (verified by execution)",
+    "code": "def add(x, items=[]):\n    items.append(x)\n    return items\n\nadd(1)\nprint(add(2))\n",
+    "language": "python",
+    "check": {
+      "type": "python_stdout"
+    }
+  },
+  {
+    "id": "qcm-py-003",
+    "theme": "python",
+    "question": "What does this program print?",
+    "choices": [
+      "[0, 1, 2]",
+      "[2, 2, 2]",
+      "[3, 3, 3]",
+      "Error: i is not defined"
+    ],
+    "answer": 1,
+    "explanation": "The lambdas capture the **variable** `i`, not its value at creation time (late binding). When they are called, the loop is over and `i` is 2. To freeze the value: `lambda i=i: i`.",
+    "source": "generated (verified by execution)",
+    "code": "funcs = [lambda: i for i in range(3)]\nprint([f() for f in funcs])\n",
+    "language": "python",
+    "check": {
+      "type": "python_stdout"
+    }
+  },
+  {
+    "id": "qcm-py-004",
+    "theme": "python",
+    "question": "What does this program print?",
+    "choices": [
+      "5 5",
+      "5 0",
+      "0 0",
+      "Error: generator exhausted"
+    ],
+    "answer": 1,
+    "explanation": "A generator can be iterated **only once**. The first `sum` consumes it entirely (0+1+4 = 5), the second sees nothing left and returns 0, without any error.",
+    "source": "generated (verified by execution)",
+    "code": "g = (x * x for x in range(3))\nprint(sum(g), sum(g))\n",
+    "language": "python",
+    "check": {
+      "type": "python_stdout"
+    }
+  },
+  {
+    "id": "qcm-py-005",
+    "theme": "python",
+    "question": "What does this program print?",
+    "choices": [
+      "[[1, 2], [3]]",
+      "[[1, 2, 9], [3]]",
+      "[[1, 2, 9], [3], [7]]",
+      "[[1, 2], [3], [7]]"
+    ],
+    "answer": 1,
+    "explanation": "`list(a)` makes a **shallow** copy: the new list holds the same inner lists. `b[0].append(9)` therefore also modifies `a[0]`, whereas `b.append([7])` only touches `b`. For a deep copy: `copy.deepcopy`.",
+    "source": "generated (verified by execution)",
+    "code": "a = [[1, 2], [3]]\nb = list(a)\nb[0].append(9)\nb.append([7])\nprint(a)\n",
+    "language": "python",
+    "check": {
+      "type": "python_stdout"
+    }
+  },
+  {
+    "id": "qcm-py-006",
+    "theme": "python",
+    "question": "What does this program print?",
+    "choices": [
+      "True True",
+      "True False",
+      "False False",
+      "False True"
+    ],
+    "answer": 1,
+    "explanation": "`==` compares **values** (both lists have the same content), `is` compares **identity** (two distinct objects in memory). Reserve `is` for `None`, `True`, `False`.",
+    "source": "generated (verified by execution)",
+    "code": "a = [1, 2]\nb = [1, 2]\nprint(a == b, a is b)\n",
+    "language": "python",
+    "check": {
+      "type": "python_stdout"
+    }
+  },
+  {
+    "id": "qcm-py-007",
+    "theme": "python",
+    "question": "What does this program print?",
+    "choices": [
+      "oh|",
+      "yt|",
+      "Error: IndexError",
+      "oh|python"
+    ],
+    "answer": 0,
+    "explanation": "`s[::-1]` reverses the string (`nohtyp`), `[1:3]` takes `oh`. An out-of-range **slice** (`s[10:]`) returns an empty string without error, unlike a plain index `s[10]`.",
+    "source": "generated (verified by execution)",
+    "code": "s = \"python\"\nprint(s[::-1][1:3] + \"|\" + s[10:])\n",
+    "language": "python",
+    "check": {
+      "type": "python_stdout"
+    }
+  },
+  {
+    "id": "qcm-py-008",
+    "theme": "python",
+    "question": "What does this program print?",
+    "choices": [
+      "[('a', 3), ('b', 2), ('c', 1)]",
+      "[('c', 1), ('b', 2), ('a', 3)]",
+      "[('a', 3), ('c', 1), ('b', 2)]",
+      "Error: a key cannot be negative"
+    ],
+    "answer": 0,
+    "explanation": "`d.get(w, 0) + 1` counts occurrences. The sort key `(-kv[1], kv[0])` sorts by **descending** count, then by ascending word. `collections.Counter` would do the counting in one line.",
+    "source": "generated (verified by execution)",
+    "code": "words = [\"a\", \"b\", \"a\", \"c\", \"a\", \"b\"]\nd = {}\nfor w in words:\n    d[w] = d.get(w, 0) + 1\nprint(sorted(d.items(), key=lambda kv: (-kv[1], kv[0])))\n",
+    "language": "python",
+    "check": {
+      "type": "python_stdout"
+    }
+  },
+  {
+    "id": "qcm-py-009",
+    "theme": "python",
+    "question": "What does this program print?",
+    "choices": [
+      "-3 -1",
+      "-4 1",
+      "-3 1",
+      "-4 -1"
+    ],
+    "answer": 1,
+    "explanation": "In Python, `//` rounds towards **negative infinity** (not towards zero) and `%` takes the sign of the divisor: -7 = 2 × (-4) + 1. This differs from C or JavaScript.",
+    "source": "generated (verified by execution)",
+    "code": "print(-7 // 2, -7 % 2)\n",
+    "language": "python",
+    "check": {
+      "type": "python_stdout"
+    }
+  },
+  {
+    "id": "qcm-py-010",
+    "theme": "python",
+    "question": "What does this program print?",
+    "choices": [
+      "1",
+      "done\n1",
+      "1\ndone",
+      "done"
+    ],
+    "answer": 1,
+    "explanation": "The `finally` block **always** runs, even after a `return`: \"done\" is printed during the call, then the returned value (1) is printed by the outer `print`.",
+    "source": "generated (verified by execution)",
+    "code": "def f():\n    try:\n        return 1\n    finally:\n        print(\"done\")\n\nprint(f())\n",
+    "language": "python",
+    "check": {
+      "type": "python_stdout"
+    }
+  },
+  {
+    "id": "qcm-py-011",
+    "theme": "python",
+    "question": "What does this program print?",
+    "choices": [
+      "1 [2] []",
+      "1 [1, 2] [1, 2]",
+      "1 [2] [2]",
+      "Error: StopIteration"
+    ],
+    "answer": 0,
+    "explanation": "`next(g)` consumes the first element. `list(g)` consumes the rest (`[2]`). The generator is then exhausted: the second `list(g)` returns `[]`. `StopIteration` is only raised by `next` on an empty generator.",
+    "source": "generated (verified by execution)",
+    "code": "def gen():\n    yield 1\n    yield 2\n\ng = gen()\nprint(next(g), list(g), list(g))\n",
+    "language": "python",
+    "check": {
+      "type": "python_stdout"
+    }
+  },
+  {
+    "id": "qcm-py-012",
+    "theme": "python",
+    "question": "What does this program print?",
+    "choices": [
+      "1",
+      "3",
+      "Error: UnboundLocalError",
+      "None"
+    ],
+    "answer": 1,
+    "explanation": "`inc` is a **closure**: thanks to `nonlocal`, it modifies the variable `n` of the enclosing function, which survives between calls. Without `nonlocal`, `n += 1` would raise `UnboundLocalError`.",
+    "source": "generated (verified by execution)",
+    "code": "def counter():\n    n = 0\n    def inc():\n        nonlocal n\n        n += 1\n        return n\n    return inc\n\nc = counter()\nc()\nc()\nprint(c())\n",
+    "language": "python",
+    "check": {
+      "type": "python_stdout"
+    }
+  },
+  {
+    "id": "qcm-py-013",
+    "theme": "python",
+    "question": "What happens at runtime?",
+    "choices": [
+      "No error, s is \"xbc\"",
+      "TypeError: strings are immutable",
+      "IndexError",
+      "ValueError"
+    ],
+    "answer": 1,
+    "explanation": "Strings are **immutable**: you cannot assign a character. You must build a new string: `s = \"x\" + s[1:]`.",
+    "source": "generated (verified by execution)",
+    "code": "s = \"abc\"\ns[0] = \"x\"\n",
+    "language": "python",
+    "check": {
+      "type": "python_raises",
+      "exception": "TypeError"
+    }
+  },
+  {
+    "id": "qcm-py-014",
+    "theme": "python",
+    "question": "What does this program print?",
+    "choices": [
+      "([1, 3], 2)",
+      "Error: a tuple is immutable",
+      "([1], 2)",
+      "([1], 2, 3)"
+    ],
+    "answer": 0,
+    "explanation": "The tuple is immutable (you cannot replace `t[0]`), but the object it holds (a list) remains **mutable**: `t[0].append(3)` works.",
+    "source": "generated (verified by execution)",
+    "code": "t = ([1], 2)\nt[0].append(3)\nprint(t)\n",
+    "language": "python",
+    "check": {
+      "type": "python_stdout"
+    }
+  },
+  {
+    "id": "qcm-py-015",
+    "theme": "python",
+    "question": "What does this program print?",
+    "choices": [
+      "(2, ['a', 'b'])",
+      "(4, [])",
+      "(2, ['b', 'a'])",
+      "Error: unexpected keyword argument"
+    ],
+    "answer": 0,
+    "explanation": "`*args` receives the positional arguments in a tuple `(1, 2)`, `**kwargs` the keyword arguments in a dict `{'b': 3, 'a': 4}`. `sorted(kwargs)` sorts the keys.",
+    "source": "generated (verified by execution)",
+    "code": "def f(*args, **kwargs):\n    return len(args), sorted(kwargs)\n\nprint(f(1, 2, b=3, a=4))\n",
+    "language": "python",
+    "check": {
+      "type": "python_stdout"
+    }
+  },
+  {
+    "id": "qcm-py-016",
+    "theme": "python",
+    "question": "What does this program print?",
+    "choices": [
+      "[1, 2, 3]",
+      "[3, 1, 2]",
+      "['a', 'b', 'c']",
+      "The order is unpredictable"
+    ],
+    "answer": 1,
+    "explanation": "Since Python 3.7, dictionaries preserve **insertion order**; iterating over a dict walks its keys in that order.",
+    "source": "generated (verified by execution)",
+    "code": "print(list({3: \"c\", 1: \"a\", 2: \"b\"}))\n",
+    "language": "python",
+    "check": {
+      "type": "python_stdout"
+    }
+  },
+  {
+    "id": "qcm-pd-001",
+    "theme": "pandas",
+    "question": "What does this program print?",
+    "choices": [
+      "nan nan 3",
+      "4.0 2.0 3",
+      "4.0 1.3333333333333333 3",
+      "Error: NaN in the sum"
+    ],
+    "answer": 1,
+    "explanation": "pandas aggregations **skip NaN** by default (`skipna=True`): sum 4.0, mean (1+3)/2 = 2.0. `len` counts every row, NaN included (`count()` would exclude them).",
+    "source": "generated (verified by execution)",
+    "code": "import pandas as pd\nimport numpy as np\n\ns = pd.Series([1.0, np.nan, 3.0])\nprint(s.sum(), s.mean(), len(s))\n",
+    "language": "python",
+    "check": {
+      "type": "python_stdout"
+    }
+  },
+  {
+    "id": "qcm-pd-002",
+    "theme": "pandas",
+    "question": "How many rows do the two joins have?",
+    "choices": [
+      "2 3",
+      "4 5",
+      "3 4",
+      "4 4"
+    ],
+    "answer": 1,
+    "explanation": "The key `k = 1` is duplicated on both sides: the merge produces the **cartesian product** of the matches (2 × 2 = 4 rows). With `left`, the unmatched row `k = 2` is kept with `y = NaN` (5 rows). Always check key uniqueness before a merge.",
+    "source": "generated (verified by execution)",
+    "code": "import pandas as pd\n\na = pd.DataFrame({\"k\": [1, 1, 2], \"x\": [10, 11, 20]})\nb = pd.DataFrame({\"k\": [1, 1, 3], \"y\": [100, 101, 300]})\nprint(len(a.merge(b, on=\"k\", how=\"inner\")), len(a.merge(b, on=\"k\", how=\"left\")))\n",
+    "language": "python",
+    "check": {
+      "type": "python_stdout"
+    }
+  },
+  {
+    "id": "qcm-pd-003",
+    "theme": "pandas",
+    "question": "What does this program print?",
+    "choices": [
+      "20 20",
+      "30 20",
+      "20 30",
+      "Error: KeyError"
+    ],
+    "answer": 1,
+    "explanation": "`loc` selects by index **label** (label 1 holds the value 30), `iloc` by **position** (position 1 holds the value 20).",
+    "source": "generated (verified by execution)",
+    "code": "import pandas as pd\n\ns = pd.Series([10, 20, 30], index=[2, 0, 1])\nprint(s.loc[1], s.iloc[1])\n",
+    "language": "python",
+    "check": {
+      "type": "python_stdout"
+    }
+  },
+  {
+    "id": "qcm-pd-004",
+    "theme": "pandas",
+    "question": "What does this program print?",
+    "choices": [
+      "[2.0, 10.0]",
+      "[2.0, 2.0, 10.0]",
+      "[1, 3, 10]",
+      "Error: transform expects a function"
+    ],
+    "answer": 1,
+    "explanation": "`transform` returns a Series **of the same length** as the input, where each row receives the aggregate of its group. `agg` / `mean()` would return one row per group (`[2.0, 10.0]`).",
+    "source": "generated (verified by execution)",
+    "code": "import pandas as pd\n\ndf = pd.DataFrame({\"g\": [\"a\", \"a\", \"b\"], \"v\": [1, 3, 10]})\nprint(df.groupby(\"g\")[\"v\"].transform(\"mean\").tolist())\n",
+    "language": "python",
+    "check": {
+      "type": "python_stdout"
+    }
+  },
+  {
+    "id": "qcm-pd-005",
+    "theme": "pandas",
+    "question": "What is `df[\"v\"]` after this program?",
+    "choices": [
+      "[1, 0, 0]",
+      "[1, 2, 3]",
+      "[0, 0, 0]",
+      "Error: assignment not allowed"
+    ],
+    "answer": 1,
+    "explanation": "`df[df[\"v\"] > 1]` returns a **copy** (boolean selection). Modifying that copy does not touch `df` (pandas emits a `SettingWithCopyWarning`). To modify in place: `df.loc[df[\"v\"] > 1, \"v\"] = 0`.",
+    "source": "generated (verified by execution)",
+    "code": "import pandas as pd\n\ndf = pd.DataFrame({\"v\": [1, 2, 3]})\nsubset = df[df[\"v\"] > 1]\nsubset[\"v\"] = 0\nprint(df[\"v\"].tolist())\n",
+    "language": "python",
+    "check": {
+      "type": "python_stdout"
+    }
+  },
+  {
+    "id": "qcm-pd-006",
+    "theme": "pandas",
+    "question": "What does this program print?",
+    "choices": [
+      "[3, 30] [11, 22]",
+      "[11, 22] [3, 30]",
+      "[3, 30] [3, 30]",
+      "[33] [33]"
+    ],
+    "answer": 0,
+    "explanation": "`axis=0` aggregates **down the rows**, hence per column (a: 1+2, b: 10+20). `axis=1` aggregates across the columns, hence per row (1+10, 2+20).",
+    "source": "generated (verified by execution)",
+    "code": "import pandas as pd\n\ndf = pd.DataFrame({\"a\": [1, 2], \"b\": [10, 20]})\nprint(df.sum(axis=0).tolist(), df.sum(axis=1).tolist())\n",
+    "language": "python",
+    "check": {
+      "type": "python_stdout"
+    }
+  },
+  {
+    "id": "qcm-pd-007",
+    "theme": "pandas",
+    "question": "What does this program print?",
+    "choices": [
+      "[0, 1, 2] 1",
+      "[0, 1, 0] [1, 3]",
+      "[0, 1, 0] 1",
+      "Error: duplicate index"
+    ],
+    "answer": 1,
+    "explanation": "`concat` **keeps the original indexes**: the index becomes `[0, 1, 0]`, with a duplicate. `c.loc[0, \"x\"]` then returns **two** values. `ignore_index=True` avoids this pitfall.",
+    "source": "generated (verified by execution)",
+    "code": "import pandas as pd\n\na = pd.DataFrame({\"x\": [1, 2]})\nb = pd.DataFrame({\"x\": [3]})\nc = pd.concat([a, b])\nprint(c.index.tolist(), c.loc[0, \"x\"].tolist())\n",
+    "language": "python",
+    "check": {
+      "type": "python_stdout"
+    }
+  },
+  {
+    "id": "qcm-pd-008",
+    "theme": "pandas",
+    "question": "What does this program print?",
+    "choices": [
+      "{'a': 2, 'b': 1, nan: 1} 3",
+      "{'a': 2, 'b': 1} 2",
+      "{'a': 2, 'b': 1} 3",
+      "Error: NaN is not hashable"
+    ],
+    "answer": 1,
+    "explanation": "`value_counts()` and `nunique()` **exclude NaN** by default (`dropna=True`). To count them: `value_counts(dropna=False)`.",
+    "source": "generated (verified by execution)",
+    "code": "import pandas as pd\nimport numpy as np\n\ns = pd.Series([\"a\", \"b\", np.nan, \"a\"])\nprint(s.value_counts().to_dict(), s.nunique())\n",
+    "language": "python",
+    "check": {
+      "type": "python_stdout"
+    }
+  },
+  {
+    "id": "qcm-pd-009",
+    "theme": "pandas",
+    "question": "What does this program print?",
+    "choices": [
+      "3 3",
+      "12 3",
+      "Error: TypeError",
+      "3 12"
+    ],
+    "answer": 1,
+    "explanation": "On strings, `sum()` **concatenates** (\"1\" + \"2\" = \"12\"). After `astype(int)`, the sum is numeric. Always check the dtypes after loading a CSV.",
+    "source": "generated (verified by execution)",
+    "code": "import pandas as pd\n\ns = pd.Series([\"1\", \"2\"])\nprint(s.sum(), s.astype(int).sum())\n",
+    "language": "python",
+    "check": {
+      "type": "python_stdout"
+    }
+  },
+  {
+    "id": "qcm-sql-001",
+    "theme": "sql",
+    "question": "Table `t(v)` holds the values 1, NULL, 3. What does this query return?",
+    "choices": [
+      "1",
+      "2",
+      "3",
+      "Error"
+    ],
+    "answer": 0,
+    "explanation": "Any comparison with `NULL` is `NULL` (neither true nor false): the `NULL` row is **excluded** by the `WHERE`. Only the row 3 satisfies `v <> 1`. To include NULLs: `WHERE v <> 1 OR v IS NULL`.",
+    "source": "generated (verified by execution)",
+    "code": "SELECT COUNT(*) FROM t WHERE v <> 1;\n",
+    "language": "sql",
+    "check": {
+      "type": "sql",
+      "setup": "CREATE TABLE t (v INTEGER); INSERT INTO t VALUES (1), (NULL), (3);",
+      "expr": "rows[0][0]"
+    }
+  },
+  {
+    "id": "qcm-sql-002",
+    "theme": "sql",
+    "question": "Table `t(v)` holds 1, NULL, 3. What does this query return?",
+    "choices": [
+      "(3, 3)",
+      "(3, 2)",
+      "(2, 2)",
+      "(2, 3)"
+    ],
+    "answer": 1,
+    "explanation": "`COUNT(*)` counts every row; `COUNT(column)` only counts **non-NULL** values.",
+    "source": "generated (verified by execution)",
+    "code": "SELECT COUNT(*), COUNT(v) FROM t;\n",
+    "language": "sql",
+    "check": {
+      "type": "sql",
+      "setup": "CREATE TABLE t (v INTEGER); INSERT INTO t VALUES (1), (NULL), (3);",
+      "expr": "rows[0]"
+    }
+  },
+  {
+    "id": "qcm-sql-003",
+    "theme": "sql",
+    "question": "Table `a(id)`: 1, 2, 3. Table `b(id)`: 1, NULL. How many rows does this query return?",
+    "choices": [
+      "2",
+      "0",
+      "3",
+      "1"
+    ],
+    "answer": 1,
+    "explanation": "`NOT IN` with a `NULL` in the subquery: `id <> NULL` is unknown for every row, so **none** is returned. Prefer `NOT EXISTS` or filter `WHERE id IS NOT NULL` in the subquery.",
+    "source": "generated (verified by execution)",
+    "code": "SELECT COUNT(*) FROM a WHERE id NOT IN (SELECT id FROM b);\n",
+    "language": "sql",
+    "check": {
+      "type": "sql",
+      "setup": "CREATE TABLE a (id INTEGER); CREATE TABLE b (id INTEGER); INSERT INTO a VALUES (1), (2), (3); INSERT INTO b VALUES (1), (NULL);",
+      "expr": "rows[0][0]"
+    }
+  },
+  {
+    "id": "qcm-sql-004",
+    "theme": "sql",
+    "question": "3 customers (ids 1, 2, 3); 2 orders, both from customer 1. What does this query return?",
+    "choices": [
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "answer": 2,
+    "explanation": "A `LEFT JOIN` keeps **every** left row: customer 1 appears twice (once per order), customers 2 and 3 once each with NULLs, hence 4 rows. To count orders per customer you need `COUNT(o.id)`, not `COUNT(*)`.",
+    "source": "generated (verified by execution)",
+    "code": "SELECT COUNT(*)\nFROM customers c\nLEFT JOIN orders o ON o.customer_id = c.id;\n",
+    "language": "sql",
+    "check": {
+      "type": "sql",
+      "setup": "CREATE TABLE customers (id INTEGER); CREATE TABLE orders (id INTEGER, customer_id INTEGER); INSERT INTO customers VALUES (1), (2), (3); INSERT INTO orders VALUES (10, 1), (11, 1);",
+      "expr": "rows[0][0]"
+    }
+  },
+  {
+    "id": "qcm-sql-005",
+    "theme": "sql",
+    "question": "`t1(v)`: 1, 2, 2; `t2(v)`: 2, 3. What does this query return (row count of UNION, then of UNION ALL)?",
+    "choices": [
+      "(5, 5)",
+      "(3, 5)",
+      "(4, 5)",
+      "(3, 3)"
+    ],
+    "answer": 1,
+    "explanation": "`UNION` **deduplicates** the result (distinct values 1, 2, 3), `UNION ALL` keeps every row (3 + 2 = 5) and is faster since it does not have to sort/deduplicate.",
+    "source": "generated (verified by execution)",
+    "code": "SELECT (SELECT COUNT(*) FROM (SELECT v FROM t1 UNION SELECT v FROM t2)),\n       (SELECT COUNT(*) FROM (SELECT v FROM t1 UNION ALL SELECT v FROM t2));\n",
+    "language": "sql",
+    "check": {
+      "type": "sql",
+      "setup": "CREATE TABLE t1 (v INTEGER); CREATE TABLE t2 (v INTEGER); INSERT INTO t1 VALUES (1), (2), (2); INSERT INTO t2 VALUES (2), (3);",
+      "expr": "rows[0]"
+    }
+  },
+  {
+    "id": "qcm-sql-006",
+    "theme": "sql",
+    "question": "Table `t(s)` with the scores 10, 10, 8. Which pair (RANK, DENSE_RANK) does the row with score 8 get?",
+    "choices": [
+      "(2, 2)",
+      "(3, 3)",
+      "(3, 2)",
+      "(2, 3)"
+    ],
+    "answer": 2,
+    "explanation": "The two 10s are tied at rank 1. `RANK` then **skips** to rank 3 (it counts the preceding rows), `DENSE_RANK` does not skip and gives 2. `ROW_NUMBER` would give 1, 2, 3 with no ties.",
+    "source": "generated (verified by execution)",
+    "code": "SELECT s,\n       RANK() OVER (ORDER BY s DESC),\n       DENSE_RANK() OVER (ORDER BY s DESC)\nFROM t\nORDER BY s DESC;\n",
+    "language": "sql",
+    "check": {
+      "type": "sql",
+      "setup": "CREATE TABLE t (s INTEGER); INSERT INTO t VALUES (10), (10), (8);",
+      "expr": "rows[2][1:]"
+    }
+  },
+  {
+    "id": "qcm-sql-007",
+    "theme": "sql",
+    "question": "Table `t(g, v)`: (a, 3), (a, 4), (b, 1), (c, 6). How many groups does this query return?",
+    "choices": [
+      "1",
+      "2",
+      "3",
+      "Error: HAVING without an aggregate in the SELECT"
+    ],
+    "answer": 1,
+    "explanation": "`HAVING` filters **after** aggregation (a: 7, b: 1, c: 6, so a and c exceed 5). `WHERE` filters rows before the `GROUP BY` and cannot reference an aggregate. An aggregate may appear in `HAVING` without being in the `SELECT`.",
+    "source": "generated (verified by execution)",
+    "code": "SELECT g\nFROM t\nGROUP BY g\nHAVING SUM(v) > 5;\n",
+    "language": "sql",
+    "check": {
+      "type": "sql",
+      "setup": "CREATE TABLE t (g TEXT, v INTEGER); INSERT INTO t VALUES ('a', 3), ('a', 4), ('b', 1), ('c', 6);",
+      "expr": "len(rows)"
+    }
+  },
+  {
+    "id": "qcm-sql-008",
+    "theme": "sql",
+    "question": "Table `t(g)`: a, NULL, NULL, b. How many rows does this query return?",
+    "choices": [
+      "2",
+      "3",
+      "4",
+      "Error: NULL cannot be grouped"
+    ],
+    "answer": 1,
+    "explanation": "In a `GROUP BY`, every `NULL` value lands in **a single** group (unlike `=` comparisons, where NULL is never equal to NULL).",
+    "source": "generated (verified by execution)",
+    "code": "SELECT g, COUNT(*)\nFROM t\nGROUP BY g;\n",
+    "language": "sql",
+    "check": {
+      "type": "sql",
+      "setup": "CREATE TABLE t (g TEXT); INSERT INTO t VALUES ('a'), (NULL), (NULL), ('b');",
+      "expr": "len(rows)"
+    }
+  },
+  {
+    "id": "qcm-sql-009",
+    "theme": "sql",
+    "question": "What does this query return (SQLite, like PostgreSQL or SQL Server on this point)?",
+    "choices": [
+      "(3.5, 3.5)",
+      "(3, 3.5)",
+      "(3, 3)",
+      "(4, 3.5)"
+    ],
+    "answer": 1,
+    "explanation": "Dividing two **integers** is an integer division (7 / 2 = 3). As soon as one operand is decimal, so is the result. A classic in rate computations: multiply by `1.0` or `CAST`.",
+    "source": "generated (verified by execution)",
+    "code": "SELECT 7 / 2, 7 / 2.0;\n",
+    "language": "sql",
+    "check": {
+      "type": "sql",
+      "setup": "",
+      "expr": "rows[0]"
+    }
+  },
+  {
+    "id": "qcm-git-001",
+    "theme": "git",
+    "question": "What does this command do?",
+    "choices": [
+      "Permanently deletes the last commit and its changes",
+      "Undoes the last commit while keeping its changes staged",
+      "Undoes the last commit and unstages its changes, which stay in the working directory",
+      "Creates a new commit that undoes the last one"
+    ],
+    "answer": 1,
+    "explanation": "`--soft` moves `HEAD` back one commit **without touching** the index or the working directory: the changes stay ready to be committed again. `--mixed` (default) also unstages them, `--hard` also discards the changes from the working directory.",
+    "source": "generated",
+    "code": "git reset --soft HEAD~1\n",
+    "language": "bash"
+  },
+  {
+    "id": "qcm-git-002",
+    "theme": "git",
+    "question": "What is the difference between `git revert <sha>` and `git reset --hard <sha>`?",
+    "choices": [
+      "None, revert is an alias of reset",
+      "revert creates a new commit that undoes the changes of the target commit; reset moves the branch and rewrites history",
+      "revert removes the commit from history; reset creates an undo commit",
+      "revert only works on the last commit"
+    ],
+    "answer": 1,
+    "explanation": "`revert` is **safe on a shared branch**: it adds an inverse commit without modifying existing history. `reset --hard` moves the branch backwards and loses the following commits (only recoverable through `reflog`), which is a problem if the history has already been pushed.",
+    "source": "generated"
+  },
+  {
+    "id": "qcm-git-003",
+    "theme": "git",
+    "question": "On your `feature` branch, you want to bring in the latest commits of `main`. Which command **rewrites** the history of `feature`?",
+    "choices": [
+      "git merge main",
+      "git rebase main",
+      "git pull origin feature",
+      "git fetch main"
+    ],
+    "answer": 1,
+    "explanation": "`rebase` **replays** the commits of `feature` on top of `main`: new SHAs, linear history, but a rewrite. `merge` creates a merge commit without modifying existing commits. Rule: never rebase a branch that is already pushed and shared.",
+    "source": "generated"
+  },
+  {
+    "id": "qcm-git-004",
+    "theme": "git",
+    "question": "You have uncommitted changes and must switch branches immediately without losing or committing them. What do you do?",
+    "choices": [
+      "git checkout -f other_branch",
+      "git stash, switch branches, then git stash pop to get them back",
+      "git reset --hard then switch branches",
+      "git commit --amend"
+    ],
+    "answer": 1,
+    "explanation": "`git stash` sets the changes aside (index and working directory) on a stack; `git stash pop` reapplies them and removes the entry (`apply` reapplies without removing it). `checkout -f` and `reset --hard` **lose** the changes.",
+    "source": "generated"
+  },
+  {
+    "id": "qcm-git-005",
+    "theme": "git",
+    "question": "What is the difference between `git fetch` and `git pull`?",
+    "choices": [
+      "fetch downloads and merges; pull only downloads",
+      "fetch downloads the remote commits without touching your branch; pull = fetch + merge (or rebase) into your current branch",
+      "pull works offline, fetch does not",
+      "No difference since Git 2.0"
+    ],
+    "answer": 1,
+    "explanation": "`fetch` updates the remote references (`origin/main`) and lets you inspect before integrating. `pull` automatically chains the merge (or the rebase with `--rebase`), which can create unexpected merge commits.",
+    "source": "generated"
+  },
+  {
+    "id": "qcm-git-006",
+    "theme": "git",
+    "question": "You add `config.env` to `.gitignore`, but the file still shows as modified in `git status`. Why, and what do you do?",
+    "choices": [
+      "git must be restarted to re-read .gitignore",
+      "The file is already tracked: .gitignore only affects untracked files; run git rm --cached config.env",
+      "The absolute path must be used in .gitignore",
+      ".gitignore must be committed before it takes effect"
+    ],
+    "answer": 1,
+    "explanation": "`.gitignore` only prevents **adding** new files. A file already in the index stays tracked: `git rm --cached` removes it from the index (without deleting it from disk), after which it is ignored. Remember to purge an already committed secret from history if needed.",
+    "source": "generated"
+  },
+  {
+    "id": "qcm-git-007",
+    "theme": "git",
+    "question": "After `git checkout a1b2c3d` (a SHA), git reports a \"detached HEAD\". What does it mean?",
+    "choices": [
+      "The current branch has been deleted",
+      "HEAD points directly to a commit rather than a branch; commits made here belong to no branch",
+      "The repository is corrupted",
+      "Commit a1b2c3d has been detached from history"
+    ],
+    "answer": 1,
+    "explanation": "In detached HEAD you can explore or test an old state. If you commit, create a branch (`git switch -c name`) so those commits are not lost when you move elsewhere (they remain in `reflog` for a while).",
+    "source": "generated"
+  },
+  {
+    "id": "qcm-git-008",
+    "theme": "git",
+    "question": "What does this command do?",
+    "choices": [
+      "Merges the whole branch containing e4f5a6b into the current branch",
+      "Applies the changes of the single commit e4f5a6b onto the current branch, as a new commit",
+      "Moves the current branch to e4f5a6b",
+      "Deletes commit e4f5a6b"
+    ],
+    "answer": 1,
+    "explanation": "`cherry-pick` copies one specific commit (new SHA) onto the current branch, useful to port a fix without merging the whole source branch.",
+    "source": "generated",
+    "code": "git cherry-pick e4f5a6b\n",
+    "language": "bash"
+  },
+  {
+    "id": "qcm-git-009",
+    "theme": "git",
+    "question": "What does `HEAD~2` refer to?",
+    "choices": [
+      "The second parent of a merge commit",
+      "The commit two generations before HEAD (the parent's parent), following the first parent",
+      "The last two commits",
+      "The second branch in the list"
+    ],
+    "answer": 1,
+    "explanation": "`~n` goes back n generations through the **first** parent; `^n` picks the n-th parent of a merge commit (`HEAD^2` = second parent). `HEAD~1` and `HEAD^` are equivalent.",
+    "source": "generated"
+  },
+  {
+    "id": "qcm-git-010",
+    "theme": "git",
+    "question": "During a merge conflict, what does the part **above** `=======` (below `<<<<<<< HEAD`) correspond to?",
+    "choices": [
+      "The version of the branch being merged in (the other branch)",
+      "The version of the current branch (HEAD)",
+      "The version of the most recent common commit",
+      "The version automatically proposed by git"
+    ],
+    "answer": 1,
+    "explanation": "Between `<<<<<<< HEAD` and `=======`: the content of the **current** branch; between `=======` and `>>>>>>> other`: the content of the merged branch. Edit, remove the markers, then `git add` and `git commit` (or `git rebase --continue`).",
+    "source": "generated",
+    "code": "<<<<<<< HEAD\nthreshold = 0.5\n=======\nthreshold = 0.7\n>>>>>>> feature/threshold\n",
+    "language": "text"
+  }
+]

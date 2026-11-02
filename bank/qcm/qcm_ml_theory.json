@@ -1,0 +1,1010 @@
+[
+  {
+    "id": "qcm-th-001",
+    "theme": "regression",
+    "question": "Which of these is **not** an assumption of classical linear regression?",
+    "choices": [
+      "Linear relationship between the explanatory variables and the target",
+      "Independent errors with constant variance (homoscedasticity)",
+      "The explanatory variables follow a normal distribution",
+      "No strong collinearity between the explanatory variables"
+    ],
+    "answer": 2,
+    "explanation": "The assumptions concern the **form** of the model (linearity, additivity, no collinearity) and the **errors** (independent, homoscedastic, normal). Nothing requires the X to be Gaussian.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-002",
+    "theme": "regression",
+    "question": "Why does the normal distribution hold such a central place in statistics?",
+    "choices": [
+      "Because all real-world data is normal",
+      "Because of the central limit theorem: the mean of independent samples tends to a normal distribution, whatever the original distribution",
+      "Because it has a single parameter",
+      "Because it is bounded between 0 and 1"
+    ],
+    "answer": 1,
+    "explanation": "The **central limit theorem** justifies using the normal distribution for means, errors and confidence intervals, even when the population is not normal.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-003",
+    "theme": "regression",
+    "question": "Which of these tools is **not** used to check the normality of a variable?",
+    "choices": [
+      "The quantile-quantile plot (Q-Q plot)",
+      "The Shapiro-Wilk test",
+      "The Durbin-Watson test",
+      "Skewness and kurtosis"
+    ],
+    "answer": 2,
+    "explanation": "Durbin-Watson tests the **autocorrelation of residuals**, not normality. Histogram, Q-Q plot, skewness/kurtosis, Shapiro-Wilk or Kolmogorov-Smirnov are used for normality.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-004",
+    "theme": "regression",
+    "question": "What is the closed-form solution (normal equation) of least squares?",
+    "choices": [
+      "β = (XᵀX)⁻¹ Xᵀ y",
+      "β = Xᵀ y",
+      "β = (X Xᵀ)⁻¹ y",
+      "β = X⁻¹ y"
+    ],
+    "answer": 0,
+    "explanation": "Set the gradient of the sum of squared errors to zero. In practice, scikit-learn uses a decomposition (SVD, QR) rather than an explicit inversion, which is costly and unstable when XᵀX is ill-conditioned.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-005",
+    "theme": "regression",
+    "question": "What is the difference between plain gradient descent and stochastic gradient descent (SGD)?",
+    "choices": [
+      "SGD does not use a learning rate",
+      "SGD estimates the gradient on a single example or a mini-batch instead of the whole training set at each update",
+      "SGD always converges to the global minimum",
+      "SGD only applies to neural networks"
+    ],
+    "answer": 1,
+    "explanation": "The full gradient requires a pass over all the data per update. SGD (or mini-batch) makes frequent, noisy updates that are much faster on large datasets.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-006",
+    "theme": "regression",
+    "question": "Which of these metrics is **not** a regression metric?",
+    "choices": [
+      "RMSE",
+      "MAE",
+      "F1-score",
+      "Adjusted R²"
+    ],
+    "answer": 2,
+    "explanation": "The F1-score combines precision and recall: it is a **classification** metric. MSE/RMSE, MAE, R² and adjusted R² evaluate numeric predictions.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-007",
+    "theme": "regression",
+    "question": "Between RMSE and MAE, which one penalizes large errors (outliers) more?",
+    "choices": [
+      "MAE, because it uses the absolute value",
+      "RMSE, because the errors are squared before being averaged",
+      "Both in the same way",
+      "Neither is sensitive to outliers"
+    ],
+    "answer": 1,
+    "explanation": "Squaring amplifies large errors: RMSE is dominated by outliers, MAE is more robust. The choice depends on the business cost of a big error.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-008",
+    "theme": "regression",
+    "question": "As the complexity of a model increases, what happens to bias and variance?",
+    "choices": [
+      "Bias increases, variance decreases",
+      "Bias decreases, variance increases",
+      "Both decrease",
+      "Both increase"
+    ],
+    "answer": 1,
+    "explanation": "Expected error = bias² + variance + irreducible noise. A more flexible model fits the data better (bias decreases) but becomes sensitive to the sample (variance increases): this is **overfitting**.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-009",
+    "theme": "regression",
+    "question": "You predict house prices, whose distribution is highly skewed with a few extreme values. What is the most classic preprocessing of the target?",
+    "choices": [
+      "Standardize the prices (mean 0, standard deviation 1)",
+      "Apply a logarithmic transformation to the target",
+      "Replace the prices by their rank",
+      "Do nothing: linear regression handles skewness"
+    ],
+    "answer": 1,
+    "explanation": "The log compresses the tail, brings the target closer to a normal distribution and makes the errors multiplicative (in %). Go back to the original scale with `exp` to interpret.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-010",
+    "theme": "regression",
+    "question": "Your features are x, y and z = x + y (exactly). What happens to a linear regression solved by the normal equation?",
+    "choices": [
+      "Nothing special, z brings additional information",
+      "XᵀX is singular (not invertible): perfect collinearity, the coefficients are not identifiable",
+      "The model becomes non-linear",
+      "The residuals are no longer normal"
+    ],
+    "answer": 1,
+    "explanation": "A column that is a linear combination of the others makes the matrix rank-deficient. With noise (z ≈ x + y), this is **multicollinearity**: unstable coefficients, handled by feature selection, PCA or L2 regularization.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-011",
+    "theme": "validation",
+    "question": "What is overfitting?",
+    "choices": [
+      "The model is too simple to capture the structure of the data",
+      "The model performs very well on the training set but generalizes poorly to new data",
+      "The model takes too long to train",
+      "The model has too few parameters"
+    ],
+    "answer": 1,
+    "explanation": "The model has memorized the noise of the sample. Remedies: more data, regularization, a simpler model, cross-validation, early stopping.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-012",
+    "theme": "validation",
+    "question": "Why split the data into three sets: training, validation and test?",
+    "choices": [
+      "To train three different models",
+      "So that the test set gives an unbiased estimate, never used to choose the hyperparameters (that is the validation set's role)",
+      "Because the algorithms require three files",
+      "To speed up training"
+    ],
+    "answer": 1,
+    "explanation": "If you tune the hyperparameters on the test set, its score becomes optimistic. The validation set is for the choices (early stopping, hyperparameters); the test set is used only once, at the end.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-013",
+    "theme": "validation",
+    "question": "In K-fold cross-validation, how many times does each observation serve as validation data?",
+    "choices": [
+      "K times",
+      "K − 1 times",
+      "Exactly once",
+      "Never: validation uses a separate set"
+    ],
+    "answer": 2,
+    "explanation": "Each fold is used once as validation, the other K−1 for training: you get K scores and take their mean (and standard deviation).",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-014",
+    "theme": "validation",
+    "question": "Why is classic K-fold cross-validation (random shuffle) unsuitable for time series?",
+    "choices": [
+      "Because time series are too small",
+      "Because it trains on data that comes after the data it validates on: information leaks from the future",
+      "Because K must equal the length of the series",
+      "It is suitable, there is no problem"
+    ],
+    "answer": 1,
+    "explanation": "The time order must be respected: validate with **rolling or expanding windows** (`TimeSeriesSplit`), where the validation data always comes after the training data.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-015",
+    "theme": "validation",
+    "question": "What is the main drawback of a very large K (up to leave-one-out) in cross-validation?",
+    "choices": [
+      "The estimate is strongly biased",
+      "The computational cost explodes (K trainings) and the variance of the estimate can increase",
+      "The test set disappears",
+      "The folds are no longer disjoint"
+    ],
+    "answer": 1,
+    "explanation": "K = 5 or 10 is the usual compromise: enough models for a stable estimate, a large enough validation set, a reasonable cost.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-016",
+    "theme": "validation",
+    "question": "You standardize every column (mean/standard deviation computed on **all** the data) before splitting into train and test. What is the problem?",
+    "choices": [
+      "None, standardization has no effect on the evaluation",
+      "Data leakage: the test statistics influenced the preprocessing; the scaler must be fitted on the training set only",
+      "Standardization must happen after training",
+      "Trees require non-standardized data"
+    ],
+    "answer": 1,
+    "explanation": "Any preprocessing fitted on the data (scaler, imputation, target encoding, feature selection) must be learned on the training set only, for instance through a scikit-learn `Pipeline`.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-017",
+    "theme": "classification",
+    "question": "Is logistic regression a linear model?",
+    "choices": [
+      "No, because of the sigmoid",
+      "Yes: the logit (log-odds) is a linear combination of the features, and the decision boundary is a hyperplane",
+      "Yes, but only with two features",
+      "No, it is a tree-based model"
+    ],
+    "answer": 1,
+    "explanation": "It is a **generalized linear model**: the sigmoid only turns the linear output into a probability. A weight is interpreted as a change in log-odds per unit.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-018",
+    "theme": "classification",
+    "question": "What does the sigmoid function σ(x) = 1 / (1 + e⁻ˣ) do?",
+    "choices": [
+      "It centers and scales the data",
+      "It squashes any real number into the interval (0, 1), usable as a probability",
+      "It returns −1 or +1",
+      "It computes the distance to the hyperplane"
+    ],
+    "answer": 1,
+    "explanation": "σ(0) = 0.5; σ(x) → 1 as x → +∞ and → 0 as x → −∞. You predict positive when σ(x) exceeds a threshold (0.5 by default, adjustable).",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-019",
+    "theme": "classification",
+    "question": "A dataset with 95% of class A and 5% of class B. What accuracy does a model that always predicts A get?",
+    "choices": [
+      "5%",
+      "50%",
+      "95%",
+      "It cannot be computed"
+    ],
+    "answer": 2,
+    "explanation": "Accuracy is misleading on **imbalanced** classes: this useless model scores 95%. Look at precision, recall, F1, PR-AUC, or the confusion matrix.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-020",
+    "theme": "classification",
+    "question": "What is the formula of precision?",
+    "choices": [
+      "TP / (TP + FN)",
+      "TP / (TP + FP)",
+      "(TP + TN) / total",
+      "TN / (TN + FP)"
+    ],
+    "answer": 1,
+    "explanation": "Precision = among the positive predictions, the share of true positives (\"when I say yes, am I right?\"). Recall, TP / (TP + FN), measures the share of actual positives that were found.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-021",
+    "theme": "classification",
+    "question": "What is the formula of recall (sensitivity)?",
+    "choices": [
+      "TP / (TP + FN)",
+      "TP / (TP + FP)",
+      "(TP + TN) / total",
+      "FP / (FP + TN)"
+    ],
+    "answer": 0,
+    "explanation": "Recall = share of actual positives correctly detected. Raising recall (lower threshold) generally lowers precision: this is the **precision-recall trade-off**.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-022",
+    "theme": "classification",
+    "question": "The F1-score is:",
+    "choices": [
+      "The arithmetic mean of precision and recall",
+      "The harmonic mean of precision and recall: 2PR / (P + R)",
+      "The product of precision and recall",
+      "The difference between precision and recall"
+    ],
+    "answer": 1,
+    "explanation": "The harmonic mean is pulled towards the smaller of the two values: a high F1 requires precision **and** recall to be good.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-023",
+    "theme": "classification",
+    "question": "What are the axes of the ROC curve?",
+    "choices": [
+      "Precision as a function of recall",
+      "True positive rate (TPR) as a function of false positive rate (FPR), over all thresholds",
+      "Accuracy as a function of the threshold",
+      "Recall as a function of the number of features"
+    ],
+    "answer": 1,
+    "explanation": "Each point corresponds to a decision threshold. The diagonal is random guessing; the area under the curve (AUC) summarizes the ability to **separate** the classes, independently of the threshold.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-024",
+    "theme": "classification",
+    "question": "What does a ROC AUC of 0.5 mean?",
+    "choices": [
+      "The model is perfect",
+      "The model separates the classes no better than chance",
+      "The model has 50% accuracy",
+      "The model always predicts the majority class"
+    ],
+    "answer": 1,
+    "explanation": "AUC = probability that a randomly drawn positive gets a higher score than a randomly drawn negative. 0.5 = chance, 1 = perfect separation, < 0.5 = worse than chance (inverted scores).",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-025",
+    "theme": "classification",
+    "question": "When is the area under the precision-recall curve (PR-AUC) more informative than the ROC AUC?",
+    "choices": [
+      "When the classes are balanced",
+      "When the positive class is rare and true negatives matter little",
+      "When doing regression",
+      "Never, both are equivalent"
+    ],
+    "answer": 1,
+    "explanation": "With many negatives, the FPR stays small even with numerous false positives: the ROC looks optimistic. The PR curve, which ignores true negatives, is harsher and more telling for rare-event detection.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-026",
+    "theme": "classification",
+    "question": "Why prefer one-hot encoding over label encoding (0, 1, 2, …) for a nominal categorical variable in a linear model?",
+    "choices": [
+      "One-hot uses less memory",
+      "Label encoding introduces an artificial order and distances between categories (\"4\" would be worth twice \"2\")",
+      "Linear models only accept 0s and 1s",
+      "Label encoding does not work with pandas"
+    ],
+    "answer": 1,
+    "explanation": "One-hot creates one binary column per category, with no implicit order. Drawback: high cardinality (identifiers) leads to a dimension explosion; alternatives: target encoding, embeddings, grouping.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-027",
+    "theme": "classification",
+    "question": "What is the \"curse of dimensionality\"?",
+    "choices": [
+      "The difficulty of displaying more than three dimensions",
+      "The fact that the number of observations needed grows very fast with the number of features, as the data becomes sparse",
+      "The computation time of matrices",
+      "The impossibility of having more features than observations"
+    ],
+    "answer": 1,
+    "explanation": "In high dimension, all points are \"far\" from each other: distances carry little information, models overfit. Remedies: feature selection, dimensionality reduction, regularization.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-028",
+    "theme": "regularization",
+    "question": "What is the major difference between L1 (Lasso) and L2 (Ridge) regularization?",
+    "choices": [
+      "L2 sets some coefficients exactly to zero, L1 does not",
+      "L1 sets some coefficients exactly to zero (feature selection); L2 shrinks them without zeroing them",
+      "L1 only applies to trees",
+      "There is no practical difference"
+    ],
+    "answer": 1,
+    "explanation": "The L1 penalty (sum of |w|) produces **sparse** solutions; L2 (sum of w²) has a closed-form solution and handles multicollinearity well by spreading the weight across correlated features.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-029",
+    "theme": "regularization",
+    "question": "What is Elastic Net?",
+    "choices": [
+      "L2 regularization with an adaptive learning rate",
+      "A combination of L1 and L2 penalties in the same model",
+      "A boosting method",
+      "A neural network architecture"
+    ],
+    "answer": 1,
+    "explanation": "Elastic Net combines the sparsity of Lasso with the stability of Ridge, useful when features are correlated in groups.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-030",
+    "theme": "regularization",
+    "question": "Why must features be normalized before a regularized regression (L1/L2)?",
+    "choices": [
+      "Only so that the model converges faster",
+      "Because the penalty acts on the size of the coefficients: without a common scale, large-amplitude features would be penalized differently",
+      "It is not necessary, regularization is scale-invariant",
+      "To make the residuals normal"
+    ],
+    "answer": 1,
+    "explanation": "A coefficient depends on the unit of its feature. Standardizing makes the penalty fair. Without regularization, ordinary linear regression does not need normalization.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-031",
+    "theme": "regularization",
+    "question": "How do you choose the regularization strength λ (or alpha)?",
+    "choices": [
+      "Always λ = 1",
+      "By search (grid or random) minimizing the cross-validation error",
+      "By taking the value that minimizes the training error",
+      "It is derived analytically from the number of features"
+    ],
+    "answer": 1,
+    "explanation": "The training error always decreases as λ → 0: you need an **out-of-sample** metric. `LassoCV` / `RidgeCV` automate this choice.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-032",
+    "theme": "regularization",
+    "question": "In a non-normalized linear model, how do you interpret the weight w of a feature x?",
+    "choices": [
+      "x is w times more important than the other features",
+      "A one-unit increase of x changes the prediction by w on average, all else being equal",
+      "w is the correlation between x and the target",
+      "w is the p-value of x"
+    ],
+    "answer": 1,
+    "explanation": "In logistic regression, w is the change in **log-odds**. To compare feature importance, you need normalized features (or methods like SHAP).",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-033",
+    "theme": "regularization",
+    "question": "Does a larger weight mean the feature is more important?",
+    "choices": [
+      "Yes, always",
+      "Only if the features are on the same scale (normalized)",
+      "No, never",
+      "Only for binary features"
+    ],
+    "answer": 1,
+    "explanation": "A feature expressed in millions will have a tiny coefficient for a huge effect. Comparing weights assumes comparable scales.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-034",
+    "theme": "regularization",
+    "question": "Can L2 regularization be used to select features?",
+    "choices": [
+      "Yes, it zeroes out useless coefficients",
+      "No: L2 shrinks the coefficients but does not set them exactly to zero; L1 is the one that produces zero coefficients",
+      "Yes, but only with trees",
+      "No, no regularization allows selection"
+    ],
+    "answer": 1,
+    "explanation": "You can keep the features with a non-zero coefficient after a Lasso. L2 is rather used to stabilize the model against multicollinearity.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-035",
+    "theme": "trees-ensembles",
+    "question": "Which criteria are used to choose the best split in a decision tree for classification?",
+    "choices": [
+      "Mean squared error and R²",
+      "Gini impurity and entropy (information gain)",
+      "Euclidean distance",
+      "The p-value of a Student's t-test"
+    ],
+    "answer": 1,
+    "explanation": "You choose the feature and threshold that **minimize the weighted impurity** of the two children. In regression, you minimize the variance (MSE) in the leaves.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-036",
+    "theme": "trees-ensembles",
+    "question": "Which hyperparameters of a decision tree directly limit overfitting?",
+    "choices": [
+      "The learning rate and the number of epochs",
+      "The maximum depth and the minimum number of observations per leaf",
+      "The number of hidden layers",
+      "The regularization parameter λ"
+    ],
+    "answer": 1,
+    "explanation": "An unconstrained tree can isolate every observation. Limiting `max_depth`, `min_samples_leaf`, `min_samples_split` or pruning reduces the variance.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-037",
+    "theme": "trees-ensembles",
+    "question": "What are the two sources of randomness in a random forest?",
+    "choices": [
+      "Random weight initialization and dropout",
+      "Bootstrap resampling of the observations for each tree and random selection of a subset of features at each split",
+      "Label shuffling and Gaussian noise on the features",
+      "Random choice of depth and criterion"
+    ],
+    "answer": 1,
+    "explanation": "Bootstrap (bagging) reduces variance; feature subsampling **decorrelates** the trees, which makes the averaging even more effective.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-038",
+    "theme": "trees-ensembles",
+    "question": "What is the fundamental difference between random forest and gradient boosting?",
+    "choices": [
+      "The forest uses trees, boosting uses linear models",
+      "The forest trains independent trees and averages them; boosting trains the trees sequentially, each correcting the errors of the previous ones",
+      "Boosting cannot do classification",
+      "The forest is always more accurate"
+    ],
+    "answer": 1,
+    "explanation": "Consequences: the forest parallelizes trivially and barely overfits with more trees; boosting is often more accurate but more sensitive to hyperparameters (learning rate, number of trees, depth) and to noise.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-039",
+    "theme": "trees-ensembles",
+    "question": "What is the learning rate (shrinkage) for in gradient boosting?",
+    "choices": [
+      "To choose the depth of the trees",
+      "To reduce the contribution of each new tree, which slows learning down but improves generalization (with more trees)",
+      "To speed up prediction",
+      "To normalize the features"
+    ],
+    "answer": 1,
+    "explanation": "A small rate (0.01 to 0.1) with many trees and early stopping on the validation set is the classic setting.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-040",
+    "theme": "trees-ensembles",
+    "question": "Two highly correlated features in a random forest: what is the effect on feature importance?",
+    "choices": [
+      "None, the importance is exact",
+      "The importance is shared between the two (each tree picks one or the other), each looking less important than it really is",
+      "The forest refuses to train",
+      "The first feature takes all the importance"
+    ],
+    "answer": 1,
+    "explanation": "Impurity-based importance is diluted across redundant features. Permutation importance suffers from the same problem. Grouping or removing duplicates helps interpretation.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-041",
+    "theme": "trees-ensembles",
+    "question": "Which of these models parallelizes most naturally during training?",
+    "choices": [
+      "Gradient boosting, because each tree depends on the previous one",
+      "Random forest, because its trees are independent",
+      "Logistic regression by gradient descent",
+      "No ensemble model can be parallelized"
+    ],
+    "answer": 1,
+    "explanation": "`n_jobs=-1` is enough for a forest. Boosting libraries (XGBoost, LightGBM) parallelize **inside** each tree (split search, histograms), not across trees.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-042",
+    "theme": "trees-ensembles",
+    "question": "What is the advantage of random search over grid search for tuning hyperparameters?",
+    "choices": [
+      "It guarantees finding the optimum",
+      "For the same budget, it explores more distinct values of each hyperparameter, which is effective when only a few of them really matter",
+      "It does not need validation",
+      "It is deterministic"
+    ],
+    "answer": 1,
+    "explanation": "Grid search wastes trials on hyperparameters with no effect. Bayesian optimization (Optuna, hyperopt) goes further by steering the next trials based on the previous results.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-043",
+    "theme": "neural-networks",
+    "question": "Why do we need non-linear activation functions between layers?",
+    "choices": [
+      "To speed up backpropagation",
+      "Because a stack of linear layers is still a linear function: without non-linearity, the network cannot learn complex relationships",
+      "To normalize the outputs between 0 and 1",
+      "To reduce the number of parameters"
+    ],
+    "answer": 1,
+    "explanation": "The composition of affine transformations is affine. ReLU, tanh, sigmoid, GELU… bring the non-linearity that gives deep networks their power.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-044",
+    "theme": "neural-networks",
+    "question": "What is the main problem with the sigmoid as an activation in a deep network?",
+    "choices": [
+      "It is too expensive to compute",
+      "Its derivative is almost zero for large positive or negative values: gradients vanish and the early layers stop learning",
+      "It produces negative values",
+      "It cannot be differentiated"
+    ],
+    "answer": 1,
+    "explanation": "The derivative is at most 0.25 and gets multiplied layer after layer. ReLU (gradient 1 for x > 0) mitigates this **vanishing gradient**, hence its default use in hidden layers.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-045",
+    "theme": "neural-networks",
+    "question": "How is the ReLU activation defined?",
+    "choices": [
+      "f(x) = 1 / (1 + e⁻ˣ)",
+      "f(x) = max(0, x)",
+      "f(x) = tanh(x)",
+      "f(x) = x²"
+    ],
+    "answer": 1,
+    "explanation": "Rectified Linear Unit: 0 for negatives, identity for positives. Simple, fast, non-saturating for x > 0. Drawback: \"dead\" neurons (always 0), hence the Leaky ReLU, ELU, GELU variants.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-046",
+    "theme": "neural-networks",
+    "question": "What happens if all the weights of a network are initialized to zero?",
+    "choices": [
+      "The network learns faster",
+      "All the neurons of a layer receive the same gradient and stay identical: the network cannot learn (symmetry problem)",
+      "The network becomes an optimal linear model",
+      "Nothing special"
+    ],
+    "answer": 1,
+    "explanation": "Random initialization (Xavier/Glorot, He) **breaks the symmetry** and keeps activations and gradients at a reasonable scale. Biases, however, can be initialized to zero.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-047",
+    "theme": "neural-networks",
+    "question": "How does dropout work?",
+    "choices": [
+      "The least useful neurons are permanently removed",
+      "At each training step, each neuron is deactivated with probability p; at inference all are active (outputs rescaled)",
+      "Examples are randomly removed from the mini-batch",
+      "Gradients that are too large are set to zero"
+    ],
+    "answer": 1,
+    "explanation": "The network cannot rely on a few specific neurons: a **regularization** effect, close to an ensemble of sub-networks. Typically p = 0.2 to 0.5.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-048",
+    "theme": "neural-networks",
+    "question": "What is the effect of a learning rate that is too large?",
+    "choices": [
+      "Training is slower but more accurate",
+      "The loss oscillates or diverges: the steps \"jump\" over the minimum",
+      "The model overfits",
+      "The gradients vanish"
+    ],
+    "answer": 1,
+    "explanation": "Too small: very slow convergence, risk of getting stuck. Common practice: start around 1e-3 (Adam) or 1e-2 (SGD), then **decay** (step, cosine, warm-up) over the epochs.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-049",
+    "theme": "neural-networks",
+    "question": "When should you stop training a neural network (early stopping)?",
+    "choices": [
+      "When the training loss reaches zero",
+      "When the validation loss (or metric) stops improving for several epochs, keeping the weights of the best point",
+      "After exactly 100 epochs",
+      "When the learning rate becomes zero"
+    ],
+    "answer": 1,
+    "explanation": "The training loss always decreases; it is the validation set that signals the onset of overfitting. **Checkpointing** saves the weights of the best point so they can be restored.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-050",
+    "theme": "neural-networks",
+    "question": "What is the main difference between Adam and SGD?",
+    "choices": [
+      "Adam does not use a gradient",
+      "Adam adapts the step of each parameter from moving averages of the gradient (1st moment) and of its square (2nd moment); SGD applies the same step to all",
+      "SGD only works on small datasets",
+      "Adam does not need a learning rate"
+    ],
+    "answer": 1,
+    "explanation": "Adam converges fast and needs little tuning; SGD with momentum sometimes converges to solutions that generalize better (vision). The choice is validated empirically.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-051",
+    "theme": "neural-networks",
+    "question": "Why use convolutional layers rather than fully connected layers on images?",
+    "choices": [
+      "Convolutions are more accurate on every type of data",
+      "They exploit locality (a pixel depends mostly on its neighbors) and share the weights of a kernel across the whole image: far fewer parameters, translation invariance",
+      "They do not need an activation function",
+      "They replace backpropagation"
+    ],
+    "answer": 1,
+    "explanation": "A dense layer on a 224×224×3 image would have millions of weights per neuron. A 3×3 kernel reused everywhere has 27 per channel. Stacking layers captures increasingly abstract patterns.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-052",
+    "theme": "neural-networks",
+    "question": "A 2×2 max pooling with stride 2 on a 32×32 feature map produces a map of size:",
+    "choices": [
+      "32×32",
+      "16×16",
+      "30×30",
+      "8×8"
+    ],
+    "answer": 1,
+    "explanation": "Each 2×2 block is replaced by its maximum: the spatial dimensions are **halved**. Pooling reduces computation and brings a small translation invariance.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-053",
+    "theme": "neural-networks",
+    "question": "In transfer learning with a network pre-trained on ImageNet, which strategy is most common with little data?",
+    "choices": [
+      "Retrain all the weights from scratch",
+      "Freeze the representation layers (or give them a small learning rate) and train a new classification head",
+      "Keep only the first layer",
+      "Increase the learning rate of all the layers"
+    ],
+    "answer": 1,
+    "explanation": "The early layers learn generic, reusable patterns (edges, textures). You fine-tune more layers when you have more data.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-054",
+    "theme": "nlp",
+    "question": "What information does the bag-of-words model lose?",
+    "choices": [
+      "Word frequency",
+      "Word order and therefore context",
+      "Document length",
+      "The vocabulary"
+    ],
+    "answer": 1,
+    "explanation": "Each document becomes a vector of counts: \"this film is good, not bad\" and \"this film is bad, not good\" are identical. N-grams or sequential models recover part of the order.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-055",
+    "theme": "nlp",
+    "question": "What does TF-IDF weighting do compared to plain word counts?",
+    "choices": [
+      "It removes rare words",
+      "It lowers the weight of words present in many documents (\"the\", \"of\") and highlights the words distinctive of a document",
+      "It turns words into dense vectors",
+      "It corrects spelling"
+    ],
+    "answer": 1,
+    "explanation": "TF = frequency in the document; IDF = log(N / number of documents containing the word). A ubiquitous word has an IDF close to 0.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-056",
+    "theme": "nlp",
+    "question": "What is an n-gram?",
+    "choices": [
+      "A word of n letters",
+      "A sequence of n consecutive items (words or characters) used as a unit of representation",
+      "A document of n words",
+      "A vector of dimension n"
+    ],
+    "answer": 1,
+    "explanation": "Bigrams (\"not good\") capture a bit of the context that bag-of-words loses, at the cost of a much larger and sparser vocabulary; n is often limited to 2 or 3.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-057",
+    "theme": "nlp",
+    "question": "What is a word embedding?",
+    "choices": [
+      "A one-hot encoding of the vocabulary",
+      "A dense, low-dimensional vector per word, learned so that words with close meanings have close vectors",
+      "The list of synonyms of a word",
+      "A normalized TF-IDF count"
+    ],
+    "answer": 1,
+    "explanation": "Word2Vec (CBOW, skip-gram), GloVe, fastText learn these vectors from contexts. For a sentence, you can average the vectors (possibly IDF-weighted) or use a sequential/Transformer model.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-058",
+    "theme": "nlp",
+    "question": "Text classification with bag-of-words features (very numerous and sparse): logistic regression or gradient boosting?",
+    "choices": [
+      "Gradient boosting, always more accurate",
+      "Logistic regression: fast and effective on very high-dimensional sparse matrices, where trees are slow and ill-suited",
+      "Neither works",
+      "Boosting, because it handles missing values better"
+    ],
+    "answer": 1,
+    "explanation": "With dense, low-dimensional **embeddings**, boosting (or a neural network) becomes relevant because the relationships are non-linear.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-059",
+    "theme": "clustering",
+    "question": "What is the correct sequence of the K-means algorithm?",
+    "choices": [
+      "Choose K centers, assign each point to the nearest center, recompute each center as the mean of its points, repeat until stable",
+      "Iteratively merge the two closest points",
+      "Sort the points then cut into K equal parts",
+      "Train a classifier on random labels"
+    ],
+    "answer": 0,
+    "explanation": "K-means minimizes the sum of squared within-cluster distances. It depends on the initialization (hence `k-means++` and several restarts) and assumes convex clusters of comparable size.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-060",
+    "theme": "clustering",
+    "question": "Which methods help choose K for K-means?",
+    "choices": [
+      "The ROC curve",
+      "The elbow method (within-cluster inertia as a function of K) and the silhouette score",
+      "The Shapiro-Wilk test",
+      "Cross-validation on accuracy"
+    ],
+    "answer": 1,
+    "explanation": "Without labels, you look at the structure: inertia always decreases with K (you look for the \"elbow\"), the silhouette compares cohesion and separation (maximum = good K). Domain knowledge remains decisive.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-061",
+    "theme": "clustering",
+    "question": "What are the two parameters of DBSCAN and what is its advantage over K-means?",
+    "choices": [
+      "K and the number of iterations; it is faster",
+      "ε (neighborhood radius) and minPts (minimum points); it does not require the number of clusters, finds arbitrary shapes and isolates noise",
+      "Depth and criterion; it is supervised",
+      "Learning rate and momentum; it always converges"
+    ],
+    "answer": 1,
+    "explanation": "DBSCAN groups densely connected points. Drawbacks: sensitive to ε, struggles with very different densities, more expensive than K-means on large volumes.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-062",
+    "theme": "clustering",
+    "question": "What is unsupervised learning?",
+    "choices": [
+      "Learning without data",
+      "Finding structure (groups, dimensions, anomalies) in data without labels",
+      "Learning with noisy labels",
+      "Reinforcement learning"
+    ],
+    "answer": 1,
+    "explanation": "Clustering, dimensionality reduction, anomaly detection, density estimation. No \"ground truth\": evaluation relies on internal criteria or business usefulness.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-063",
+    "theme": "dimensionality-reduction",
+    "question": "What are the principal components in PCA?",
+    "choices": [
+      "The original features most correlated with the target",
+      "Orthogonal directions, linear combinations of the features, ordered by decreasing explained variance",
+      "The densest clusters",
+      "The features selected by a Lasso"
+    ],
+    "answer": 1,
+    "explanation": "You project onto the first components to reduce the dimension while keeping most of the variance (chosen by explained-variance ratio or scree plot). Standardizing beforehand is generally necessary.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-064",
+    "theme": "dimensionality-reduction",
+    "question": "How does the singular value decomposition (SVD) factorize a matrix X?",
+    "choices": [
+      "X = L + Σ + Rᵀ",
+      "X = U Σ Vᵀ, with U and V orthogonal and Σ diagonal (singular values)",
+      "X = Xᵀ X",
+      "X = P D P⁻¹ only if X is square"
+    ],
+    "answer": 1,
+    "explanation": "PCA is obtained by SVD of the centered matrix: the squared singular values are proportional to the variances of the components. Also used for collaborative filtering and compression.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-065",
+    "theme": "dimensionality-reduction",
+    "question": "Which of these methods is **not** a dimensionality reduction technique?",
+    "choices": [
+      "t-SNE",
+      "Autoencoder",
+      "Grid search",
+      "Linear discriminant analysis (LDA)"
+    ],
+    "answer": 2,
+    "explanation": "Grid search tunes hyperparameters. t-SNE/UMAP are mostly for visualization (non-linear, non-invertible), PCA/LDA/SVD are linear, autoencoders learn a compressed representation.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-066",
+    "theme": "recommender-systems",
+    "question": "What is collaborative filtering?",
+    "choices": [
+      "Recommending the best-selling items to everyone",
+      "Predicting a user's taste for an item from the ratings of similar users (or similar items), without describing the items' content",
+      "Recommending based on the items' attributes",
+      "Filtering fraudulent reviews"
+    ],
+    "answer": 1,
+    "explanation": "It only needs a users × items matrix (ratings, clicks). Limits: sparse data, **cold start**, rating bias (center per user).",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-067",
+    "theme": "recommender-systems",
+    "question": "What is the cold start problem?",
+    "choices": [
+      "The system is slow on first load",
+      "Impossible to recommend for a new user (no computable similarity) or a new item (no rating)",
+      "The servers must warm up the cache",
+      "The model must be retrained every night"
+    ],
+    "answer": 1,
+    "explanation": "Solutions: content-based filtering (item attributes) for new items, demographic profile or questionnaire for new users, popular recommendations by default.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-068",
+    "theme": "recommender-systems",
+    "question": "For the query \"car\", your search engine returns 5 results of which 2 are relevant; there are 3 relevant products in total. What are precision@5 and recall@5?",
+    "choices": [
+      "40% and 66.7%",
+      "66.7% and 40%",
+      "40% and 40%",
+      "20% and 100%"
+    ],
+    "answer": 0,
+    "explanation": "Precision@k = relevant in the top k / k = 2/5. Recall@k = relevant in the top k / existing relevant = 2/3. Other ranking metrics (MAP@k, NDCG) take the position into account.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-069",
+    "theme": "time-series",
+    "question": "Why remove the trend (or model it explicitly) from a time series?",
+    "choices": [
+      "To reduce the size of the data",
+      "Because many methods (ARIMA, autocorrelations) assume stationarity: constant mean and variance over time",
+      "Because the trend is always noise",
+      "To make the series periodic"
+    ],
+    "answer": 1,
+    "explanation": "Differencing, regression on time, Holt smoothing (trend) or Holt-Winters (trend + seasonality) are classic ways to obtain a stationary series.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-070",
+    "theme": "time-series",
+    "question": "What is an autoregressive (AR) model?",
+    "choices": [
+      "A model that predicts y from external variables only",
+      "A regression where y_t is explained by its own past values y_{t−1}, y_{t−2}, …",
+      "A recurrent neural network",
+      "A moving average of the errors"
+    ],
+    "answer": 1,
+    "explanation": "The lags act as explanatory variables; the partial autocorrelation helps choose the order. MA models the past errors, ARIMA combines both with differencing.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-071",
+    "theme": "time-series",
+    "question": "What is the main problem of tree-based models (forest, boosting) for forecasting a series with an increasing trend?",
+    "choices": [
+      "They are too slow",
+      "They cannot extrapolate: their predictions stay within the range of values seen during training",
+      "They require stationary data by construction",
+      "They do not handle dates"
+    ],
+    "answer": 1,
+    "explanation": "A leaf returns an average of training values. Remedies: remove the trend beforehand, predict differences or ratios, combine with a linear model.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  },
+  {
+    "id": "qcm-th-072",
+    "theme": "time-series",
+    "question": "How does time series forecasting differ from a classic regression?",
+    "choices": [
+      "It never uses explanatory variables",
+      "The observations are ordered and dependent in time: you exploit autocorrelation, trend and seasonality, and validation must respect the time order",
+      "It only works with neural networks",
+      "It does not need training data"
+    ],
+    "answer": 1,
+    "explanation": "You can still add exogenous variables (price, weather): this is called causal forecasting. The independence assumption of classic regression no longer holds.",
+    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
+  }
+]

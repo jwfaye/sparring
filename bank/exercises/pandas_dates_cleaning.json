@@ -1,0 +1,305 @@
+[
+  {
+    "id": "pd-dates-001",
+    "title": "Logins per day of the week",
+    "theme": "dates",
+    "difficulty": "easy",
+    "language": "python",
+    "statement": "The DataFrame `logs` holds `user` and `timestamp` (string `YYYY-MM-DD HH:MM:SS`).\n\nWrite `per_weekday(logs)` returning a DataFrame with two columns:\n\n- `weekday`: day-of-week number, from 0 (Monday) to 6 (Sunday)\n- `n`: number of `logs` rows on that day\n\nAll 7 days must appear, even with `n = 0`, sorted by `weekday`, index reset.\n\nExample with the setup data:\n\n```\n   weekday  n\n0        0  3\n1        1  1\n2        2  0\n3        3  0\n4        4  0\n5        5  1\n6        6  1\n```\n",
+    "setup": "import pandas as pd\n\nlogs = pd.DataFrame({\n    \"user\": [\"u1\", \"u2\", \"u1\", \"u3\", \"u2\", \"u1\"],\n    \"timestamp\": [\"2024-03-04 08:12:00\", \"2024-03-04 09:40:11\", \"2024-03-05 18:00:00\",\n                  \"2024-03-09 10:00:00\", \"2024-03-10 22:15:00\", \"2024-03-11 07:59:59\"],\n})\n",
+    "starter": "import pandas as pd\n\n\ndef per_weekday(logs):\n    ...\n",
+    "run_call": "per_weekday(logs)",
+    "tests": [
+      {
+        "name": "setup data",
+        "code": "expected = pd.DataFrame({\"weekday\": list(range(7)), \"n\": [3, 1, 0, 0, 0, 1, 1]})\nassert_eq(per_weekday(logs), expected)\n"
+      },
+      {
+        "name": "Sundays only",
+        "code": "l2 = pd.DataFrame({\"user\": [\"a\", \"b\"], \"timestamp\": [\"2024-06-02 00:00:00\", \"2024-06-09 23:59:59\"]})\nexpected = pd.DataFrame({\"weekday\": list(range(7)), \"n\": [0, 0, 0, 0, 0, 0, 2]})\nassert_eq(per_weekday(l2), expected)\n"
+      }
+    ],
+    "hints": [
+      "`pd.to_datetime(...).dt.dayofweek` gives 0 for Monday.",
+      "`value_counts().reindex(range(7), fill_value=0)` fills in the missing days."
+    ],
+    "solution": "import pandas as pd\n\n\ndef per_weekday(logs):\n    days = pd.to_datetime(logs[\"timestamp\"]).dt.dayofweek\n    n = days.value_counts().reindex(range(7), fill_value=0)\n    return pd.DataFrame({\"weekday\": range(7), \"n\": n.to_numpy()})\n"
+  },
+  {
+    "id": "pd-dates-002",
+    "title": "Daily sales, missing days included",
+    "theme": "dates",
+    "difficulty": "medium",
+    "language": "python",
+    "statement": "The DataFrame `sales` holds `date` (string `YYYY-MM-DD`, possibly several rows per day,\nin any order) and `amount`.\n\nWrite `daily(sales)` returning a DataFrame with one row **per calendar day** between the\nfirst and the last date, both included:\n\n- `date`: datetime type\n- `amount`: total of the day, **0** for days without sales\n\nSorted by date ascending, index reset.\n\nExample with the setup data:\n\n```\n        date  amount\n0 2024-01-01      15\n1 2024-01-02       0\n2 2024-01-03       7\n3 2024-01-04       0\n4 2024-01-05       1\n```\n",
+    "setup": "import pandas as pd\n\nsales = pd.DataFrame({\n    \"date\": [\"2024-01-03\", \"2024-01-01\", \"2024-01-05\", \"2024-01-01\"],\n    \"amount\": [7, 10, 1, 5],\n})\n",
+    "starter": "import pandas as pd\n\n\ndef daily(sales):\n    ...\n",
+    "run_call": "daily(sales)",
+    "tests": [
+      {
+        "name": "setup data",
+        "code": "expected = pd.DataFrame({\"date\": pd.to_datetime([\"2024-01-01\", \"2024-01-02\", \"2024-01-03\", \"2024-01-04\", \"2024-01-05\"]),\n                         \"amount\": [15, 0, 7, 0, 1]})\nassert_eq(daily(sales), expected)\n"
+      },
+      {
+        "name": "month boundary",
+        "code": "s2 = pd.DataFrame({\"date\": [\"2024-03-01\", \"2024-02-28\"], \"amount\": [2.5, 1.0]})\nexpected = pd.DataFrame({\"date\": pd.to_datetime([\"2024-02-28\", \"2024-02-29\", \"2024-03-01\"]), \"amount\": [1.0, 0.0, 2.5]})\nassert_eq(daily(s2), expected)\n"
+      }
+    ],
+    "hints": [
+      "With a datetime index, `resample(\"D\").sum()` creates the missing days.",
+      "Remember to aggregate the rows of the same day, before or during the resample."
+    ],
+    "solution": "import pandas as pd\n\n\ndef daily(sales):\n    s = sales.assign(date=pd.to_datetime(sales[\"date\"])).set_index(\"date\")[\"amount\"]\n    s = s.resample(\"D\").sum()\n    return s.rename_axis(\"date\").reset_index()\n"
+  },
+  {
+    "id": "pd-dates-003",
+    "title": "Rolling mean over three readings",
+    "theme": "dates",
+    "difficulty": "medium",
+    "language": "python",
+    "statement": "The DataFrame `readings` holds `ts` (datetime) and `value`. The rows **are not in chronological\norder**.\n\nWrite `smooth(readings)` returning a DataFrame sorted by `ts` ascending, index reset, with the\ncolumns `ts`, `value`, `mean3` where `mean3` is the mean of the current value and of the\n**two previous readings in time** (`NaN` for the first two readings).\n\nExample with the setup data:\n\n```\n                   ts  value  mean3\n0 2024-01-01 08:00:00    3.0    NaN\n1 2024-01-01 09:00:00    2.0    NaN\n2 2024-01-01 10:00:00    1.0    2.0\n3 2024-01-01 11:00:00    6.0    3.0\n4 2024-01-01 12:00:00    8.0    5.0\n```\n",
+    "setup": "import pandas as pd\n\nreadings = pd.DataFrame({\n    \"ts\": pd.to_datetime([\"2024-01-01 10:00\", \"2024-01-01 08:00\", \"2024-01-01 09:00\", \"2024-01-01 11:00\", \"2024-01-01 12:00\"]),\n    \"value\": [1.0, 3.0, 2.0, 6.0, 8.0],\n})\n",
+    "starter": "import pandas as pd\n\n\ndef smooth(readings):\n    ...\n",
+    "run_call": "smooth(readings)",
+    "tests": [
+      {
+        "name": "setup data",
+        "code": "expected = pd.DataFrame({\n    \"ts\": pd.to_datetime([\"2024-01-01 08:00\", \"2024-01-01 09:00\", \"2024-01-01 10:00\", \"2024-01-01 11:00\", \"2024-01-01 12:00\"]),\n    \"value\": [3.0, 2.0, 1.0, 6.0, 8.0],\n    \"mean3\": [float(\"nan\"), float(\"nan\"), 2.0, 3.0, 5.0],\n})\nassert_eq(smooth(readings), expected)\n"
+      },
+      {
+        "name": "misleading input order",
+        "code": "r2 = pd.DataFrame({\"ts\": pd.to_datetime([\"2024-02-02\", \"2024-02-01\", \"2024-02-04\", \"2024-02-03\"]), \"value\": [10.0, 20.0, 40.0, 80.0]})\nexpected = pd.DataFrame({\n    \"ts\": pd.to_datetime([\"2024-02-01\", \"2024-02-02\", \"2024-02-03\", \"2024-02-04\"]),\n    \"value\": [20.0, 10.0, 80.0, 40.0],\n    \"mean3\": [float(\"nan\"), float(\"nan\"), 110 / 3, 130 / 3],\n})\nassert_eq(smooth(r2), expected)\n"
+      }
+    ],
+    "hints": [
+      "`rolling(3).mean()` works in row order, not in time order: sort first."
+    ],
+    "solution": "import pandas as pd\n\n\ndef smooth(readings):\n    out = readings.sort_values(\"ts\").reset_index(drop=True)\n    out[\"mean3\"] = out[\"value\"].rolling(3).mean()\n    return out\n"
+  },
+  {
+    "id": "pd-dates-004",
+    "title": "Counting user sessions",
+    "theme": "dates",
+    "difficulty": "hard",
+    "language": "python",
+    "statement": "The DataFrame `logs` holds `user` and `ts` (datetime), in any order.\n\nA **session** is a run of events of the same user; a new event opens a new session when more\nthan **30 minutes** (strictly) have elapsed since that user's previous event. A user's first\nevent always opens a session.\n\nWrite `sessions(logs)` returning a DataFrame `user`, `n_sessions`, sorted by `user`, index reset.\n\nExample with the setup data:\n\n```\n  user  n_sessions\n0   u1           3\n1   u2           2\n2   u3           1\n```\n",
+    "setup": "import pandas as pd\n\nlogs = pd.DataFrame({\n    \"user\": [\"u1\", \"u2\", \"u1\", \"u3\", \"u1\", \"u2\", \"u1\", \"u2\", \"u1\"],\n    \"ts\": pd.to_datetime([\"2024-01-01 08:50\", \"2024-01-01 09:00\", \"2024-01-01 08:00\", \"2024-01-01 15:00\",\n                          \"2024-01-01 12:00\", \"2024-01-01 09:30\", \"2024-01-01 08:10\", \"2024-01-01 10:01\",\n                          \"2024-01-01 09:15\"]),\n})\n",
+    "starter": "import pandas as pd\n\n\ndef sessions(logs):\n    ...\n",
+    "run_call": "sessions(logs)",
+    "tests": [
+      {
+        "name": "setup data",
+        "code": "expected = pd.DataFrame({\"user\": [\"u1\", \"u2\", \"u3\"], \"n_sessions\": [3, 2, 1]})\nassert_eq(sessions(logs), expected)\n"
+      },
+      {
+        "name": "generated dataset, compared with a direct computation",
+        "code": "import random\nrng = random.Random(42)\nrows = []\nfor u in [\"a\", \"b\", \"c\", \"d\"]:\n    t = pd.Timestamp(\"2024-05-01 00:00\")\n    for _ in range(rng.randint(1, 12)):\n        t = t + pd.Timedelta(minutes=rng.choice([5, 10, 29, 30, 31, 45, 90]))\n        rows.append((u, t))\nrng.shuffle(rows)\nl2 = pd.DataFrame(rows, columns=[\"user\", \"ts\"])\nwanted = {}\nfor u in sorted(set(r[0] for r in rows)):\n    ts = sorted(r[1] for r in rows if r[0] == u)\n    n = 1 + sum(1 for a, b in zip(ts, ts[1:]) if (b - a) > pd.Timedelta(minutes=30))\n    wanted[u] = n\nexpected = pd.DataFrame({\"user\": list(wanted), \"n_sessions\": list(wanted.values())})\nassert_eq(sessions(l2), expected)\n"
+      }
+    ],
+    "hints": [
+      "Sort by (user, ts), then `groupby(\"user\")[\"ts\"].diff()` gives the gap with the same user's previous event.",
+      "A session starts where the gap is `NaT` or > 30 min: counting those starts per user is enough."
+    ],
+    "solution": "import pandas as pd\n\n\ndef sessions(logs):\n    s = logs.sort_values([\"user\", \"ts\"])\n    gap = s.groupby(\"user\")[\"ts\"].diff()\n    start = gap.isna() | (gap > pd.Timedelta(minutes=30))\n    out = start.groupby(s[\"user\"]).sum().rename(\"n_sessions\").reset_index()\n    return out.sort_values(\"user\").reset_index(drop=True)\n"
+  },
+  {
+    "id": "pd-nan-001",
+    "title": "Impute with the sensor's median",
+    "theme": "nan",
+    "difficulty": "easy",
+    "language": "python",
+    "statement": "The DataFrame `measurements` holds `sensor` and `value`, with missing values.\n\nWrite `impute(measurements)` returning a **copy** where each `NaN` of `value` is replaced by the\n**median** of the known values of the same sensor. If a sensor has no known value, its `NaN` values\nstay `NaN`. Same order, same index, same columns; `measurements` is not modified.\n\nExample with the setup data:\n\n```\n  sensor  value\n0     s1    1.0\n1     s2    5.0\n2     s1    3.0\n3     s1    3.0\n4     s2    5.0\n5     s1   10.0\n```\n",
+    "setup": "import pandas as pd\nimport numpy as np\n\nmeasurements = pd.DataFrame({\n    \"sensor\": [\"s1\", \"s2\", \"s1\", \"s1\", \"s2\", \"s1\"],\n    \"value\": [1.0, np.nan, np.nan, 3.0, 5.0, 10.0],\n})\n",
+    "starter": "import pandas as pd\n\n\ndef impute(measurements):\n    ...\n",
+    "run_call": "impute(measurements)",
+    "tests": [
+      {
+        "name": "setup data",
+        "code": "expected = pd.DataFrame({\"sensor\": [\"s1\", \"s2\", \"s1\", \"s1\", \"s2\", \"s1\"], \"value\": [1.0, 5.0, 3.0, 3.0, 5.0, 10.0]})\nassert_eq(impute(measurements), expected)\n"
+      },
+      {
+        "name": "sensor without any known value, non-standard index",
+        "code": "m2 = pd.DataFrame({\"sensor\": [\"x\", \"y\", \"x\", \"y\"], \"value\": [float(\"nan\"), 2.0, float(\"nan\"), 4.0]}, index=[9, 8, 7, 6])\nexpected = pd.DataFrame({\"sensor\": [\"x\", \"y\", \"x\", \"y\"], \"value\": [float(\"nan\"), 2.0, float(\"nan\"), 4.0]}, index=[9, 8, 7, 6])\nassert_eq(impute(m2), expected)\n"
+      },
+      {
+        "name": "input left unchanged",
+        "code": "before = measurements.copy()\nimpute(measurements)\nassert_eq(measurements, before, \"measurements was modified.\")\n"
+      }
+    ],
+    "hints": [
+      "`fillna` accepts an aligned Series: `groupby(\"sensor\")[\"value\"].transform(\"median\")`."
+    ],
+    "solution": "import pandas as pd\n\n\ndef impute(measurements):\n    out = measurements.copy()\n    out[\"value\"] = out[\"value\"].fillna(out.groupby(\"sensor\")[\"value\"].transform(\"median\"))\n    return out\n"
+  },
+  {
+    "id": "pd-nan-002",
+    "title": "Disguised missing values",
+    "theme": "nan",
+    "difficulty": "medium",
+    "language": "python",
+    "statement": "The DataFrame `customers` comes from a badly cleaned export: missing values are encoded in\nseveral ways: empty string `\"\"`, `\"NA\"`, `\"n/a\"`, and the sentinel `-999` (number or string).\n\nColumns: `age` (strings), `city` (strings), `score` (numbers).\n\nWrite `normalize(customers)` returning a copy where all those values become `NaN`, with\n`age` and `score` converted to **float**. Same order, same index, same columns.\n\nExample with the setup data:\n\n```\n    age   city  score\n0  34.0  Paris    1.5\n1   NaN    NaN    NaN\n2   NaN    NaN    2.0\n3   NaN   Lyon    NaN\n4  41.0   Lyon    3.5\n```\n",
+    "setup": "import pandas as pd\nimport numpy as np\n\ncustomers = pd.DataFrame({\n    \"age\": [\"34\", \"NA\", \"\", \"-999\", \"41\"],\n    \"city\": [\"Paris\", \"\", \"n/a\", \"Lyon\", \"Lyon\"],\n    \"score\": [1.5, -999.0, 2.0, np.nan, 3.5],\n})\n",
+    "starter": "import pandas as pd\nimport numpy as np\n\n\ndef normalize(customers):\n    ...\n",
+    "run_call": "normalize(customers)",
+    "tests": [
+      {
+        "name": "setup data",
+        "code": "nan = float(\"nan\")\nexpected = pd.DataFrame({\"age\": [34.0, nan, nan, nan, 41.0], \"city\": [\"Paris\", nan, nan, \"Lyon\", \"Lyon\"], \"score\": [1.5, nan, 2.0, nan, 3.5]})\nassert_eq(normalize(customers), expected)\n"
+      },
+      {
+        "name": "numeric dtypes",
+        "code": "res = normalize(customers)\nassert_eq([str(res[\"age\"].dtype), str(res[\"score\"].dtype)], [\"float64\", \"float64\"], \"age and score must be float64.\")\nassert_eq(res.isna().sum().to_dict(), {\"age\": 3, \"city\": 2, \"score\": 2}, \"Number of NaN per column.\")\n"
+      },
+      {
+        "name": "another export",
+        "code": "nan = float(\"nan\")\nc2 = pd.DataFrame({\"age\": [\"-999\", \"7\"], \"city\": [\"NA\", \"Nice\"], \"score\": [-999.0, -999.0]}, index=[3, 1])\nexpected = pd.DataFrame({\"age\": [nan, 7.0], \"city\": [nan, \"Nice\"], \"score\": [nan, nan]}, index=[3, 1])\nassert_eq(normalize(c2), expected)\n"
+      }
+    ],
+    "hints": [
+      "`DataFrame.replace([list of values], np.nan)` handles every column at once.",
+      "`pd.to_numeric` converts a column of strings holding NaN to float."
+    ],
+    "solution": "import pandas as pd\nimport numpy as np\n\n\ndef normalize(customers):\n    out = customers.replace([\"\", \"NA\", \"n/a\", \"-999\", -999, -999.0], np.nan)\n    out[\"age\"] = pd.to_numeric(out[\"age\"])\n    out[\"score\"] = pd.to_numeric(out[\"score\"])\n    return out\n"
+  },
+  {
+    "id": "pd-clean-001",
+    "title": "Deduplicating sign-ups",
+    "theme": "cleaning",
+    "difficulty": "medium",
+    "language": "python",
+    "statement": "The DataFrame `signups` holds `email`, `name`, `signed_up_on` (string `YYYY-MM-DD`). Emails were\ntyped with capitals and stray spaces; the same person may appear several times.\n\nWrite `deduplicate(signups)` which:\n\n- normalizes `email` (no surrounding spaces, lowercase);\n- keeps, for each email, the **oldest** sign-up row (with its `name`);\n- returns the columns `email`, `name`, `signed_up_on`, sorted by `email`, index reset.\n\nExample with the setup data:\n\n```\n          email    name signed_up_on\n0  ana@mail.com  Ana B.   2024-01-15\n1  bob@mail.com     Bob   2024-03-01\n2  cid@mail.com     Cid   2024-01-01\n```\n",
+    "setup": "import pandas as pd\n\nsignups = pd.DataFrame({\n    \"email\": [\"  Ana@Mail.com\", \"ana@mail.com\", \"bob@mail.com \", \"BOB@mail.com\", \"cid@mail.com\"],\n    \"name\": [\"Ana\", \"Ana B.\", \"Bob\", \"Bobby\", \"Cid\"],\n    \"signed_up_on\": [\"2024-02-01\", \"2024-01-15\", \"2024-03-01\", \"2024-03-05\", \"2024-01-01\"],\n})\n",
+    "starter": "import pandas as pd\n\n\ndef deduplicate(signups):\n    ...\n",
+    "run_call": "deduplicate(signups)",
+    "tests": [
+      {
+        "name": "setup data",
+        "code": "expected = pd.DataFrame({\"email\": [\"ana@mail.com\", \"bob@mail.com\", \"cid@mail.com\"], \"name\": [\"Ana B.\", \"Bob\", \"Cid\"],\n                         \"signed_up_on\": [\"2024-01-15\", \"2024-03-01\", \"2024-01-01\"]})\nassert_eq(deduplicate(signups), expected)\n"
+      },
+      {
+        "name": "tabs and reversed order",
+        "code": "s2 = pd.DataFrame({\"email\": [\"Z@x.io\\t\", \"z@X.io\", \" a@x.io\"], \"name\": [\"Z2\", \"Z1\", \"A\"], \"signed_up_on\": [\"2024-09-02\", \"2024-09-01\", \"2024-09-03\"]})\nexpected = pd.DataFrame({\"email\": [\"a@x.io\", \"z@x.io\"], \"name\": [\"A\", \"Z1\"], \"signed_up_on\": [\"2024-09-03\", \"2024-09-01\"]})\nassert_eq(deduplicate(s2), expected)\n"
+      }
+    ],
+    "hints": [
+      "`.str.strip().str.lower()` to normalize.",
+      "Sort by date before `drop_duplicates(\"email\", keep=\"first\")`."
+    ],
+    "solution": "import pandas as pd\n\n\ndef deduplicate(signups):\n    out = signups.assign(email=signups[\"email\"].str.strip().str.lower())\n    out = out.sort_values(\"signed_up_on\").drop_duplicates(\"email\", keep=\"first\")\n    return out.sort_values(\"email\").reset_index(drop=True)[[\"email\", \"name\", \"signed_up_on\"]]\n"
+  },
+  {
+    "id": "pd-clean-002",
+    "title": "Amounts typed in European format",
+    "theme": "cleaning",
+    "difficulty": "hard",
+    "language": "python",
+    "statement": "The DataFrame `invoices` holds `invoice` and `amount`, where `amount` is a hand-typed string in\nEuropean (French) number format: thousands separator = space (sometimes a **non-breaking space**, regular or\nnarrow), decimal comma, `€` symbol attached or not, possible negative sign. Some values are not\namounts at all (`\"N/A\"`).\n\nWrite `convert(invoices)` returning a copy where `amount` is a **float** (`NaN` when the string\ncannot be converted). Same order, same index, same columns.\n\nExample with the setup data:\n\n```\n  invoice   amount\n0    F001   1234.5\n1    F002     89.0\n2    F003  12000.0\n3    F004    -45.1\n4    F005      NaN\n```\n",
+    "setup": "import pandas as pd\n\ninvoices = pd.DataFrame({\n    \"invoice\": [\"F001\", \"F002\", \"F003\", \"F004\", \"F005\"],\n    \"amount\": [\"1 234,50 €\", \"89,00€\", \"12\\u202f000,00 €\", \"-45,10 €\", \"N/A\"],\n})\n",
+    "starter": "import pandas as pd\n\n\ndef convert(invoices):\n    ...\n",
+    "run_call": "convert(invoices)",
+    "tests": [
+      {
+        "name": "setup data",
+        "code": "expected = pd.DataFrame({\"invoice\": [\"F001\", \"F002\", \"F003\", \"F004\", \"F005\"], \"amount\": [1234.5, 89.0, 12000.0, -45.1, float(\"nan\")]})\nassert_eq(convert(invoices), expected)\n"
+      },
+      {
+        "name": "millions, cents, regular non-breaking space",
+        "code": "i2 = pd.DataFrame({\"invoice\": [\"A\", \"B\", \"C\"], \"amount\": [\"1\\u00a0000\\u00a0000,00 €\", \"0,05€\", \"unknown\"]}, index=[2, 0, 1])\nexpected = pd.DataFrame({\"invoice\": [\"A\", \"B\", \"C\"], \"amount\": [1000000.0, 0.05, float(\"nan\")]}, index=[2, 0, 1])\nassert_eq(convert(i2), expected)\n"
+      },
+      {
+        "name": "float dtype",
+        "code": "assert_eq(str(convert(invoices)[\"amount\"].dtype), \"float64\", \"amount must be float64.\")\n"
+      }
+    ],
+    "hints": [
+      "Remove everything that is not a digit, a sign or a comma: `.str.replace(r\"[^0-9,\\-]\", \"\", regex=True)`, then replace the comma with a dot.",
+      "`pd.to_numeric(..., errors=\"coerce\")` returns NaN for strings that cannot be converted."
+    ],
+    "solution": "import pandas as pd\n\n\ndef convert(invoices):\n    out = invoices.copy()\n    s = out[\"amount\"].str.replace(r\"[^0-9,\\-]\", \"\", regex=True).str.replace(\",\", \".\", regex=False)\n    out[\"amount\"] = pd.to_numeric(s, errors=\"coerce\")\n    return out\n"
+  },
+  {
+    "id": "py-001",
+    "title": "Most frequent words",
+    "theme": "python",
+    "difficulty": "easy",
+    "language": "python",
+    "statement": "Write `top_words(text, k)` returning the list of the `k` most frequent words of `text`, as\n`(word, count)` tuples.\n\n- A word is a run of letters; case is ignored (everything lowercase); punctuation separates words.\n- Sort: count descending, then alphabetical order in case of a tie.\n- If the text has fewer than `k` distinct words, return them all.\n\nExample with the setup text, `k = 3`: `[(\"the\", 3), (\"cat\", 2), (\"sleeps\", 2)]`\n",
+    "setup": "text = \"The cat sleeps. The dog sleeps too, and the cat eats!\"\n",
+    "starter": "import re\nfrom collections import Counter\n\n\ndef top_words(text, k):\n    ...\n",
+    "run_call": "top_words(text, 3)",
+    "tests": [
+      {
+        "name": "k = 3",
+        "code": "assert_eq(top_words(text, 3), [(\"the\", 3), (\"cat\", 2), (\"sleeps\", 2)])\n"
+      },
+      {
+        "name": "k larger than the number of words, ties",
+        "code": "assert_eq(top_words(\"b a, B! c-a\", 10), [(\"a\", 2), (\"b\", 2), (\"c\", 1)])\n"
+      },
+      {
+        "name": "empty text",
+        "code": "assert_eq(top_words(\"\", 2), [])\n"
+      }
+    ],
+    "hints": [
+      "`re.findall(r\"[a-z]+\", text.lower())` then `collections.Counter`.",
+      "`sorted(..., key=lambda kv: (-kv[1], kv[0]))`."
+    ],
+    "solution": "import re\nfrom collections import Counter\n\n\ndef top_words(text, k):\n    words = re.findall(r\"[a-z]+\", text.lower())\n    counts = Counter(words)\n    return sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))[:k]\n"
+  },
+  {
+    "id": "py-002",
+    "title": "Merging intervals",
+    "theme": "python",
+    "difficulty": "medium",
+    "language": "python",
+    "statement": "Write `merge_intervals(intervals)` where `intervals` is a list of integer lists `[start, end]`\n(`start <= end`), in any order, possibly overlapping or touching.\n\nReturn a new list of merged intervals, sorted by `start`, where two intervals that overlap\n**or touch** (`[1, 3]` and `[3, 5]`) are joined. The input list must not be modified.\n\nExample with the setup data: `[[1, 4], [5, 10]]`\n",
+    "setup": "intervals = [[5, 8], [1, 3], [2, 4], [9, 10], [8, 9]]\n",
+    "starter": "def merge_intervals(intervals):\n    ...\n",
+    "run_call": "merge_intervals(intervals)",
+    "tests": [
+      {
+        "name": "setup data",
+        "code": "assert_eq(merge_intervals(intervals), [[1, 4], [5, 10]])\n"
+      },
+      {
+        "name": "edge cases",
+        "code": "assert_eq(merge_intervals([]), [])\nassert_eq(merge_intervals([[3, 3]]), [[3, 3]])\nassert_eq(merge_intervals([[1, 10], [2, 3], [12, 13], [11, 12]]), [[1, 10], [11, 13]])\n"
+      },
+      {
+        "name": "input left unchanged",
+        "code": "src = [[5, 8], [1, 3]]\ncopy = [list(i) for i in src]\nmerge_intervals(src)\nassert_eq(src, copy, \"The input list was modified.\")\n"
+      }
+    ],
+    "hints": [
+      "Sort a copy by `start`, then walk through it extending the last interval of the result whenever `start <= current_end`."
+    ],
+    "solution": "def merge_intervals(intervals):\n    result = []\n    for start, end in sorted(intervals):\n        if result and start <= result[-1][1]:\n            result[-1][1] = max(result[-1][1], end)\n        else:\n            result.append([start, end])\n    return result\n"
+  },
+  {
+    "id": "py-003",
+    "title": "Flattening a nested dictionary",
+    "theme": "python",
+    "difficulty": "hard",
+    "language": "python",
+    "statement": "Write `flatten(d, sep=\".\")` turning a nested dictionary into a flat one:\n\n- the keys of successive levels are joined with `sep`;\n- a **list** is treated as a dictionary whose keys are the positions (`0`, `1`, …);\n- an **empty** dictionary or list is kept as is, as a value;\n- other values are kept as is.\n\nExample with the setup data:\n\n```\n{\"a.b\": 1, \"a.c.0\": 10, \"a.c.1\": 20, \"d\": 2, \"e\": {}}\n```\n",
+    "setup": "config = {\"a\": {\"b\": 1, \"c\": [10, 20]}, \"d\": 2, \"e\": {}}\n",
+    "starter": "def flatten(d, sep=\".\"):\n    ...\n",
+    "run_call": "flatten(config)",
+    "tests": [
+      {
+        "name": "setup data",
+        "code": "assert_eq(flatten(config), {\"a.b\": 1, \"a.c.0\": 10, \"a.c.1\": 20, \"d\": 2, \"e\": {}})\n"
+      },
+      {
+        "name": "separator, lists of dicts, depth",
+        "code": "src = {\"x\": [{\"y\": 1}, {\"y\": 2, \"z\": [[]]}], \"w\": None}\nassert_eq(flatten(src, sep=\"/\"), {\"x/0/y\": 1, \"x/1/y\": 2, \"x/1/z/0\": [], \"w\": None})\nassert_eq(flatten({}), {})\nassert_eq(flatten({\"k\": \"v\"}), {\"k\": \"v\"})\n"
+      }
+    ],
+    "hints": [
+      "Recursive function with a current prefix; `enumerate` for lists.",
+      "Test `isinstance(v, (dict, list)) and v` to tell an empty container from one to walk through."
+    ],
+    "solution": "def flatten(d, sep=\".\"):\n    if not d:\n        return {}\n    flat = {}\n\n    def visit(value, prefix):\n        if isinstance(value, dict) and value:\n            for k, v in value.items():\n                visit(v, f\"{prefix}{sep}{k}\" if prefix else str(k))\n        elif isinstance(value, list) and value:\n            for i, v in enumerate(value):\n                visit(v, f\"{prefix}{sep}{i}\" if prefix else str(i))\n        else:\n            flat[prefix] = value\n\n    visit(d, \"\")\n    return flat\n"
+  }
+]

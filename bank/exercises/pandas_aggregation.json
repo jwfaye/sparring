@@ -1,0 +1,192 @@
+[
+  {
+    "id": "pd-groupby-002",
+    "title": "Order statistics per customer",
+    "theme": "groupby",
+    "difficulty": "easy",
+    "language": "python",
+    "statement": "The DataFrame `orders` has two columns: `customer` and `amount`.\n\nWrite `customer_stats(orders)` returning a DataFrame with, for each customer:\n\n- `customer`\n- `n_orders`: number of orders\n- `mean_amount`: mean amount, **rounded to 2 decimals**\n\nSorted by `customer` ascending, index reset.\n\nExample with the setup data:\n\n```\n  customer  n_orders  mean_amount\n0      ana         3        20.00\n1      bob         3        16.67\n2      cid         2        50.00\n```\n",
+    "setup": "import pandas as pd\n\norders = pd.DataFrame({\n    \"customer\": [\"ana\", \"bob\", \"ana\", \"cid\", \"bob\", \"ana\", \"cid\", \"bob\"],\n    \"amount\": [20.0, 35.5, 12.0, 80.0, 4.5, 28.0, 20.0, 10.0],\n})\n",
+    "starter": "import pandas as pd\n\n\ndef customer_stats(orders):\n    ...\n",
+    "run_call": "customer_stats(orders)",
+    "tests": [
+      {
+        "name": "setup data",
+        "code": "expected = pd.DataFrame({\"customer\": [\"ana\", \"bob\", \"cid\"], \"n_orders\": [3, 3, 2], \"mean_amount\": [20.0, 16.67, 50.0]})\nassert_eq(customer_stats(orders), expected)\n"
+      },
+      {
+        "name": "a single customer, rounding",
+        "code": "o2 = pd.DataFrame({\"customer\": [\"zed\", \"zed\", \"zed\"], \"amount\": [1.0, 2.0, 2.005]})\nexpected = pd.DataFrame({\"customer\": [\"zed\"], \"n_orders\": [3], \"mean_amount\": [1.67]})\nassert_eq(customer_stats(o2), expected)\n"
+      }
+    ],
+    "hints": [
+      "`groupby(...).agg(new_column=(\"column\", \"function\"))` lets you name the aggregates directly."
+    ],
+    "solution": "import pandas as pd\n\n\ndef customer_stats(orders):\n    out = (orders.groupby(\"customer\")\n           .agg(n_orders=(\"amount\", \"size\"), mean_amount=(\"amount\", \"mean\"))\n           .reset_index())\n    out[\"mean_amount\"] = out[\"mean_amount\"].round(2)\n    return out.sort_values(\"customer\").reset_index(drop=True)\n"
+  },
+  {
+    "id": "pd-groupby-003",
+    "title": "Gap to the department's mean salary",
+    "theme": "groupby",
+    "difficulty": "medium",
+    "language": "python",
+    "statement": "The DataFrame `hr` holds the columns `name`, `department`, `salary`.\n\nWrite `add_gap(hr)` returning a **copy** of `hr` with an extra column `gap`:\nthe person's salary minus the mean salary of their department.\n\nConstraints:\n\n- same row order and **same index** as the input;\n- columns in the order `name`, `department`, `salary`, `gap`;\n- `hr` must not be modified.\n\nExample with the setup data:\n\n```\n     name department  salary    gap\n0   Alice       Data    5200  200.0\n1   Bruno       Data    4800 -200.0\n2   David      Sales    3900 -100.0\n3    Emma      Sales    4100  100.0\n4   Farid         HR    3500    0.0\n5  Gaelle      Sales    4000    0.0\n```\n",
+    "setup": "import pandas as pd\n\nhr = pd.DataFrame({\n    \"name\": [\"Alice\", \"Bruno\", \"David\", \"Emma\", \"Farid\", \"Gaelle\"],\n    \"department\": [\"Data\", \"Data\", \"Sales\", \"Sales\", \"HR\", \"Sales\"],\n    \"salary\": [5200, 4800, 3900, 4100, 3500, 4000],\n})\n",
+    "starter": "import pandas as pd\n\n\ndef add_gap(hr):\n    ...\n",
+    "run_call": "add_gap(hr)",
+    "tests": [
+      {
+        "name": "setup data",
+        "code": "expected = hr.copy()\nexpected[\"gap\"] = [200.0, -200.0, -100.0, 100.0, 0.0, 0.0]\nassert_eq(add_gap(hr), expected)\n"
+      },
+      {
+        "name": "non-standard index preserved",
+        "code": "hr2 = pd.DataFrame({\"name\": [\"a\", \"b\", \"c\"], \"department\": [\"X\", \"Y\", \"X\"], \"salary\": [10, 50, 30]}, index=[7, 3, 9])\nexpected = hr2.copy()\nexpected[\"gap\"] = [-10.0, 0.0, 10.0]\nassert_eq(add_gap(hr2), expected)\n"
+      },
+      {
+        "name": "input left unchanged",
+        "code": "before = hr.copy()\nadd_gap(hr)\nassert_eq(hr, before, \"hr was modified.\")\n"
+      }
+    ],
+    "hints": [
+      "`transform` returns a Series aligned with the original rows, unlike `agg`."
+    ],
+    "solution": "import pandas as pd\n\n\ndef add_gap(hr):\n    out = hr.copy()\n    out[\"gap\"] = out[\"salary\"] - out.groupby(\"department\")[\"salary\"].transform(\"mean\")\n    return out\n"
+  },
+  {
+    "id": "pd-groupby-004",
+    "title": "The two best products of each store",
+    "theme": "groupby",
+    "difficulty": "medium",
+    "language": "python",
+    "statement": "The DataFrame `sales` holds sales rows: `store`, `product`, `quantity`, `price`.\nThe same (store, product) pair may appear on several rows.\n\nWrite `top2(sales)` returning, for each store, the **two products** with the highest total\nrevenue (`quantity * price`, summed over all rows). A store selling a single product has a single row.\n\nColumns: `store`, `product`, `revenue`. Sort: `store` ascending then `revenue` descending. Index reset.\nThere are never any ties.\n\nExample with the setup data:\n\n```\n   store   product  revenue\n0  Lille     cable     80.0\n1   Lyon    screen    360.0\n2   Lyon     mouse     62.5\n3  Paris    screen    180.0\n4  Paris  keyboard    135.0\n```\n",
+    "setup": "import pandas as pd\n\nsales = pd.DataFrame([\n    (\"Paris\", \"keyboard\", 2, 45.0), (\"Paris\", \"mouse\", 4, 12.5), (\"Paris\", \"screen\", 1, 180.0),\n    (\"Paris\", \"keyboard\", 1, 45.0), (\"Lyon\", \"mouse\", 5, 12.5), (\"Lyon\", \"screen\", 2, 180.0),\n    (\"Lyon\", \"cable\", 3, 8.0), (\"Lille\", \"cable\", 10, 8.0),\n], columns=[\"store\", \"product\", \"quantity\", \"price\"])\n",
+    "starter": "import pandas as pd\n\n\ndef top2(sales):\n    ...\n",
+    "run_call": "top2(sales)",
+    "tests": [
+      {
+        "name": "setup data",
+        "code": "expected = pd.DataFrame({\n    \"store\": [\"Lille\", \"Lyon\", \"Lyon\", \"Paris\", \"Paris\"],\n    \"product\": [\"cable\", \"screen\", \"mouse\", \"screen\", \"keyboard\"],\n    \"revenue\": [80.0, 360.0, 62.5, 180.0, 135.0],\n})\nassert_eq(top2(sales), expected)\n"
+      },
+      {
+        "name": "three products, one store",
+        "code": "s2 = pd.DataFrame([(\"A\", \"p1\", 1, 10.0), (\"A\", \"p2\", 3, 10.0), (\"A\", \"p3\", 2, 10.0), (\"A\", \"p1\", 1, 5.0)],\n                  columns=[\"store\", \"product\", \"quantity\", \"price\"])\nexpected = pd.DataFrame({\"store\": [\"A\", \"A\"], \"product\": [\"p2\", \"p3\"], \"revenue\": [30.0, 20.0]})\nassert_eq(top2(s2), expected)\n"
+      }
+    ],
+    "hints": [
+      "Aggregate by (store, product) first, then sort, then keep the first 2 rows of each group (`groupby(...).head(2)`)."
+    ],
+    "solution": "import pandas as pd\n\n\ndef top2(sales):\n    rev = (sales.assign(revenue=sales[\"quantity\"] * sales[\"price\"])\n           .groupby([\"store\", \"product\"], as_index=False)[\"revenue\"].sum())\n    rev = rev.sort_values([\"store\", \"revenue\"], ascending=[True, False])\n    return rev.groupby(\"store\").head(2).reset_index(drop=True)\n"
+  },
+  {
+    "id": "pd-merge-002",
+    "title": "Order amounts at the current price",
+    "theme": "merge",
+    "difficulty": "medium",
+    "language": "python",
+    "statement": "Two DataFrames:\n\n- `orders`: `order_id`, `product`, `quantity`\n- `prices`: `product`, `price`, `effective_date` (string `YYYY-MM-DD`). A product may have\n  **several price rows**, in any order; the current price is the one with the most recent\n  `effective_date`.\n\nWrite `amounts(orders, prices)` returning a DataFrame `order_id`, `amount`\n(= `quantity` × current price), one row per order, sorted by `order_id`, index reset.\n\nExample with the setup data:\n\n```\n   order_id  amount\n0         1    90.0\n1         2    50.0\n2         3   180.0\n3         4    12.5\n4         5   135.0\n```\n",
+    "setup": "import pandas as pd\n\norders = pd.DataFrame({\n    \"order_id\": [1, 2, 3, 4, 5],\n    \"product\": [\"keyboard\", \"mouse\", \"screen\", \"mouse\", \"keyboard\"],\n    \"quantity\": [2, 4, 1, 1, 3],\n})\nprices = pd.DataFrame({\n    \"product\": [\"keyboard\", \"mouse\", \"keyboard\", \"mouse\", \"screen\", \"mouse\"],\n    \"price\": [40.0, 10.0, 45.0, 12.5, 180.0, 11.0],\n    \"effective_date\": [\"2024-01-01\", \"2023-05-01\", \"2024-06-01\", \"2024-03-01\", \"2024-01-15\", \"2024-02-01\"],\n})\n",
+    "starter": "import pandas as pd\n\n\ndef amounts(orders, prices):\n    ...\n",
+    "run_call": "amounts(orders, prices)",
+    "tests": [
+      {
+        "name": "setup data",
+        "code": "expected = pd.DataFrame({\"order_id\": [1, 2, 3, 4, 5], \"amount\": [90.0, 50.0, 180.0, 12.5, 135.0]})\nassert_eq(amounts(orders, prices), expected)\n"
+      },
+      {
+        "name": "prices listed from newest to oldest",
+        "code": "o2 = pd.DataFrame({\"order_id\": [10, 11], \"product\": [\"x\", \"x\"], \"quantity\": [1, 2]})\np2 = pd.DataFrame({\"product\": [\"x\", \"x\", \"x\"], \"price\": [3.0, 2.0, 1.0], \"effective_date\": [\"2024-03-01\", \"2024-02-01\", \"2024-01-01\"]})\nexpected = pd.DataFrame({\"order_id\": [10, 11], \"amount\": [3.0, 6.0]})\nassert_eq(amounts(o2, p2), expected)\n"
+      },
+      {
+        "name": "one row per order",
+        "code": "res = amounts(orders, prices)\nassert_eq(len(res), len(orders), \"The number of rows must equal the number of orders.\")\n"
+      }
+    ],
+    "hints": [
+      "Reduce `prices` to one row per product before joining.",
+      "`sort_values` then `drop_duplicates(subset=..., keep=\"last\")` keeps the most recent row."
+    ],
+    "solution": "import pandas as pd\n\n\ndef amounts(orders, prices):\n    current = (prices.sort_values(\"effective_date\")\n               .drop_duplicates(\"product\", keep=\"last\")[[\"product\", \"price\"]])\n    m = orders.merge(current, on=\"product\", how=\"left\")\n    m[\"amount\"] = m[\"quantity\"] * m[\"price\"]\n    return m[[\"order_id\", \"amount\"]].sort_values(\"order_id\").reset_index(drop=True)\n"
+  },
+  {
+    "id": "pd-merge-003",
+    "title": "Latest calibration before each measurement",
+    "theme": "merge",
+    "difficulty": "hard",
+    "language": "python",
+    "statement": "Two DataFrames, with `ts` of datetime type:\n\n- `measurements`: `sensor`, `ts`, `value` — **not sorted** by date\n- `calibrations`: `sensor`, `ts`, `offset`\n\nWrite `correct(measurements, calibrations)` adding to each measurement:\n\n- `offset`: the offset of the **latest calibration of the same sensor whose `ts` ≤ the measurement's ts**\n  (a calibration at the exact same instant counts), `NaN` if there is none;\n- `corrected_value` = `value + offset` (`NaN` when there is no offset).\n\nThe result keeps the **original order and index** of `measurements`, with the columns\n`sensor`, `ts`, `value`, `offset`, `corrected_value`. `measurements` must not be modified.\n\nExample with the setup data:\n\n```\n  sensor                  ts  value  offset  corrected_value\n0     s1 2024-01-01 10:00:00   20.0     0.5             20.5\n1     s2 2024-01-01 09:00:00    5.0     NaN              NaN\n2     s1 2024-01-01 08:00:00   19.0     NaN              NaN\n3     s2 2024-01-01 12:00:00    6.0     2.0              8.0\n4     s1 2024-01-02 00:00:00   21.0    -1.0             20.0\n```\n",
+    "setup": "import pandas as pd\n\nmeasurements = pd.DataFrame({\n    \"sensor\": [\"s1\", \"s2\", \"s1\", \"s2\", \"s1\"],\n    \"ts\": pd.to_datetime([\"2024-01-01 10:00\", \"2024-01-01 09:00\", \"2024-01-01 08:00\", \"2024-01-01 12:00\", \"2024-01-02 00:00\"]),\n    \"value\": [20.0, 5.0, 19.0, 6.0, 21.0],\n})\ncalibrations = pd.DataFrame({\n    \"sensor\": [\"s1\", \"s1\", \"s2\"],\n    \"ts\": pd.to_datetime([\"2024-01-01 09:00\", \"2024-01-01 23:00\", \"2024-01-01 10:00\"]),\n    \"offset\": [0.5, -1.0, 2.0],\n})\n",
+    "starter": "import pandas as pd\n\n\ndef correct(measurements, calibrations):\n    ...\n",
+    "run_call": "correct(measurements, calibrations)",
+    "tests": [
+      {
+        "name": "setup data",
+        "code": "expected = measurements.copy()\nexpected[\"offset\"] = [0.5, float(\"nan\"), float(\"nan\"), 2.0, -1.0]\nexpected[\"corrected_value\"] = [20.5, float(\"nan\"), float(\"nan\"), 8.0, 20.0]\nassert_eq(correct(measurements, calibrations), expected)\n"
+      },
+      {
+        "name": "calibration at the same instant, non-standard index",
+        "code": "m2 = pd.DataFrame({\"sensor\": [\"a\", \"a\"], \"ts\": pd.to_datetime([\"2024-05-01 12:00\", \"2024-05-01 11:00\"]), \"value\": [1.0, 2.0]}, index=[5, 2])\nc2 = pd.DataFrame({\"sensor\": [\"a\"], \"ts\": pd.to_datetime([\"2024-05-01 12:00\"]), \"offset\": [10.0]})\nexpected = m2.copy()\nexpected[\"offset\"] = [10.0, float(\"nan\")]\nexpected[\"corrected_value\"] = [11.0, float(\"nan\")]\nassert_eq(correct(m2, c2), expected)\n"
+      },
+      {
+        "name": "measurements left unchanged",
+        "code": "before = measurements.copy()\ncorrect(measurements, calibrations)\nassert_eq(measurements, before, \"measurements was modified.\")\n"
+      }
+    ],
+    "hints": [
+      "`pd.merge_asof(..., by=\"sensor\", direction=\"backward\")` does exactly this join, but requires inputs sorted by `ts`.",
+      "Remember the original index (`reset_index()`) before sorting, to restore it at the end."
+    ],
+    "solution": "import pandas as pd\n\n\ndef correct(measurements, calibrations):\n    m = measurements.assign(_pos=range(len(measurements))).sort_values(\"ts\")\n    c = calibrations.sort_values(\"ts\")\n    out = pd.merge_asof(m, c, on=\"ts\", by=\"sensor\", direction=\"backward\")\n    out[\"corrected_value\"] = out[\"value\"] + out[\"offset\"]\n    out = out.sort_values(\"_pos\")\n    out.index = measurements.index\n    return out[[\"sensor\", \"ts\", \"value\", \"offset\", \"corrected_value\"]]\n"
+  },
+  {
+    "id": "pd-pivot-001",
+    "title": "Month × product cross table",
+    "theme": "pivot",
+    "difficulty": "easy",
+    "language": "python",
+    "statement": "The DataFrame `sales` holds `month` (string `YYYY-MM`), `product`, `quantity`.\n\nWrite `cross_table(sales)` returning a cross table: one row per `month` (index), one column\nper `product`, values = total quantity. Missing combinations are **0**.\nRows and columns sorted in ascending order.\n\nExample with the setup data:\n\n```\nproduct  keyboard  mouse  screen\nmonth\n2024-01         3      5       0\n2024-02         0      2       1\n2024-03         4      0       0\n```\n",
+    "setup": "import pandas as pd\n\nsales = pd.DataFrame({\n    \"month\": [\"2024-01\", \"2024-01\", \"2024-02\", \"2024-01\", \"2024-03\", \"2024-02\"],\n    \"product\": [\"keyboard\", \"mouse\", \"screen\", \"keyboard\", \"keyboard\", \"mouse\"],\n    \"quantity\": [2, 5, 1, 1, 4, 2],\n})\n",
+    "starter": "import pandas as pd\n\n\ndef cross_table(sales):\n    ...\n",
+    "run_call": "cross_table(sales)",
+    "tests": [
+      {
+        "name": "setup data",
+        "code": "expected = pd.DataFrame({\"keyboard\": [3, 0, 4], \"mouse\": [5, 2, 0], \"screen\": [0, 1, 0]},\n                        index=pd.Index([\"2024-01\", \"2024-02\", \"2024-03\"], name=\"month\"))\nassert_eq(cross_table(sales), expected)\n"
+      },
+      {
+        "name": "months and products out of order",
+        "code": "s2 = pd.DataFrame({\"month\": [\"2023-12\", \"2023-11\", \"2023-12\"], \"product\": [\"b\", \"a\", \"b\"], \"quantity\": [1, 2, 3]})\nexpected = pd.DataFrame({\"a\": [2, 0], \"b\": [0, 4]}, index=pd.Index([\"2023-11\", \"2023-12\"], name=\"month\"))\nassert_eq(cross_table(s2), expected)\n"
+      }
+    ],
+    "hints": [
+      "`pivot_table(index=..., columns=..., values=..., aggfunc=\"sum\", fill_value=0)`."
+    ],
+    "solution": "import pandas as pd\n\n\ndef cross_table(sales):\n    t = sales.pivot_table(index=\"month\", columns=\"product\", values=\"quantity\", aggfunc=\"sum\", fill_value=0)\n    return t.sort_index().sort_index(axis=1)\n"
+  },
+  {
+    "id": "pd-pivot-002",
+    "title": "From wide to long format",
+    "theme": "pivot",
+    "difficulty": "medium",
+    "language": "python",
+    "statement": "The DataFrame `readings` is in wide format: a `day` column and one column per room\n(`temp_room_a`, `temp_room_b`, …) holding temperatures, sometimes missing (`NaN`).\n\nWrite `to_long(readings)` returning the long format with the columns `day`, `room`\n(the letter only: `a`, `b`, …) and `temperature`. Missing values are **dropped**.\nSort by `day` then `room`, index reset.\n\nExample with the setup data:\n\n```\n          day room  temperature\n0  2024-01-01    a         20.0\n1  2024-01-01    b         21.5\n2  2024-01-02    b         22.0\n3  2024-01-02    c         19.0\n```\n",
+    "setup": "import pandas as pd\nimport numpy as np\n\nreadings = pd.DataFrame({\n    \"day\": [\"2024-01-01\", \"2024-01-02\"],\n    \"temp_room_a\": [20.0, np.nan],\n    \"temp_room_b\": [21.5, 22.0],\n    \"temp_room_c\": [np.nan, 19.0],\n})\n",
+    "starter": "import pandas as pd\n\n\ndef to_long(readings):\n    ...\n",
+    "run_call": "to_long(readings)",
+    "tests": [
+      {
+        "name": "setup data",
+        "code": "expected = pd.DataFrame({\"day\": [\"2024-01-01\", \"2024-01-01\", \"2024-01-02\", \"2024-01-02\"],\n                         \"room\": [\"a\", \"b\", \"b\", \"c\"], \"temperature\": [20.0, 21.5, 22.0, 19.0]})\nassert_eq(to_long(readings), expected)\n"
+      },
+      {
+        "name": "columns out of order, a single value",
+        "code": "r2 = pd.DataFrame({\"temp_room_z\": [float(\"nan\"), 3.0], \"day\": [\"2024-02-02\", \"2024-02-01\"], \"temp_room_k\": [float(\"nan\"), float(\"nan\")]})\nexpected = pd.DataFrame({\"day\": [\"2024-02-01\"], \"room\": [\"z\"], \"temperature\": [3.0]})\nassert_eq(to_long(r2), expected)\n"
+      }
+    ],
+    "hints": [
+      "`melt(id_vars=\"day\", var_name=..., value_name=...)` then `dropna`.",
+      "`.str.replace(\"temp_room_\", \"\")` or `.str[-1]` to extract the letter."
+    ],
+    "solution": "import pandas as pd\n\n\ndef to_long(readings):\n    long = readings.melt(id_vars=\"day\", var_name=\"room\", value_name=\"temperature\").dropna(subset=[\"temperature\"])\n    long[\"room\"] = long[\"room\"].str.replace(\"temp_room_\", \"\", regex=False)\n    return long.sort_values([\"day\", \"room\"]).reset_index(drop=True)\n"
+  }
+]

@@ -1,0 +1,152 @@
+[
+  {
+    "id": "pd-groupby-001",
+    "title": "Revenue per store",
+    "theme": "groupby",
+    "difficulty": "easy",
+    "language": "python",
+    "statement": "The DataFrame `df` holds sales rows with the columns `store`, `product`, `quantity` and `unit_price`.\n\nWrite the function `revenue_per_store(df)` returning a **DataFrame** with two columns:\n\n- `store`\n- `revenue`: the store's revenue, i.e. the sum of `quantity * unit_price`\n\nConstraints:\n\n- sorted by `revenue` **descending**\n- index reset (`0, 1, 2, …`)\n- the function must **not modify** `df` (no new column added to the input)\n\nExample with the setup data:\n\n```\n   store  revenue\n0   Lyon    422.5\n1  Paris    320.0\n2  Lille    147.5\n```\n",
+    "setup": "import pandas as pd\nimport numpy as np\n\ndf = pd.DataFrame({\n    \"store\": [\"Paris\", \"Lyon\", \"Paris\", \"Lille\", \"Lyon\", \"Paris\", \"Lille\"],\n    \"product\": [\"keyboard\", \"mouse\", \"screen\", \"keyboard\", \"screen\", \"mouse\", \"mouse\"],\n    \"quantity\": [2, 5, 1, 3, 2, 4, 1],\n    \"unit_price\": [45.0, 12.5, 180.0, 45.0, 180.0, 12.5, 12.5],\n})\n",
+    "starter": "import pandas as pd\n\n\ndef revenue_per_store(df):\n    # TODO: compute the revenue per store\n    ...\n",
+    "run_call": "revenue_per_store(df)",
+    "tests": [
+      {
+        "name": "setup data",
+        "code": "expected = pd.DataFrame({\"store\": [\"Lyon\", \"Paris\", \"Lille\"], \"revenue\": [422.5, 320.0, 147.5]})\nassert_eq(revenue_per_store(df), expected)\n"
+      },
+      {
+        "name": "another dataset (a single store, zero quantities)",
+        "code": "df2 = pd.DataFrame({\n    \"store\": [\"Nice\", \"Nice\", \"Metz\"],\n    \"product\": [\"a\", \"b\", \"a\"],\n    \"quantity\": [0, 3, 1],\n    \"unit_price\": [99.0, 10.0, 31.0],\n})\nexpected = pd.DataFrame({\"store\": [\"Metz\", \"Nice\"], \"revenue\": [31.0, 30.0]})\nassert_eq(revenue_per_store(df2), expected)\n"
+      },
+      {
+        "name": "input df left unchanged",
+        "code": "before = df.copy()\nrevenue_per_store(df)\nassert_eq(df, before, \"The input DataFrame was modified (column added or values changed).\")\n"
+      }
+    ],
+    "solution": "import pandas as pd\n\n\ndef revenue_per_store(df):\n    out = df.assign(revenue=df[\"quantity\"] * df[\"unit_price\"])\n    out = out.groupby(\"store\", as_index=False)[\"revenue\"].sum()\n    return out.sort_values(\"revenue\", ascending=False).reset_index(drop=True)\n",
+    "hints": [
+      "First add a per-row amount column, then aggregate per store.",
+      "`df.assign(...)` creates a copy, unlike `df['revenue'] = ...` which modifies `df`."
+    ]
+  },
+  {
+    "id": "pd-merge-001",
+    "title": "Customers without a valid order (anti-join)",
+    "theme": "merge",
+    "difficulty": "medium",
+    "language": "python",
+    "statement": "Two DataFrames:\n\n- `customers`: `customer_id`, `name`, `city`\n- `orders`: `order_id`, `customer_id`, `amount`, `status` (`\"delivered\"` or `\"cancelled\"`)\n\nWrite `inactive_customers(customers, orders)` returning the customers **with no non-cancelled order** (a cancelled order does not count).\n\nResult format: a DataFrame with exactly the columns `customer_id` and `name`, sorted by `customer_id` ascending, index reset. **Each customer must appear exactly once.**\n\nExample with the setup data:\n\n```\n   customer_id    name\n0            4  Dupont\n1            5   Evans\n2            6    Fall\n```\n",
+    "setup": "import pandas as pd\n\ncustomers = pd.DataFrame({\n    \"customer_id\": [1, 2, 3, 4, 5, 6],\n    \"name\": [\"Alami\", \"Bernard\", \"Chen\", \"Dupont\", \"Evans\", \"Fall\"],\n    \"city\": [\"Paris\", \"Lyon\", \"Paris\", \"Nantes\", \"Lille\", \"Lyon\"],\n})\norders = pd.DataFrame({\n    \"order_id\": [101, 102, 103, 104, 105, 106, 107],\n    \"customer_id\": [1, 1, 3, 3, 5, 2, 6],\n    \"amount\": [120.0, 80.0, 40.0, 60.0, 300.0, 55.0, 20.0],\n    \"status\": [\"delivered\", \"delivered\", \"cancelled\", \"delivered\", \"cancelled\", \"delivered\", \"cancelled\"],\n})\n",
+    "starter": "import pandas as pd\n\n\ndef inactive_customers(customers, orders):\n    # TODO\n    ...\n",
+    "run_call": "inactive_customers(customers, orders)",
+    "tests": [
+      {
+        "name": "setup data",
+        "code": "expected = pd.DataFrame({\"customer_id\": [4, 5, 6], \"name\": [\"Dupont\", \"Evans\", \"Fall\"]})\nassert_eq(inactive_customers(customers, orders), expected)\n"
+      },
+      {
+        "name": "exact columns and no duplicates",
+        "code": "res = inactive_customers(customers, orders)\nassert_eq(list(res.columns), [\"customer_id\", \"name\"], \"Expected columns: customer_id, name\")\nassert_eq(bool(res[\"customer_id\"].is_unique), True, \"Some customers appear several times.\")\n"
+      },
+      {
+        "name": "another dataset: heavily duplicated keys, a single inactive customer",
+        "code": "c2 = pd.DataFrame({\"customer_id\": [10, 20, 30], \"name\": [\"X\", \"Y\", \"Z\"], \"city\": [\"a\", \"b\", \"c\"]})\no2 = pd.DataFrame({\n    \"order_id\": [1, 2, 3, 4, 5, 6],\n    \"customer_id\": [10, 10, 10, 30, 30, 20],\n    \"amount\": [1.0, 2.0, 3.0, 4.0, 5.0, 6.0],\n    \"status\": [\"delivered\", \"delivered\", \"cancelled\", \"cancelled\", \"cancelled\", \"delivered\"],\n})\nexpected = pd.DataFrame({\"customer_id\": [30], \"name\": [\"Z\"]})\nassert_eq(inactive_customers(c2, o2), expected)\n"
+      }
+    ],
+    "solution": "import pandas as pd\n\n\ndef inactive_customers(customers, orders):\n    active = orders.loc[orders[\"status\"] != \"cancelled\", \"customer_id\"].unique()\n    out = customers.loc[~customers[\"customer_id\"].isin(active), [\"customer_id\", \"name\"]]\n    return out.sort_values(\"customer_id\").reset_index(drop=True)\n",
+    "hints": [
+      "A customer may have several orders: a direct join would duplicate their rows.",
+      "Start by isolating the orders that count, then look for the customers absent from that set (`isin` or `merge(..., indicator=True)`)."
+    ]
+  },
+  {
+    "id": "sql-window-001",
+    "title": "Top earners per department (with ties)",
+    "theme": "sql-window",
+    "difficulty": "medium",
+    "language": "sql",
+    "statement": "Table `employees(id, name, department, salary)`.\n\nWrite a query returning, for each department, the employee(s) with the department's **maximum salary** (in case of a tie, all of them must appear).\n\nExpected columns, in this order: `department`, `name`, `salary`.\nSort: `department` then `name` (ascending).\n\nExpected result with the setup data:\n\n```\ndepartment  name    salary\nData        Alice   5200\nData        Chloe   5200\nHR          Farid   3500\nSales       Emma    4100\nSales       Gaelle  4100\n```\n",
+    "setup": "CREATE TABLE employees (\n    id INTEGER PRIMARY KEY,\n    name TEXT NOT NULL,\n    department TEXT NOT NULL,\n    salary INTEGER NOT NULL\n);\nINSERT INTO employees VALUES\n    (1, 'Alice',  'Data',  5200),\n    (2, 'Bruno',  'Data',  4800),\n    (3, 'Chloe',  'Data',  5200),\n    (4, 'David',  'Sales', 3900),\n    (5, 'Emma',   'Sales', 4100),\n    (6, 'Farid',  'HR',    3500),\n    (7, 'Gaelle', 'Sales', 4100),\n    (8, 'Hugo',   'HR',    3200);\n",
+    "starter": "-- Write your query here\nSELECT\n",
+    "tests": [
+      {
+        "name": "setup data",
+        "columns": [
+          "department",
+          "name",
+          "salary"
+        ],
+        "ordered": true,
+        "expected": [
+          [
+            "Data",
+            "Alice",
+            5200
+          ],
+          [
+            "Data",
+            "Chloe",
+            5200
+          ],
+          [
+            "HR",
+            "Farid",
+            3500
+          ],
+          [
+            "Sales",
+            "Emma",
+            4100
+          ],
+          [
+            "Sales",
+            "Gaelle",
+            4100
+          ]
+        ]
+      },
+      {
+        "name": "another dataset: three-way tie and a single-employee department",
+        "setup": "CREATE TABLE employees (id INTEGER PRIMARY KEY, name TEXT, department TEXT, salary INTEGER);\nINSERT INTO employees VALUES\n    (1, 'Ana', 'X', 100), (2, 'Bob', 'X', 100), (3, 'Cid', 'X', 100),\n    (4, 'Dan', 'Y', 50), (5, 'Eve', 'Y', 70), (6, 'Flo', 'Z', 10);\n",
+        "columns": [
+          "department",
+          "name",
+          "salary"
+        ],
+        "ordered": true,
+        "expected": [
+          [
+            "X",
+            "Ana",
+            100
+          ],
+          [
+            "X",
+            "Bob",
+            100
+          ],
+          [
+            "X",
+            "Cid",
+            100
+          ],
+          [
+            "Y",
+            "Eve",
+            70
+          ],
+          [
+            "Z",
+            "Flo",
+            10
+          ]
+        ]
+      }
+    ],
+    "solution": "WITH ranked AS (\n    SELECT department, name, salary,\n           RANK() OVER (PARTITION BY department ORDER BY salary DESC) AS rnk\n    FROM employees\n)\nSELECT department, name, salary\nFROM ranked\nWHERE rnk = 1\nORDER BY department, name;\n",
+    "hints": [
+      "You need to rank the employees inside each department.",
+      "Mind the ties: window functions do not all handle them the same way (`ROW_NUMBER` vs `RANK`)."
+    ]
+  }
+]
