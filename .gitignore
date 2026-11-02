@@ -10,3 +10,4 @@ data/
 repoach.toml.local
 .pytest_cache/
 .mypy_cache/
+.repoach.env
