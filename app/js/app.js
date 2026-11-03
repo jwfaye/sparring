@@ -1,15 +1,18 @@
-/* Training app, step 1: exercise engine (Python via Pyodide in a worker, SQL via sqlite3). */
+/* Training app: setup screen, exercise engine (Python via Pyodide in a worker, SQL via sqlite3), exam countdown, summary. */
 (() => {
   'use strict';
 
   const { $, $$, NS, selectTab, loadJSON, saveJSON, escapeHtml, fmtTime, shuffle, inline, renderMd, twoClick } = window.TT;
-  const LS = { progress: NS + 'progress', settings: NS + 'settings', exam: NS + 'exam', order: NS + 'order', lastId: NS + 'lastId' };
+  const LS = { progress: NS + 'progress', settings: NS + 'settings', setup: NS + 'setup', exam: NS + 'exam', order: NS + 'order', lastId: NS + 'lastId' };
+  const MODES = ['exercises', 'qcm', 'theory'];
+  const VIEWS = ['setup', ...MODES, 'recap'];
+  const LABELS = { exercises: 'Exercises', qcm: 'Quiz', theory: 'Interview', recap: 'Summary' };
   const DIFF_RANK = { easy: 0, medium: 1, hard: 2 };
 
   const state = {
     bank: [], byId: {}, order: [], idx: -1, current: null,
-    progress: {}, settings: { examMinutes: 45 }, exam: null,
-    pyReady: false, busy: false, editor: null, view: 'exercises', outputCollapsed: false,
+    progress: {}, settings: { examMinutes: 45 }, setup: { mode: 'exercises', filters: {}, examEnabled: false }, exam: null,
+    pyReady: false, busy: false, editor: null, view: 'setup', outputCollapsed: false,
     pendingConfirm: null,
   };
   const nextPaint = () => new Promise(r => setTimeout(r, 30));
@@ -23,8 +26,17 @@
   const statusIcon = st => ({ ok: '<span class="st-ok" aria-hidden="true">✓</span>', fail: '<span class="st-fail" aria-hidden="true">✗</span>' }[st] || '<span class="st-todo" aria-hidden="true">○</span>');
   const statusWord = st => ({ ok: 'solved', fail: 'failed' }[st] || 'to do');
 
-  // ------------------------------------------------------------ filters & order
-  const filters = () => ({ theme: $('#f-theme').value, difficulty: $('#f-difficulty').value, language: $('#f-language').value });
+  // ------------------------------------------------------------ filters & order (the selects live on the setup screen)
+  const FILTER_IDS = { theme: '#f-theme', difficulty: '#f-difficulty', language: '#f-language' };
+  const filters = () => Object.fromEntries(Object.entries(FILTER_IDS).map(([k, sel]) => [k, $(sel).value]));
+  const saveSetup = () => saveJSON(LS.setup, state.setup);
+  function applyFilters(f) {
+    Object.entries(FILTER_IDS).forEach(([k, sel]) => { const el = $(sel); el.value = f[k] || ''; if (el.value !== (f[k] || '')) el.value = ''; });
+  }
+  function renderSetupExercises() {
+    const n = pool().length, done = pool().filter(e => prog(e.id).status === 'ok').length;
+    $('#setup-ex-msg').textContent = state.bank.length ? `${n} exercise(s) in this selection, ${done} solved.` : '';
+  }
   function pool() {
     const f = filters();
     return state.bank.filter(e => (!f.theme || e.theme === f.theme) && (!f.difficulty || e.difficulty === f.difficulty) && (!f.language || e.language === f.language));
@@ -125,7 +137,7 @@
     if (!ex) {
       const all = state.bank.length, p = pool().length;
       box.innerHTML = p === 0 && all > 0
-        ? `<h2>No exercise</h2><p>No exercise matches the filters. Widen the filters or ask me to generate some: <code>generate N X exercises on the theme Y</code>.</p>`
+        ? `<h2>No exercise</h2><p>No exercise matches the filters. Widen them on the setup screen or ask me to generate some: <code>generate N X exercises on the theme Y</code>.</p>`
         : `<h2>Empty bank</h2><p>No exercise loaded. Check that <code>bank/exercises/*.json</code> exists and that the server is running.</p>`;
       return;
     }
@@ -302,28 +314,26 @@
     }
     renderExam();
   }
+  // The clock sits in the top bar and is shown only while a countdown runs; the setup screen shows the controls.
   function renderExam() {
-    const clock = $('#exam-clock'), btn = $('#exam-toggle'), banner = $('#exam-banner');
-    if (!state.exam) {
-      clock.textContent = fmtTime(Number($('#exam-minutes').value || 45) * 60);
-      clock.className = 'clock'; btn.textContent = 'Start'; banner.classList.add('hidden');
-      return;
-    }
+    const clock = $('#exam-clock'), banner = $('#exam-banner'), running = !!state.exam;
+    clock.classList.toggle('hidden', !running);
+    $('#exam-running').classList.toggle('hidden', !running); $('#exam-toggle').classList.toggle('hidden', !running);
+    $('#exam-enabled-label').classList.toggle('hidden', running); $('#exam-minutes-label').classList.toggle('hidden', running);
+    if (!running) { clock.textContent = ''; clock.className = 'clock hidden'; banner.classList.add('hidden'); return; }
     const left = Math.round((state.exam.endsAt - Date.now()) / 1000);
     clock.textContent = left >= 0 ? fmtTime(left) : '-' + fmtTime(-left);
     clock.className = 'clock ' + (left < 0 ? 'over' : left < 300 ? 'warning' : 'running');
-    btn.textContent = 'Stop';
+    $('#exam-running').textContent = left >= 0 ? `Exam in progress, ${fmtTime(left)} left` : 'Exam over';
     banner.classList.toggle('hidden', left >= 0);
   }
-  function toggleExam() {
-    if (state.exam) { state.exam = null; }
-    else {
-      const minutes = Math.max(1, Number($('#exam-minutes').value || 45));
-      state.settings.examMinutes = minutes; saveJSON(LS.settings, state.settings);
-      state.exam = { startedAt: Date.now(), endsAt: Date.now() + minutes * 60000, minutes };
-    }
+  function startExam() {
+    const minutes = Math.max(1, Number($('#exam-minutes').value || 45));
+    state.settings.examMinutes = minutes; saveJSON(LS.settings, state.settings);
+    state.exam = { startedAt: Date.now(), endsAt: Date.now() + minutes * 60000, minutes };
     saveJSON(LS.exam, state.exam); renderExam();
   }
+  function stopExam() { state.exam = null; saveJSON(LS.exam, null); renderExam(); }
 
   // ------------------------------------------------------------ recap
   function renderRecap() {
@@ -346,21 +356,43 @@
       sorted.map(({ e, p }) => `<tr class="clickable" data-id="${escapeHtml(e.id)}"><td>${statusIcon(p.status)}<span class="visually-hidden">${statusWord(p.status)}</span></td><td>${escapeHtml(e.title)}</td><td>${escapeHtml(e.theme)}</td><td class="${escapeHtml(e.difficulty)}">${escapeHtml(e.difficulty)}</td><td>${e.language}</td><td>${p.attempts}</td><td>${fmtTime(p.time)}</td><td>${p.hintsUsed || ''}</td><td>${p.solutionSeen ? 'viewed' : ''}</td></tr>`).join('');
     $$('#recap-exercises tr.clickable').forEach(tr => tr.onclick = () => {
       const id = tr.dataset.id;
-      if (!state.order.includes(id)) { $('#f-theme').value = ''; $('#f-difficulty').value = ''; $('#f-language').value = ''; restoreOrCreateOrder(true); }
+      if (!state.order.includes(id)) { applyFilters({}); state.setup.filters = {}; saveSetup(); restoreOrCreateOrder(true); }
       switchView('exercises'); gotoId(id);
     });
   }
+  // ------------------------------------------------------------ views and the setup screen
+  // One view at a time: the setup screen, a training mode, or the summary. The mode modules show their own panels.
   function switchView(v) {
     state.view = v;
-    selectTab(v);
-    $('#view-exercises').classList.toggle('hidden', v !== 'exercises');
-    $('#view-recap').classList.toggle('hidden', v !== 'recap');
-    $('#view-qcm').classList.toggle('hidden', v !== 'qcm');
-    $('#view-theory').classList.toggle('hidden', v !== 'theory');
+    document.body.dataset.view = v;
+    VIEWS.forEach(x => $('#view-' + x).classList.toggle('hidden', x !== v));
+    $('#mode-label').textContent = LABELS[v] || '';
+    $('#btn-setup').classList.toggle('hidden', v === 'setup');
     if (v === 'recap') { saveCode(); renderRecap(); }
-    else if (v === 'qcm') { saveCode(); if (window.TTQCM) window.TTQCM.open(); }
-    else if (v === 'theory') { saveCode(); if (window.TTTHEORY) window.TTTHEORY.open(); }
-    else if (state.editor) state.editor.refresh();
+    else if (v === 'exercises' && state.editor) state.editor.refresh();
+    else if (v === 'setup') { saveCode(); renderSetupExercises(); $('#tab-' + state.setup.mode).focus(); }
+  }
+  function selectMode(m) {
+    state.setup.mode = m; saveSetup();
+    selectTab(m);
+    MODES.forEach(x => $('#setup-' + x).classList.toggle('hidden', x !== m));
+  }
+  // Start: the exam countdown when asked, then the chosen mode with the parameters of its panel.
+  function start() {
+    const m = state.setup.mode;
+    if ($('#exam-enabled').checked && !state.exam) startExam();
+    if (m === 'exercises') {
+      restoreOrCreateOrder();
+      const lastId = loadJSON(LS.lastId, null, sessionStorage);
+      showExercise(state.order.length ? Math.max(0, state.order.indexOf(lastId)) : -1);
+      switchView('exercises');
+    } else if (m === 'qcm') { if (window.TTQCM?.start()) switchView('qcm'); }
+    else if (m === 'theory') { if (window.TTTHEORY?.start()) switchView('theory'); }
+  }
+  function openSetup() {
+    if (state.view === 'qcm') window.TTQCM?.leave();
+    if (state.view === 'theory') window.TTTHEORY?.leave();
+    switchView('setup');
   }
 
   // ------------------------------------------------------------ init
@@ -379,8 +411,10 @@
     window.tt = state;
     state.progress = loadJSON(LS.progress, {});
     state.settings = { examMinutes: 45, ...loadJSON(LS.settings, {}) };
+    state.setup = { ...state.setup, ...loadJSON(LS.setup, {}) };
     state.exam = loadJSON(LS.exam, null);
     $('#exam-minutes').value = state.settings.examMinutes;
+    $('#exam-enabled').checked = !!state.setup.examEnabled;
     initEditor();
 
     $('#btn-run').onclick = onRun;
@@ -390,27 +424,33 @@
     $('#btn-next').onclick = () => state.idx < state.order.length - 1 && showExercise(state.idx + 1);
     twoClick($('#btn-reset'), 'Reset', () => { if (state.current) { state.editor.setValue(state.current.starter); saveCode(); state.editor.focus(); } });
     initSplitter();
-    $('#exam-toggle').onclick = toggleExam;
-    $('#exam-minutes').onchange = () => { state.settings.examMinutes = Number($('#exam-minutes').value); saveJSON(LS.settings, state.settings); renderExam(); };
-    $$('.tab').forEach(t => t.onclick = () => switchView(t.dataset.view));
+    $('#exam-toggle').onclick = stopExam;
+    $('#exam-enabled').onchange = () => { state.setup.examEnabled = $('#exam-enabled').checked; saveSetup(); };
+    $('#exam-minutes').onchange = () => { state.settings.examMinutes = Number($('#exam-minutes').value); saveJSON(LS.settings, state.settings); };
+    $$('.tab').forEach(t => t.onclick = () => selectMode(t.dataset.mode));
+    $('#btn-start').onclick = start;
+    $('#btn-setup').onclick = openSetup;
+    $('#btn-recap').onclick = () => switchView('recap');
+    $('#btn-qcm-history').onclick = () => { window.TTQCM?.openHistory(); switchView('qcm'); };
+    $('#btn-th-history').onclick = () => { window.TTTHEORY?.openHistory(); switchView('theory'); };
     $('#ex-list').onclick = ev => { const li = ev.target.closest('li[data-i]'); if (li) showExercise(Number(li.dataset.i)); };
-    ['#f-theme', '#f-difficulty', '#f-language'].forEach(s => $(s).onchange = () => { restoreOrCreateOrder(true); showExercise(state.order.length ? 0 : -1); });
-    $('#reshuffle').onclick = () => { restoreOrCreateOrder(true); showExercise(state.order.length ? 0 : -1); };
+    Object.values(FILTER_IDS).forEach(sel => $(sel).onchange = () => { state.setup.filters = filters(); saveSetup(); renderSetupExercises(); });
+    $('#reshuffle').onclick = () => { restoreOrCreateOrder(true); saveJSON(LS.lastId, null, sessionStorage); $('#setup-ex-msg').textContent = 'Order reshuffled: the next Start begins with a fresh draw.'; };
     $('#btn-export').onclick = () => {
       const blob = new Blob([JSON.stringify({ exportedAt: new Date().toISOString(), progress: state.progress }, null, 2)], { type: 'application/json' });
       const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'progress.json'; a.click();
     };
     twoClick($('#btn-reset-progress'), 'Reset progress', () => { state.progress = {}; saveProgress(); restoreOrCreateOrder(true); renderRecap(); showExercise(state.order.length ? 0 : -1); });
+    window.TTAPP = { switchView };
     window.addEventListener('beforeunload', () => { saveCode(); saveProgress(); });
     setInterval(tick, 1000);
     renderExam();
 
     try { await loadBank(); } catch (e) { $('#statement').innerHTML = `<h2>Bank unreachable</h2><p>${escapeHtml(e.message)}. Run <code>python server.py</code> and open the printed URL.</p>`; }
+    applyFilters(state.setup.filters || {});
     restoreOrCreateOrder();
-    // Resume where we left off: the last exercise seen, otherwise the first one.
-    const lastId = loadJSON(LS.lastId, null, sessionStorage);
-    const startIdx = lastId && state.order.includes(lastId) ? state.order.indexOf(lastId) : 0;
-    showExercise(state.order.length ? startIdx : -1);
+    selectMode(MODES.includes(state.setup.mode) ? state.setup.mode : 'exercises');
+    switchView('setup');
     await initPython();
   }
 

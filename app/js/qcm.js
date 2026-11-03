@@ -1,4 +1,4 @@
-/* Quiz tab: one question at a time, explanation, score, error history by theme. */
+/* Quiz mode: parameters on the setup screen, one question at a time, explanation, score, error history by theme. */
 (() => {
   'use strict';
   const { $, $$, NS, loadJSON, saveJSON, escapeHtml, shuffle, renderMd, twoClick, fmtDate } = window.TT;
@@ -27,8 +27,9 @@
   function show(part) { ['home', 'quiz', 'end'].forEach(p => $('#qcm-' + p).classList.toggle('hidden', p !== part)); }
   const plain = s => String(s).replace(/[`*]/g, '').replace(/\s+/g, ' ').trim();
 
-  // ------------------------------------------------------------ home + history
-  function renderHome() {
+  const failing = () => st.bank.filter(q => st.history[q.id]?.lastWrong).length;
+  // ------------------------------------------------------------ setup panel (#setup-qcm) and history page (#qcm-home)
+  function renderSetup() {
     if (!st.loaded) return;
     const counts = {};
     st.bank.forEach(q => counts[q.theme] = (counts[q.theme] || 0) + 1);
@@ -37,7 +38,10 @@
       `<label class="chip"><input type="checkbox" value="${escapeHtml(t)}" ${!prefs.themes.length || prefs.themes.includes(t) ? 'checked' : ''}> ${escapeHtml(label(t))} <span class="muted">${counts[t]}</span></label>`).join('');
     $('#qcm-n').value = String(prefs.n); $('#qcm-prioritize').checked = prefs.prioritize !== false;
     $('#qcm-msg').textContent = '';
-
+    const rv = $('#qcm-review'), n = failing(); rv.disabled = n === 0; rv.textContent = `Review my mistakes (${n})`;
+  }
+  function renderHistory() {
+    if (!st.loaded) return;
     const rows = st.themes.map(t => {
       const qs = st.bank.filter(q => q.theme === t);
       let asked = 0, wrong = 0, failing = 0, seen = 0;
@@ -52,17 +56,18 @@
     $('#qcm-stats-themes').innerHTML = `<tr><th>Theme</th><th>Questions</th><th>Seen</th><th>Answers</th><th>Mistakes</th><th>Error rate</th><th>To review</th></tr>` +
       rows.map(r => `<tr><td>${escapeHtml(label(r.t))}</td><td>${r.n}</td><td>${r.seen}</td><td>${r.asked}</td><td>${r.wrong}</td>
         <td><div class="bar rate" title="${r.asked ? Math.round(100 * r.wrong / r.asked) + ' %' : ''}"><span style="width:${r.asked ? 100 * r.wrong / r.asked : 0}%"></span></div></td><td>${r.failing}</td></tr>`).join('');
-    const rv = $('#qcm-review'); rv.disabled = tot.failing === 0; rv.textContent = `Review my mistakes (${tot.failing})`;
     $('#qcm-sessions').innerHTML = st.sessions.slice(-8).reverse().map(s =>
       `<li><span class="muted">${fmtDate(s.at)}</span><span><strong>${s.score} / ${s.n}</strong></span><span class="muted">${s.themes.map(label).join(', ')}</span></li>`).join('') || '<li class="muted">No session yet.</li>';
   }
   const selectedThemes = () => $$('#qcm-themes input:checked').map(i => i.value);
 
   // ------------------------------------------------------------ session
+  // Returns false, with a message on the setup panel, when the selection holds no question.
   function startSession(ids) {
-    if (!ids.length) { $('#qcm-msg').textContent = 'No question for this selection.'; return; }
+    if (!ids.length) { $('#qcm-msg').textContent = 'No question for this selection.'; return false; }
     st.session = { ids, idx: 0, answers: [], perms: Object.fromEntries(ids.map(id => [id, shuffle([0, 1, 2, 3])])) };
     show('quiz'); renderQuestion();
+    return true;
   }
   function newSession() {
     const themes = selectedThemes(), n = $('#qcm-n').value, prioritize = $('#qcm-prioritize').checked;
@@ -74,9 +79,11 @@
       ids = [...shuffle(g1), ...shuffle(g2), ...shuffle(g3)].map(q => q.id);
     } else ids = shuffle([...pool]).map(q => q.id);
     if (n !== 'all') ids = ids.slice(0, Number(n));
-    startSession(ids);
+    return startSession(ids);
   }
-  function reviewErrors() { startSession(shuffle(st.bank.filter(q => st.history[q.id]?.lastWrong).map(q => q.id))); }
+  function reviewErrors() {
+    if (startSession(shuffle(st.bank.filter(q => st.history[q.id]?.lastWrong).map(q => q.id)))) window.TTAPP.switchView('qcm');
+  }
 
   function renderQuestion() {
     const s = st.session, q = st.byId[s.ids[s.idx]], perm = s.perms[q.id];
@@ -134,9 +141,9 @@
     }).join('') : '<p>No mistake in this session.</p>';
     $('#qcm-replay').classList.toggle('hidden', !failed.length);
     $('#qcm-replay').onclick = () => startSession(shuffle(failed.map(a => a.id)));
-    st.session = null;
+    st.session = null; renderSetup();
   }
-  function backHome() { st.session = null; renderHome(); show('home'); }
+  function backToSetup() { st.session = null; window.TTAPP.switchView('setup'); }
 
   // ------------------------------------------------------------ keyboard
   document.addEventListener('keydown', e => {
@@ -147,14 +154,19 @@
   });
 
   // ------------------------------------------------------------ init
-  $('#qcm-start').onclick = newSession;
   $('#qcm-review').onclick = reviewErrors;
   $('#qcm-next').onclick = next;
-  $('#qcm-quit').onclick = backHome;
-  $('#qcm-back').onclick = backHome;
+  $('#qcm-quit').onclick = backToSetup;
+  $('#qcm-back').onclick = backToSetup;
   $('#qcm-all').onclick = () => { const boxes = $$('#qcm-themes input'); const all = boxes.every(b => b.checked); boxes.forEach(b => b.checked = !all); };
-  twoClick($('#qcm-reset-history'), 'Clear quiz history', () => { st.history = {}; st.sessions = []; save(); renderHome(); });
-  window.TTQCM = { open: () => { if (st.session) show('quiz'); else { renderHome(); show('home'); } }, state: st };
+  twoClick($('#qcm-reset-history'), 'Clear quiz history', () => { st.history = {}; st.sessions = []; save(); renderSetup(); renderHistory(); });
+  // start: a session from the setup panel (false when the selection is empty); openHistory: the history page; leave: drop the session.
+  window.TTQCM = {
+    start: newSession,
+    openHistory: () => { renderHistory(); show('home'); },
+    leave: () => { st.session = null; },
+    state: st,
+  };
   st.history = loadJSON(KEY.history, {}); st.sessions = loadJSON(KEY.sessions, []);
-  load().then(renderHome).catch(e => { $('#qcm-home').innerHTML = `<h2>Quiz bank unreachable</h2><p>${escapeHtml(e.message)}</p>`; });
+  load().then(() => { renderSetup(); renderHistory(); }).catch(e => { $('#qcm-msg').textContent = 'Quiz bank unreachable: ' + e.message; $('#qcm-home').innerHTML = `<h2>Quiz bank unreachable</h2><p>${escapeHtml(e.message)}</p>`; });
 })();

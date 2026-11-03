@@ -31,13 +31,9 @@ a { color: var(--accent); }
 .topbar { display: flex; align-items: center; gap: 20px; padding: 0 20px; height: 48px; background: var(--bg); border-bottom: 1px solid var(--border); flex-wrap: wrap; flex: none; }
 .brand { display: inline-flex; align-items: center; gap: 7px; font-weight: 600; font-size: 14px; margin: 0; }
 .brand .mark { flex: none; }
-.tabs { height: 100%; }
-.tablist { display: flex; gap: 2px; height: 100%; }
-.tab { background: transparent; border: 0; border-bottom: 2px solid transparent; color: var(--muted); padding: 0 12px; cursor: pointer; font-weight: 500; }
-.tab:hover { color: var(--fg); }
-.tab.active { color: var(--fg); border-bottom-color: var(--fg); }
-.exam { display: flex; align-items: center; gap: 8px; margin-left: auto; font-size: 13px; color: var(--muted); }
-.exam input[type=number] { width: 60px; }
+.mode { font-size: 13px; }
+.spacer { flex: 1; }
+body[data-view="qcm"] #py-status, body[data-view="theory"] #py-status, body[data-view="recap"] #py-status { display: none; }
 .clock { font-family: var(--mono); font-size: 14px; min-width: 56px; text-align: right; color: var(--fg); font-variant-numeric: tabular-nums; }
 .clock.running { color: var(--accent); }
 .clock.warning { color: var(--warn); }
@@ -62,12 +58,26 @@ a { color: var(--accent); }
 .btn.warn { color: var(--warn); border-color: #f1d9a8; }
 .btn.warn:hover { background: var(--warn-bg); }
 
-/* ---- exercises view */
+/* ---- setup screen: mode tabs, one panel per mode, the exam countdown, Start */
 .views { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .view { flex: 1; min-height: 0; }
+.setup { overflow: auto; padding: 32px 24px; }
+.setup-inner { max-width: 760px; margin: 0 auto; }
+.setup h2 { margin: 0 0 14px; font-size: 20px; }
+.tablist { display: flex; gap: 2px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+.tab { background: transparent; border: 0; border-bottom: 2px solid transparent; margin-bottom: -1px; color: var(--muted); padding: 8px 14px; cursor: pointer; font-weight: 500; }
+.tab:hover { color: var(--fg); }
+.tab.active { color: var(--fg); border-bottom-color: var(--fg); }
+.panel { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px 18px; margin-bottom: 14px; }
+.row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin: 8px 0; }
+.panel label select, .panel label input[type=number] { margin-left: 6px; }
+#exam-minutes { width: 64px; }
+.setup-actions { margin-top: 18px; }
+.setup-actions .btn.primary { padding: 8px 28px; }
+
+/* ---- exercises view */
 #view-exercises { display: grid; grid-template-columns: 250px minmax(320px, 1fr) minmax(420px, 1.3fr); gap: 0; }
 .sidebar { border-right: 1px solid var(--border); background: var(--bg2); display: flex; flex-direction: column; min-height: 0; }
-.filters { display: flex; flex-direction: column; gap: 6px; padding: 12px; border-bottom: 1px solid var(--border); }
 .ex-list { list-style: none; margin: 0; padding: 6px; overflow: auto; }
 .ex-list li { display: flex; }
 .ex-list .ex-item { flex: 1; min-width: 0; padding: 6px 8px; border: 0; border-radius: var(--radius); background: transparent; color: inherit; text-align: left; cursor: pointer; display: flex; gap: 8px; align-items: baseline; }
@@ -100,7 +110,6 @@ a { color: var(--accent); }
 
 .editor-pane { display: flex; flex-direction: column; min-height: 0; }
 .toolbar { display: flex; gap: 8px; align-items: center; padding: 8px 12px; border-bottom: 1px solid var(--border); background: var(--bg); flex-wrap: wrap; }
-.spacer { flex: 1; }
 .ex-timer { font-family: var(--mono); color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
 .editor-wrap { flex: 1 1 auto; min-height: 120px; position: relative; }
 .editor-wrap .CodeMirror { position: absolute; inset: 0; height: 100%; font-size: 13.5px; line-height: 1.5; color: var(--fg); }
@@ -135,7 +144,7 @@ a { color: var(--accent); }
 /* ---- recap */
 .recap { max-width: 1100px; margin: 0 auto; padding: 24px; overflow: auto; height: 100%; }
 .recap-head { display: flex; align-items: center; justify-content: space-between; }
-.recap-head h2, .qcm h2 { margin: 0; font-size: 20px; }
+.recap-head h2, .qcm h2 { margin: 0 0 12px; font-size: 20px; }
 .recap-actions { display: flex; gap: 8px; }
 .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 12px 0 20px; }
 .card { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; }
@@ -161,10 +170,6 @@ a { color: var(--accent); }
 
 /* ---- QCM */
 .qcm { max-width: 860px; margin: 0 auto; padding: 24px; overflow: auto; height: 100%; }
-.qcm .row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin: 8px 0; }
-.qcm select { margin-left: 6px; }
-.qcm-config { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 16px 18px; margin-bottom: 24px; }
-.qcm-config h2 { margin-bottom: 10px; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 10px; }
 .chip { background: var(--bg); border: 1px solid var(--border-strong); border-radius: 999px; padding: 3px 10px; font-size: 12.5px; cursor: pointer; display: inline-flex; gap: 5px; align-items: center; }
 .chip:has(input:checked) { border-color: var(--accent); background: var(--accent-bg); color: var(--accent); }
@@ -203,8 +208,9 @@ input[type=checkbox] { accent-color: var(--accent); }
 .theory .answer { width: 100%; box-sizing: border-box; background: var(--bg); color: var(--fg); border: 1px solid var(--border-strong); border-radius: 8px; padding: 10px 12px; font: 14px/1.55 var(--sans); resize: vertical; margin: 10px 0; }
 .theory .answer:disabled { background: var(--bg2); }
 .th-list .t { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.th-list li { cursor: pointer; align-items: center; }
-.th-list li:hover { background: var(--bg2); }
+.th-list li { padding: 0; }
+.th-list .th-item { flex: 1; min-width: 0; display: flex; gap: 14px; align-items: center; padding: 6px 0; background: none; border: 0; text-align: left; color: inherit; cursor: pointer; }
+.th-list .th-item:hover { background: var(--bg2); }
 .score-pill { font-family: var(--mono); font-size: 12px; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--border); flex: none; }
 .score-pill.good { color: var(--ok); } .score-pill.mid { color: var(--warn); } .score-pill.bad { color: var(--fail); } .score-pill.pending { color: var(--muted); }
 .grade { border: 1px solid var(--border); border-radius: 8px; background: var(--bg); padding: 14px 16px; margin: 10px 0; }

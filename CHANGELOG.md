@@ -18,6 +18,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   that opens with a banner, the CI and license badges, the three modes and screenshots in both themes (#27).
 
 ### Changed
+- The page opens on a setup screen: mode, its parameters, an optional exam countdown and one Start button, remembered
+  per profile; the training screens show only what the work needs, a Setup button in the top bar returns to the
+  setup screen, and the Summary and the quiz and interview histories open from there (#28).
 - Python sources formatted with `ruff format`, checked in CI and by the pre-commit hook (#26).
 - Interview answers are kept in a SQLite database per profile (`data/theory[/<profile>]/answers.sqlite3`) instead
   of a JSON file rewritten on every request; an existing `answers.json` is imported on first use and renamed

@@ -1,4 +1,4 @@
-"""Quiz tab: start a session and answer with the keyboard."""
+"""Quiz mode: start a session from the setup screen and answer with the keyboard."""
 
 import re
 
@@ -10,11 +10,10 @@ expect = playwright.expect
 pytestmark = pytest.mark.e2e
 
 
-def test_answer_with_the_keyboard_shows_the_explanation(page, app_url):
+def test_answer_with_the_keyboard_shows_the_explanation(page, app_url, start):
     page.goto(app_url)
-    page.click('.tab[data-view="qcm"]')
-    expect(page.locator("#qcm-themes label.chip").first).to_be_visible()
-    page.click("#qcm-start")
+    expect(page.locator("#qcm-themes label.chip").first).to_be_attached()
+    start(page, "qcm")
     expect(page.locator("#qcm-quiz")).to_be_visible()
     expect(page.locator("#qcm-progress")).to_have_text(re.compile(r"^Question 1 / \d+$"))
     choices = page.locator("#qcm-choices .choice")
@@ -27,3 +26,5 @@ def test_answer_with_the_keyboard_shows_the_explanation(page, app_url):
     expect(page.locator("#qcm-choices .choice.correct")).to_have_count(1)
     expect(choices.first).to_be_disabled()
     expect(page.locator("#qcm-next")).to_be_visible()
+    page.click("#qcm-quit")
+    expect(page.locator("#view-setup")).to_be_visible()

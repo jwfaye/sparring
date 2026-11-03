@@ -1,4 +1,4 @@
-"""The page boots cleanly and the theme toggle works."""
+"""The page boots cleanly on the setup screen and the theme toggle works."""
 
 import pytest
 
@@ -8,10 +8,12 @@ expect = playwright.expect
 pytestmark = pytest.mark.e2e
 
 
-def test_page_loads_without_console_errors_or_failed_requests(ready_page):
+def test_page_loads_without_console_errors_or_failed_requests(ready_page, setup_screen):
     page = ready_page
     page.wait_for_load_state("networkidle")
-    expect(page.locator("#ex-list li[data-i]").first).to_be_visible()
+    setup_screen(page)
+    expect(page.locator("#btn-setup")).to_be_hidden()
+    assert page.locator("#f-theme option").count() > 1
     expect(page.locator("#qcm-themes label.chip").first).to_be_attached()
     expect(page.locator("#th-status")).to_contain_text("Offline mode")
     assert page.log.console_errors == []

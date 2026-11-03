@@ -23,10 +23,22 @@ A local web app with three training modes:
 - **Interview**: a theory-interview mode where a model grades your free-text answers against a key-point grid, or
   records them for later grading when no model is available.
 
+The page opens on a setup screen: pick a mode and its parameters (exercise theme, difficulty and language; quiz
+themes, number of questions, mistakes first; interview sections, unanswered first, timer per question), tick the
+optional exam countdown, press Start. The training screen then shows only what the work needs; the Setup button in
+the top bar returns to the setup screen, from which the Summary and the quiz and interview histories also open. The
+last setup is remembered per profile, so a returning user just presses Start.
+
 The page is usable with the keyboard alone and with a screen reader (ARIA tabs, landmarks, live status regions);
 inside the code editor Tab indents, so press Escape, then Tab, to leave it. Light or dark theme follows the system
 setting; the "Dark / Light" button in the top bar forces one (remembered by the browser).
 
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/img/setup-dark.webp">
+    <img src="docs/img/setup-light.webp" alt="Setup screen: mode tabs, the parameters of the mode, the exam countdown and the Start button" width="800">
+  </picture>
+</p>
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/img/exercises-dark.webp">
@@ -205,8 +217,10 @@ Exercise format:
 }
 ```
 
-Shortcuts: `Ctrl+Enter` run, `Ctrl+Shift+Enter` check, `Ctrl+/` comment. Progress, code and exam timer live in the
-browser's `localStorage` (Summary tab: Export / Reset).
+Theme, difficulty and language are chosen on the setup screen (Reshuffle redraws the order of the exercises not done
+yet); the training screen shows the list, the statement, the editor and the output. Shortcuts: `Ctrl+Enter` run,
+`Ctrl+Shift+Enter` check, `Ctrl+/` comment. Progress, code, setup and exam timer live in the browser's
+`localStorage` (Summary page, opened from the setup screen: Export / Reset).
 
 Your code runs in a Web Worker (`app/js/py-worker.js`), so the page never freezes. The **Stop** button interrupts
 the current run, and a run is interrupted automatically after 20 s (`RUN_TIMEOUT_MS` in `app/js/py-client.js`);
@@ -216,8 +230,10 @@ reloaded in the worker (a few seconds) and the next run waits for "Python ready"
 
 ## Quiz
 
-**Quiz** tab: one question at a time, shuffled choices, keys 1-4 to answer, Enter for the next one, explanation after
-each answer, score and list of failed questions at the end, error history by theme, "Review my mistakes" button.
+**Quiz** mode: themes, number of questions and "prioritize my mistakes and unseen questions" are chosen on the setup
+screen, which also carries the "Review my mistakes" button; then one question at a time, shuffled choices, keys 1-4
+to answer, Enter for the next one, explanation after each answer, score and list of failed questions at the end. The
+error history by theme and the recent sessions are on the quiz history page, opened from the setup screen.
 
 Bank: `bank/qcm/*.json`. Question format:
 
@@ -245,7 +261,8 @@ ML theory questions are adapted from alexeygrigorev/data-science-interviews (the
 
 ## Theory interview
 
-**Interview** tab: a question, a free-text answer, an optional timer (2 or 3 min), then:
+**Interview** mode: sections, "unanswered questions first" and an optional timer per question (2 or 3 min) are
+chosen on the setup screen, which also shows whether grading is online; then a question, a free-text answer, and:
 
 - **online**: the backend (`backend/grader.py`) sends the question, the grid and your answer to the model (structured
   JSON output) and returns a score out of 10, covered / missing / wrong points, feedback and an improved version of
@@ -261,7 +278,8 @@ ML theory questions are adapted from alexeygrigorev/data-science-interviews (the
   `python -m tools.grade_pending` once a key is available. Answers saved by an earlier version in `answers.json` are
   imported into the database the first time the profile is read, and the file is renamed `answers.json.migrated`.
 
-Score history by section and weak points on the tab's home. Every saved answer can be reopened.
+Score history by section, weak points and the saved answers (each can be reopened) are on the interview history
+page, opened from the setup screen.
 
 Bank: `bank/theory/*.json`, 231 questions imported without answers by `tools.import_theory_questions` from
 `tools/sources/` (65 from the AI engineering field guide, 166 from data-science-interviews, source kept on each
@@ -295,9 +313,10 @@ package itself, build the wheel and look at it:
 `python -m pip wheel . --no-deps -w /tmp/wheel && unzip -l /tmp/wheel/sparring-*.whl` (it must list
 `sparring_data/app/` and `sparring_data/bank/`, nothing from `data/` or `tests/`).
 `tests/e2e/` drives the page in headless Chromium (Playwright) against a `server.py` started on a free port with the
-`e2e` profile: page boot, an exercise check, a quiz answer, an offline interview answer, the theme toggle, and an
-accessibility audit (`tests/e2e/test_a11y.py` injects `axe-core` from `node_modules`, installed by `npm ci`, and
-fails on any serious or critical violation on each tab in both themes: run it alone with
+`e2e` profile: page boot, the setup screen (remembered setup, no configuration control on the training screens, the
+exam clock), an exercise check, a quiz answer, an offline interview answer, the theme toggle, and an accessibility
+audit (`tests/e2e/test_a11y.py` injects `axe-core` from `node_modules`, installed by `npm ci`, and fails on any
+serious or critical violation on nine screens in both themes: run it alone with
 `.venv-check/bin/python -m pytest -q -m e2e tests/e2e/test_a11y.py`). The suite
 is opt-in (`-m e2e` overrides the `addopts` of `pyproject.toml`) and its modules skip when the `e2e` extra is not
 installed. The same steps run in GitHub Actions on every push to `main`
