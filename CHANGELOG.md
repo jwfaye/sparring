@@ -16,7 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   AA contrast; an axe-core audit runs in the browser test suite (#25).
 
 ### Changed
-- Python sources formatted with `ruff format`, checked in CI and by the pre-commit hook (#N).
+- Python sources formatted with `ruff format`, checked in CI and by the pre-commit hook (#26).
 - Interview answers are kept in a SQLite database per profile (`data/theory[/<profile>]/answers.sqlite3`) instead
   of a JSON file rewritten on every request; an existing `answers.json` is imported on first use and renamed
   `answers.json.migrated` (#24).
