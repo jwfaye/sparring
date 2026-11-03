@@ -58,7 +58,6 @@ Everything lives in one `config.json` (defaults in `backend/config.py`), the fir
 Because of step 2, start the installed command from a directory you trust: a `config.json` found there can set
 `grader.claude_bin`, a program the grader runs, and the server warns at startup when that happens.
 
-
 ```json
 {
   "server": { "host": "127.0.0.1", "port": 8765 },
