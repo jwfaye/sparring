@@ -42,6 +42,16 @@ def test_theory_bank_is_valid(capsys):
     assert int(summary.split()[0]) >= 200
 
 
+def test_theory_questions_have_difficulty_and_key_points():
+    items = check_theory.load_all()
+    assert len(items) >= 200
+    for item in items:
+        assert item.get("difficulty") in check_theory.DIFFICULTIES, item["id"]
+        key_points = item["key_points"]
+        assert 3 <= len(key_points) <= 6, item["id"]
+        assert all(isinstance(p, str) and p.strip() for p in key_points), item["id"]
+
+
 def test_bank_files_are_json_lists_with_unique_ids():
     seen: dict[str, str] = {}
     for path in glob.glob(os.path.join(ROOT, "bank", "*", "*.json")):

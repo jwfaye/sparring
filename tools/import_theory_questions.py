@@ -5,8 +5,9 @@
 - tools/sources/ds_interviews_theory.md   (alexeygrigorev/data-science-interviews, theory.md, CC BY 4.0)
 
 Writes bank/theory/questions_field_guide.json and bank/theory/questions_ds_interviews.json:
-[{id, section, question, difficulty?, source}]. The grading grids (reference answer, key points, common
-mistakes, translation) are added afterwards by tools/add_theory_grids.py and preserved on re-import.
+[{id, section, question, source, difficulty?}]. The grading grids (reference answer, key points, common
+mistakes) are added afterwards by tools/add_theory_grids.py; grids and a difficulty already in the bank are
+preserved on re-import when the source gives none.
 
 Usage: python -m tools.import_theory_questions
 """
@@ -85,6 +86,8 @@ def merge(path: str, items: list[Question], prefix: str, source: str) -> list[Qu
         q: Question = {"id": qid, "section": it["section"], "question": it["question"], "source": source}
         if it.get("difficulty"):
             q["difficulty"] = it["difficulty"]
+        elif qid in old and "difficulty" in old[qid]:
+            q["difficulty"] = old[qid]["difficulty"]
         for f in GRID_FIELDS:
             if qid in old and f in old[qid]:
                 q[f] = old[qid][f]

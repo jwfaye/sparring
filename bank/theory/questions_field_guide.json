@@ -4,6 +4,7 @@
     "section": "LLM Practice",
     "question": "How do LLMs work?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "easy",
     "reference": "An LLM is a Transformer network trained to predict the next token on huge text corpora (self-supervised pre-training). Text is split into tokens, each token becomes a vector, and attention layers relate each position to the previous ones to produce a probability distribution over the next token. Generation is autoregressive: sample a token, append it to the context, repeat. After pre-training, post-training (instruction tuning, RLHF/DPO) makes the model useful and safe in conversation. The model has no memory beyond its context window and only 'knows' what its weights have compressed, hence hallucinations and the need for RAG or tools.",
     "key_points": [
       "Tokenization then embeddings; Transformer architecture with attention",
@@ -23,6 +24,7 @@
     "section": "LLM Practice",
     "question": "What is temperature and top-p sampling? How do they affect outputs?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "easy",
     "reference": "At each step the model produces logits over the vocabulary. Temperature divides the logits before the softmax: T < 1 sharpens the likely tokens (more deterministic, repetitive outputs), T > 1 flattens the distribution (more diversity, more errors), T = 0 amounts to greedy decoding. Top-p (nucleus sampling) keeps only the smallest set of tokens whose cumulative probability reaches p, then samples within it: it cuts the long tail of unlikely tokens. Tune one or the other depending on the task: extraction/code -> low temperature; brainstorming -> higher. Even at T = 0 the output is not guaranteed identical (floating-point computation, batching).",
     "key_points": [
       "Temperature: scales the logits before the softmax; low = deterministic, high = diversity",
@@ -41,6 +43,7 @@
     "section": "LLM Practice",
     "question": "What is the context window and what happens when you exceed it? How do you handle long documents?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "easy",
     "reference": "The context window is the maximum number of tokens (prompt + answer) the model can process in one request. Beyond it, the API returns an error or the client truncates, often losing the beginning; and even under the limit, quality degrades on very long contexts ('lost in the middle'), with cost and latency growing with size. For a long document: split into chunks (by structure, with overlap), load only the relevant passages (RAG), summarize hierarchically (map-reduce), or make several targeted passes; count tokens before the call and keep room for the answer.",
     "key_points": [
       "Definition: limit on input + output tokens per request",
@@ -58,6 +61,7 @@
     "section": "LLM Practice",
     "question": "How do you do memory management and context management with LLMs?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "medium",
     "reference": "The model is stateless: all 'memory' has to be re-injected into the prompt. Distinguish working memory (the conversation history, truncated or summarized as it grows: sliding window, progressive summary, compaction), long-term memory (facts about the user or the project stored outside the model, retrieved by vector search or by keys, and injected selectively) and retrieval tools (RAG). Good practice: keep the system prompt and stable information at the beginning (cache), put the most useful information near the question, clean up large tool results, and evaluate what the memory actually brings.",
     "key_points": [
       "The LLM is stateless: all context must be re-injected on every call",
@@ -76,6 +80,7 @@
     "section": "RAG Systems",
     "question": "What's RAG? Explain the complete process.",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "easy",
     "reference": "RAG (Retrieval-Augmented Generation) makes the LLM answer from documents retrieved at query time rather than from its weights alone. Ingestion: collect the documents, clean them, split them into chunks, compute an embedding per chunk and index it (vector database, often complemented by a BM25 lexical index). Query: embed the question, retrieve the k closest chunks (hybrid + optional reranking), build a prompt with the question and the passages, generate an answer that cites its sources. Benefits: up-to-date and private knowledge, traceability, fewer hallucinations. Watch points: quality of chunking, retrieval and context window, and separate evaluation of the two stages.",
     "key_points": [
       "Ingestion: cleaning, chunking, embeddings, indexing",
@@ -95,6 +100,7 @@
     "section": "RAG Systems",
     "question": "Text vs Vector search. When would you use each?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "easy",
     "reference": "Text search (BM25, inverted index) relies on exact terms: excellent for identifiers, codes, proper nouns, jargon, short precise queries; transparent, fast, no model needed. Vector search compares embeddings: it captures meaning (synonyms, paraphrases, natural-language questions, multilingual) but misses rare exact matches and depends on the embedding model. In practice you combine both (hybrid search, RRF fusion) then rerank with a cross-encoder. Choose according to the nature of queries and documents, and measure on an evaluation set.",
     "key_points": [
       "Text/BM25: exact terms, identifiers, names, jargon; fast and explainable",
@@ -112,6 +118,7 @@
     "section": "RAG Systems",
     "question": "You're making a system for huge PDF reports. How would you process them?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "medium",
     "reference": "First extract cleanly: a PDF parser with layout detection (headings, columns, tables, figures), OCR for scans, tables extracted as structure (CSV/markdown) rather than flat text. Keep metadata (title, section, page, date) for filtering and citations. Split by structure (sections, paragraphs) with controlled size and overlap, keeping the hierarchical context (section title inside the chunk). Index hybrid, possibly with a summary per section for two-level search. Process in an asynchronous, idempotent pipeline (large volumes), deduplicate, and evaluate extraction on a sample because that is where most information gets lost.",
     "key_points": [
       "Robust extraction: layout, tables, OCR when scanned",
@@ -130,6 +137,7 @@
     "section": "RAG Systems",
     "question": "How would you handle the problem of a model hallucinating when no information is found in the given context?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "medium",
     "reference": "Several layers: explicitly instruct the model to answer only from the provided passages and to say 'I don't know' otherwise, with a mandatory citation format; filter upstream with a relevance threshold (if no passage passes it, answer that nothing was found or ask a clarifying question); verify grounding downstream (an LLM judge or an NLI model checks that each claim is supported by a passage); improve retrieval (hybrid, reranking, query rewriting) to reduce no-context cases; measure the rate of ungrounded answers on an evaluation set that includes unanswerable questions.",
     "key_points": [
       "Explicit instruction: rely on the context, admit missing information",
@@ -148,6 +156,7 @@
     "section": "RAG Systems",
     "question": "What are common RAG failure points and how do you debug them?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "medium",
     "reference": "Failures sort by stage. Ingestion: broken extraction, chunks that cut an idea, missing metadata, stale index. Retrieval: the right information exists but is not retrieved (bad embedding, poorly phrased query, k too small, filter too strict) or is drowned by irrelevant passages. Generation: the passage is there but the model ignores it, mixes it up or extrapolates; context too long; answer format. Debugging = instrumenting each stage: trace the query, the retrieved chunks and their scores, the final prompt; build a question set with expected passages to measure retrieval recall separately from answer quality; look at failure cases one by one before optimizing.",
     "key_points": [
       "Ingestion/chunking failures (splitting, extraction, stale index)",
@@ -166,6 +175,7 @@
     "section": "RAG Systems",
     "question": "How do you handle citations and source attribution in a RAG system?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "medium",
     "reference": "Give each passage a stable identifier (document, section, page, URL) and pass it in the prompt with its content; ask the model for a structured answer where each claim references the identifiers used (JSON format or [1] markers); downstream, check that the cited identifiers exist and that the cited text supports the claim (overlap comparison or NLI judge), drop invalid citations; show the source excerpts to the user so they can verify. Some APIs offer native passage-level citations. Measuring citation precision is part of the evaluation.",
     "key_points": [
       "Stable identifiers per chunk passed in the prompt",
@@ -183,6 +193,7 @@
     "section": "RAG Systems",
     "question": "What is semantic caching?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "easy",
     "reference": "A classic cache only helps when the query is identical; a semantic cache stores (query embedding, answer) pairs and returns the cached answer when a new query is close enough (cosine similarity above a threshold). It reduces cost and latency on frequent, rephrased questions. Risks: serving an answer to a close but different question (the threshold is tuned on an evaluation set, and entities matter: 'price of plan A' != 'price of plan B'), stale answers (TTL, invalidation when documents change), personalization (do not share context-dependent answers between users). Distinct from the API's prompt caching, which caches the token prefix.",
     "key_points": [
       "Cache keyed by embedding; hit when similarity > threshold",
@@ -200,6 +211,7 @@
     "section": "RAG Systems",
     "question": "How do you scale a RAG system to 10M+ articles?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "expert",
     "reference": "Ingestion: distributed, incremental pipeline (message queues, embedding batches, idempotency, version tracking). Index: distributed vector database with an approximate index (HNSW, IVF-PQ) and quantization to fit in memory; partition by tenant, language or date; combine with metadata filters and a lexical index. Query: two-stage search (fast candidates then reranking on a few dozen), cache of frequent queries, limits on k and on context size. Freshness: incremental updates, deletion of obsolete documents. Observability and cost: measure p95 latency, recall on an evaluation set, cost per query; size embeddings and storage.",
     "key_points": [
       "Distributed, incremental, idempotent ingestion",
@@ -218,6 +230,7 @@
     "section": "RAG Systems",
     "question": "What are the key tradeoffs when designing a RAG system?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "medium",
     "reference": "Chunk size: small = precise retrieval but fragmented context; large = more context but noise and cost. Number of passages k and context size: recall vs cost, latency and dilution. Retrieval quality vs cost: simple BM25 vs embeddings vs hybrid + reranker. Freshness vs indexing cost. Generation model: large, accurate and expensive vs small and fast. Precision vs coverage: a strict relevance threshold reduces hallucinations but increases 'I don't know' answers. Simplicity vs sophistication (agentic RAG, multiple queries) to be justified by measurements. The right setting depends on the use case and is decided with an evaluation set.",
     "key_points": [
       "Chunk size and overlap: precision vs context",
@@ -236,6 +249,7 @@
     "section": "Agents and Tool Use",
     "question": "What makes an AI system agentic?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "easy",
     "reference": "A system is agentic when the LLM itself decides the steps to reach a goal: it observes a state, chooses an action (call a tool, search, write), observes the result and iterates until a stop condition. The loop is driven by the model, not by a sequence of calls coded in advance (workflow). Ingredients: goal, tool-calling ability, observe-act loop, memory/state, stop criteria. It is a continuum, from a fixed workflow to an autonomous agent; more autonomy = more flexibility but less predictability, more cost and more risk, hence guardrails.",
     "key_points": [
       "The model dynamically chooses actions (observe -> act -> observe loop) instead of a coded flow",
@@ -253,6 +267,7 @@
     "section": "Agents and Tool Use",
     "question": "What are the essential components of an agent beyond an LLM?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "medium",
     "reference": "Tools with clear descriptions and schemas (plus their execution, argument validation, error handling); an orchestration loop (turn management, parallel calls, stops); memory and context management (history, summary, long-term memory, retrieval); persistent state and resume points; guardrails (permissions, sandbox, cost and iteration limits, human validation for sensitive actions); observability (traces of each turn, costs, latency); and evaluation (task sets, success metrics). Often also a planner or sub-agents.",
     "key_points": [
       "Well-described tools + safe, validated execution",
@@ -271,6 +286,7 @@
     "section": "Agents and Tool Use",
     "question": "How do agents decide which tool to use?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "easy",
     "reference": "The model receives the tool definitions (name, description, argument schema) in its request and, from the goal and the context, generates a structured call (tool_use) with the arguments; the choice therefore relies on the quality of the descriptions, examples and system prompt. Good practice: precise descriptions stating when (not) to use the tool, unambiguous names, few overlapping tools, strict schemas validated client-side, informative tool results (including errors) so the model can correct itself. With many tools: grouping, deferred loading or tool search. And evaluate the rate of correct tool choice on test cases.",
     "key_points": [
       "Tool definitions in the prompt -> structured call generated by the model",
@@ -289,6 +305,7 @@
     "section": "Agents and Tool Use",
     "question": "When agent is the wrong solution?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "medium",
     "reference": "When the task is well specified and repeatable (a fixed workflow or a single LLM call is enough, cheaper and predictable); when the cost of an error is high without control or rollback; when latency or budget are constrained (an agent multiplies calls); when there is no good way to verify the result (tests, review); when the model is not reliable on this kind of task; or when a deterministic solution exists (rules, SQL). Rule: start with the simplest option, add autonomy only once value and viability are demonstrated.",
     "key_points": [
       "Task specifiable in advance -> workflow or single call",
@@ -307,6 +324,7 @@
     "section": "Agents and Tool Use",
     "question": "How do you explain agentic systems to non-technical stakeholders?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "easy",
     "reference": "By analogy: an assistant given a goal, who has a set of tools (query a database, send an email) and rules (what it may do alone, what needs approval), and who works step by step while checking its results. Stress what it can and cannot do, the guardrails, the fact that it can be wrong and how it is supervised and measured (success rate, cost, time saved). Avoid jargon, give a concrete end-to-end example and talk about risks and costs, not only promises.",
     "key_points": [
       "Assistant analogy with a goal, tools and rules",
@@ -324,6 +342,7 @@
     "section": "Agents and Tool Use",
     "question": "How do you detect and stop infinite planning loops?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "medium",
     "reference": "Prevention: hard limits on iterations, tokens, time and cost per task; detection: spot repeated identical tool calls (same tool + same arguments), lack of progress (unchanged state, same error), context growing without new results; reaction: interrupt, summarize the state, ask the human for clarification or degrade to a partial answer. Help the model make progress: informative tool results, budget announced in the prompt, ask for an explicit plan and a completion criterion. Trace loops in production to adjust.",
     "key_points": [
       "Hard limits: iterations, tokens, time, cost",
@@ -342,6 +361,7 @@
     "section": "Agents and Tool Use",
     "question": "How do you implement termination conditions in long-running agents?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "medium",
     "reference": "Combine several conditions: verified success (passing tests, satisfied rubric, validation by a judge or a human); stop declared by the model (it states the task is done, in an explicit format); resource limits (iterations, tokens, duration, dollar budget); lack of progress or repeated errors; external signals (cancellation, deadline). Make termination observable (stop reason logged) and resumable (state checkpoints) so a run can restart without redoing everything. Define the success condition before launching the agent.",
     "key_points": [
       "Objectively verified success (tests, rubric, validation)",
@@ -360,6 +380,7 @@
     "section": "Agents and Tool Use",
     "question": "How do you sandbox tool execution safely?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "medium",
     "reference": "Run code or commands in an isolated environment (ephemeral container or microVM) with an unprivileged user, file system limited to the project, network cut or allow-listed, CPU, memory, time and output-size limits; no secrets in the sandbox (injected at the egress point or through a proxy); per-tool permissions (read-only by default, destructive actions subject to approval); logging of every action; cleanup of the environment after the task; and argument checks before execution (paths, commands). Treat tool output as untrusted.",
     "key_points": [
       "Isolation: ephemeral container/microVM, unprivileged user, restricted FS",
@@ -377,6 +398,7 @@
     "section": "Agents and Tool Use",
     "question": "How do you handle tool failures, retries, and idempotency?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "medium",
     "reference": "Classify errors: transient (timeout, 429, 5xx) to retry with exponential backoff and jitter, a limited number of times; permanent (400, invalid argument) to return to the model with a clear message so it can correct. Make actions idempotent: idempotency keys on writes, check the state before acting, prefer 'upsert' operations. Save state between steps to resume after a crash. Plan per-tool timeouts, a circuit breaker when a service fails repeatedly, and degradation (partial answer, human escalation). Trace everything for diagnosis.",
     "key_points": [
       "Distinguish transient errors (retry with backoff) from permanent ones (back to the model)",
@@ -395,6 +417,7 @@
     "section": "Agents and Tool Use",
     "question": "What are the biggest security risks with tool-using agents?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "medium",
     "reference": "Indirect prompt injection: content read by the agent (web page, email, document, tool result) contains instructions that hijack it; data exfiltration through a tool (sending secrets to a URL); destructive or irreversible actions (deletion, payment, sending) triggered by mistake; privilege escalation when the agent has too many rights; uncontrolled code execution; PII leaking into logs. Mitigations: least privilege, separation between untrusted data and instructions, human approval of sensitive actions, sandbox, destination allow-lists, logs and rate limits, adversarial testing.",
     "key_points": [
       "Indirect prompt injection through processed content",
@@ -412,6 +435,7 @@
     "section": "Agents and Tool Use",
     "question": "How do you create an agent for analyzing customer support tickets, drafting responses, and escalating complex issues.",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "medium",
     "reference": "Pipeline: ticket classification (category, urgency, sentiment) with structured output; context retrieval (customer history, knowledge base through RAG, order status through tools); drafting a reply grounded on the sources, in the brand's tone; confidence score and escalation rules (sensitive topics, refund above a threshold, low confidence, unhappy customer) to a human with a summary and suggested actions. Human in the loop at first (draft approved), progressive autonomy driven by metrics. Evaluation: annotated ticket set, correct escalation rate, satisfaction, resolution time; guardrails on PII and binding promises.",
     "key_points": [
       "Structured classification + context retrieval (RAG, business tools)",
@@ -430,6 +454,7 @@
     "section": "Agents and Tool Use",
     "question": "Build an agent reviewing code and suggesting improvements.",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "expert",
     "reference": "Inputs: the diff, the affected files with context, the project conventions. Tools: file reading, repository search, running tests and linters in a sandbox. Process: understand the intent of the change, go through the review points (bugs, security, readability, tests, performance), verify each suspicion by reading the code or running it, then produce structured comments (file, line, severity, justification, concrete suggestion), prioritizing real problems over style. Guardrails: do not modify the code without approval, limit noise (confidence threshold), respect the repository rules. Evaluation: precision of findings on annotated PRs, acceptance rate by developers.",
     "key_points": [
       "Context: diff + files + conventions; tools for reading, searching, testing",
@@ -448,6 +473,7 @@
     "section": "Testing and Evaluation",
     "question": "How do you ensure the output from LLMs is consistent and accurate?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "medium",
     "reference": "You do not 'guarantee', you reduce and measure. Design side: structured outputs (JSON schema, validation), low temperature for factual tasks, grounding on sources (RAG) with citations, precise instructions with examples, splitting complex tasks into verifiable steps. Verification side: deterministic validators (schema, business rules, tests for code), LLM judge or verification model for grounding, double pass or voting for critical cases, human in the loop for sensitive ones. Measurement side: reference evaluation set, run on every prompt or model change, production monitoring (error rate, user feedback). Consistency also means pinning model and prompt versions.",
     "key_points": [
       "Constrain: validated structured outputs, low temperature, precise instructions and examples",
@@ -466,6 +492,7 @@
     "section": "Testing and Evaluation",
     "question": "How do you evaluate a chatbot?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "medium",
     "reference": "Define what 'good' means for the use case: accuracy and grounding of answers, compliance with instructions and tone, safety (appropriate refusals), usefulness (need resolved), concision. Offline: reference conversation set (anonymized real + synthetic, including hard and adversarial cases), rubric scoring by an LLM judge calibrated on human annotations, automatic metrics where they exist (accuracy on known-answer questions), non-regression tests on every change. Online: resolution rate, escalation to a human, satisfaction (CSAT, thumbs), abandonment, latency and cost; A/B tests between versions. Evaluate at the turn level and over the whole conversation (multi-turn).",
     "key_points": [
       "Criteria defined by the use case (accuracy, grounding, instructions, safety, usefulness)",
@@ -484,6 +511,7 @@
     "section": "Testing and Evaluation",
     "question": "What metrics do you consider when evaluating LLM performance?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "easy",
     "reference": "Task quality: accuracy / success rate on a reference set, F1 or exact match for extraction, pass@k for code, rubric score by a judge for free text, grounding and correct-citation rates in RAG, hallucination rate. Behavior: format compliance (valid JSON), instruction following, appropriate vs excessive refusal rates, bias and safety. Operational: latency (p50/p95, time to first token), cost per request, throughput, API error rate. The choice depends on the use case; generic metrics (perplexity, public benchmarks) matter little next to your own evaluation set.",
     "key_points": [
       "Task metrics that fit: accuracy, F1/EM, pass@k, judge rubric",
@@ -502,6 +530,7 @@
     "section": "Testing and Evaluation",
     "question": "How do you build a golden dataset for evaluation?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "medium",
     "reference": "Start from real usage: sample production queries (anonymized), stratified by type, difficulty and frequency; complement with synthetic cases to cover rare, edge and adversarial cases (unanswerable questions, injections). Annotate with humans: expected answer or criteria rubric, with an annotation guide and double annotation to measure agreement. Aim for a few hundred examples at first, version the set, keep a development set separate from a held-out test set, and enrich it with failures met in production. Check for drift regularly (the product evolves).",
     "key_points": [
       "Representative, stratified sampling of real queries",
@@ -520,6 +549,7 @@
     "section": "Testing and Evaluation",
     "question": "How do you detect and mitigate hallucinations?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "medium",
     "reference": "Detection: compare the answer with the sources (grounding by LLM judge or NLI, claim by claim), check citations, measure consistency across several samples (an unstable answer is suspect), use external validators (fact base, code execution, API). Reduction: RAG with the instruction to stick to the context and admit ignorance, low temperature, structured outputs, decomposition into verifiable steps, more capable models, post-processing that removes unsupported claims, human in the loop for the critical. Measure the hallucination rate on an evaluation set with trick questions and track it in production.",
     "key_points": [
       "Detection: claim-by-claim grounding check, citations, cross-sample consistency, external validators",
@@ -537,6 +567,7 @@
     "section": "Testing and Evaluation",
     "question": "How would you prevent factual errors in a summarization system?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "medium",
     "reference": "Constrain the model to stay extractive or to cite the source passages for each claim; limit the context length (split long documents, summarize parts then merge); verify faithfulness downstream: each sentence of the summary is checked against the source text by an LLM judge or an NLI model, unsupported sentences are removed or flagged; detect the entities and numbers in the summary and check that they appear in the source; low temperature; evaluate on a set annotated for faithfulness (not only ROUGE) and have a human proofread sensitive documents.",
     "key_points": [
       "Grounded summary: extractive or with a citation per claim",
@@ -554,6 +585,7 @@
     "section": "Testing and Evaluation",
     "question": "How do you debug a RAG chatbot giving confident but wrong answers?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "medium",
     "reference": "Reproduce with the traces: for each case, look at the query, the retrieved chunks and their scores, the final prompt and the answer. Locate the stage: the right information is not in the index (ingestion); it is in the index but not retrieved (retrieval: embeddings, rewriting, k, filters); it is retrieved but the model ignores it or extrapolates (generation: prompt, context too long, contradictory passages, obsolete documents). Fix the faulty stage, add the case to the evaluation set, and strengthen the guardrails: abstention under a threshold, verified citations, sources displayed so the user can check.",
     "key_points": [
       "Start from the traces: query, chunks + scores, final prompt",
@@ -572,6 +604,7 @@
     "section": "Testing and Evaluation",
     "question": "How do you evaluate a RAG pipeline?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "medium",
     "reference": "Separate the two stages. Retrieval: question set with annotated relevant passages, measure recall@k, precision@k, MRR/NDCG; compare chunking, embeddings, hybrid, reranking. Generation (with retrieval fixed): faithfulness to the context (grounding), answer relevance, accuracy against a reference answer, correct abstention rate on unanswerable questions, citation quality; scoring by an LLM judge calibrated on human annotations. End to end: rate of correct answers, latency and cost per query. Replay on every change; track user feedback and no-result cases in production.",
     "key_points": [
       "Retrieval: recall@k, precision@k, MRR/NDCG on annotated passages",
@@ -590,6 +623,7 @@
     "section": "Testing and Evaluation",
     "question": "How do you evaluate agent performance? What metrics matter (tool selection quality, action advancement, context adherence)?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "expert",
     "reference": "Outcome: task success rate verified objectively (tests, expected final state, rubric) on a varied task set, with several attempts to measure variance. Process: tool-selection quality (right tool, right arguments), action advancement (does each step bring the goal closer?), adherence to context and instructions, absence of loops, recovered errors. Safety: forbidden actions attempted, permission compliance. Efficiency: number of steps, tokens, cost and time per successful task. Evaluate with full traces, per-step judges and reproducible test environments (sandbox, frozen data).",
     "key_points": [
       "Objectively verified success rate, over several attempts (variance)",
@@ -608,6 +642,7 @@
     "section": "Monitoring",
     "question": "What operational/business metrics matter for AI systems?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "easy",
     "reference": "Operational: latency (p50/p95, time to first token), availability and API error rate, throughput, cost per request and per user, token consumption, cache hit rate, timeout and retry rates. Continuous quality: judge scores on a sample, hallucination or ungrounded-answer rate, refusal rate, user feedback (thumbs, reports), input drift. Business: resolution or conversion rate, time saved, escalation rate to a human, satisfaction (CSAT/NPS), retention, cost per outcome. The key is to link technical metrics to business goals and to define alerts.",
     "key_points": [
       "Operational: latency, errors, cost, tokens, cache",
@@ -625,6 +660,7 @@
     "section": "Monitoring",
     "question": "How would you evaluate and monitor a model in production, not just offline?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "medium",
     "reference": "Log requests, answers, contexts and metadata (with PII handling); sample conversations and score them automatically (LLM judge with a rubric) and by humans on a fraction; collect explicit feedback (thumbs, corrections) and implicit feedback (rephrasing, abandonment, escalation); track input drift (new topics, languages) and output drift (length, refusals); dashboards and threshold alerts; canary and A/B tests for every model or prompt change; close the loop: failures spotted in production feed the offline evaluation set.",
     "key_points": [
       "Full traces with PII handling",
@@ -643,6 +679,7 @@
     "section": "Monitoring",
     "question": "How would you test a new model before full deployment?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "medium",
     "reference": "Offline: replay the full evaluation set (quality, format, safety, cost, latency) and compare with the current model's results, manually reviewing the differences; check API changes (parameters, behaviors). Shadow mode: run the new model in parallel on real traffic without showing its answers, compare. Canary: expose a small percentage of users with close monitoring and automatic rollback on thresholds. A/B: measure business metrics with statistical significance. Deploy progressively, by segment, keeping the ability to roll back.",
     "key_points": [
       "Comparative offline evaluation with review of the differences",
@@ -661,6 +698,7 @@
     "section": "Monitoring",
     "question": "How do you measure hallucination rate in production?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "expert",
     "reference": "There is no live ground truth, so you estimate: sample answers regularly, automatically check grounding against the provided sources (LLM judge or NLI, claim by claim) and calibrate that judge on a human-annotated sample to know its precision; complement with user signals (reports, corrections, thumbs down) and cross-sample consistency; track the share of unsupported claims by segment and over time, with alerts; run periodic human audits to recalibrate. For answers without sources (model knowledge), check against fact bases when possible.",
     "key_points": [
       "Sampling + automatic claim-by-claim grounding check",
@@ -678,6 +716,7 @@
     "section": "Monitoring",
     "question": "How do you monitor and observe autonomous agent behavior in production?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "medium",
     "reference": "Trace each session as a tree: every turn, tool call (arguments, result, duration, error), decision, cost and tokens, with identifiers to link to the user and the task (OpenTelemetry or a dedicated tool). Metrics: success rate, number of steps, loops detected, tool errors, sensitive actions, latency and cost per task. Alerts on drifts (cost explosion, repeated failures, forbidden actions). Replay of problematic sessions for diagnosis, sampling for human review, and a dashboard per agent version to compare after every change.",
     "key_points": [
       "Structured traces per session: turns, tools, arguments, results, costs",
@@ -696,6 +735,7 @@
     "section": "Cost and Latency Optimization",
     "question": "How do you reduce latency in GenAI applications?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "easy",
     "reference": "Stream the answer to reduce perceived latency; pick a smaller or faster model when quality allows; shorten prompts and cap output length; prompt caching for stable prefixes; semantic cache for recurring queries; parallelize independent calls (retrieval, sub-tasks); reduce the number of steps in a chain; precompute what can be (embeddings, summaries); optimize retrieval (ANN index, reasonable k); measure where the time goes (time to first token vs generation vs tools) before optimizing.",
     "key_points": [
       "Streaming for perceived latency",
@@ -714,6 +754,7 @@
     "section": "Cost and Latency Optimization",
     "question": "What is time to first token and why does it matter for user experience?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "easy",
     "reference": "TTFT is the delay between sending the request and receiving the first token of the answer; it covers the network, queueing, and prompt processing (prefill, proportional to input size). It determines when the user sees that 'something is happening': with streaming, a short TTFT makes the wait acceptable even if the full answer takes several seconds. Distinct from generation throughput (tokens per second) and from total latency. It is reduced by shortening the prompt, with prompt caching, by avoiding blocking steps before the call and by choosing a faster model.",
     "key_points": [
       "Definition: delay until the first token (network + queue + prompt prefill)",
@@ -731,11 +772,12 @@
     "section": "Cost and Latency Optimization",
     "question": "How would you benchmark each LLM call in a multi-step pipeline to identify latency bottlenecks?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "medium",
     "reference": "Instrument each step with spans (OpenTelemetry or an LLM tracing tool): step name, model, input and output tokens, TTFT, total duration, tool and retrieval time, errors and retries, cost. Aggregate per step on real traffic: p50/p95, share of total time, variance. Visualize the trace as a waterfall to see what is sequential and could be parallel. Replay a fixed sample of requests as a benchmark to compare variants (shorter prompt, other model, cache). Set latency budgets per step and alerts.",
     "key_points": [
       "Spans per step with tokens, TTFT, duration, tools, errors, cost",
       "p50/p95 aggregation and share of total time per step",
-      "Waterfall view to spot parallelisable sequential work",
+      "Waterfall view to spot parallelizable sequential work",
       "Reproducible benchmark on a fixed sample to compare variants",
       "Latency budgets and alerts"
     ],
@@ -749,6 +791,7 @@
     "section": "Cost and Latency Optimization",
     "question": "How do you reduce token costs?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "easy",
     "reference": "Reduce input: concise prompts, removal of useless context, more relevant chunks (better retrieval, smaller k), summary or compaction of the history, compact formats for data. Reduce output: ask for short or structured answers, cap max_tokens, avoid verbose reasoning when it adds nothing. Caching: prompt caching on stable prefixes, semantic cache of answers. Routing: small model for simple tasks, large model for the rest; effort level adapted. Batch processing (cheaper batch API) for non-interactive work. Measure cost per request and per feature before and after.",
     "key_points": [
       "Input: concise prompts, relevant context, compacted history",
@@ -767,6 +810,7 @@
     "section": "Cost and Latency Optimization",
     "question": "Cost vs. quality trade-offs: when is a small open-source model \"good enough\"?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "medium",
     "reference": "When the task is well delimited (classification, extraction, rephrasing, routing), when you have an evaluation set to measure the quality gap with a large model, and that gap is acceptable for the business cost of an error; when volume is high and latency or cost are binding; when data must stay on premises (confidentiality); possibly after fine-tuning on the task. It is not good enough for open-ended tasks, long reasoning, complex agentic work, or when you cannot operate the inference (GPU, updates, security). Decide with numbers: measured quality, total cost of ownership, latency.",
     "key_points": [
       "Delimited task and evaluation set to measure the gap",
@@ -785,6 +829,7 @@
     "section": "Cost and Latency Optimization",
     "question": "What is model tiering? When do you route to a small distilled model vs. a large LLM?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "medium",
     "reference": "Tiering means having several models of different size and cost and routing each request to the cheapest one that reaches the required quality. The router can be a rule (task type, length, user), a difficulty classifier, or a cascade: try the small model and escalate to the large one when confidence is low or a validation fails. Small model: simple and frequent tasks, tight latency constraints, pre-filtering; large model: reasoning, open-ended tasks, critical cases, low confidence. Measure quality per tier on an evaluation set and monitor the escalation rate and the real cost (a badly tuned cascade costs more).",
     "key_points": [
       "Definition: several models, routing to the cheapest sufficient one",
@@ -802,6 +847,7 @@
     "section": "Cost and Latency Optimization",
     "question": "Your app gets 1M queries/day - how do you optimize cost?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "medium",
     "reference": "Put numbers on it first: cost per request (input/output tokens x price) x volume, per feature. Then act in order of return: caching (prefix and semantic, a share of requests is repetitive), shorter prompts and outputs, routing simple requests to cheaper models, batch API for everything non-interactive, rate limits and per-user quotas against abuse, precomputed embeddings and summaries, and possibly fine-tuning a small model for very high-volume tasks. Measure the impact of each lever on a sample before generalizing, and track cost per request continuously.",
     "key_points": [
       "Quantify cost per request and per feature",
@@ -820,6 +866,7 @@
     "section": "Cost and Latency Optimization",
     "question": "Estimate the budget for a RAG pipeline at enterprise scale (e.g., 300,000 legal contracts).",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "expert",
     "reference": "Reason by cost item with explicit assumptions. Ingestion (once + updates): 300,000 contracts x ~30 pages x ~500 tokens ~ 4.5 billion tokens to chunk and embed; embedding cost from a few hundred to a few thousand dollars depending on the model, plus extraction/OCR and compute. Storage: ~5 to 10 million chunks x vector dimension -> tens of GB, managed or self-hosted vector database (hundreds to thousands of dollars per month). Queries: requests per day x (question embedding + ~5-10k context tokens + output) x model price; for example 10,000 requests/day at ~$0.02-0.05 ~ $200-500/day. Add evaluation, humans for annotation, infrastructure and a margin. Present a range and the sensitive assumptions (document size, model, volume).",
     "key_points": [
       "Break down: ingestion (extraction, embeddings), storage/index, queries, evaluation and humans",
@@ -837,6 +884,7 @@
     "section": "Safety and Guardrails",
     "question": "When and how would you implement LLM guardrails?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "medium",
     "reference": "As soon as a system is exposed to users or acts on data: guardrails on input (detection of injection, forbidden content, PII, off-topic), on output (format and business-rule validation, toxicity filters, grounding check, PII removal), and on actions (permissions, human approval for the irreversible, rate and cost limits). Layered implementation: fast deterministic rules, classifiers or small models, LLM judge for the nuanced; proportionate to impact (an internal assistant does not have the same requirements as a public chatbot); measure false positives (wrongful refusals) and false negatives with adversarial tests, and log every trigger.",
     "key_points": [
       "Three control points: input, output, actions",
@@ -854,6 +902,7 @@
     "section": "Safety and Guardrails",
     "question": "How do you handle data privacy and PII in prompts and logs?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "medium",
     "reference": "Minimize: send the model only the data it needs; pseudonymize or mask PII before the call (detection by rules and NER, replacement with reversible tokens when the model must reason over them); choose providers with contractual commitments (no training on the data, limited retention, regions) or self-host for the very sensitive; logs: PII masking, encryption, access control, limited retention, separation of technical traces from content; compliance (GDPR: legal basis, right to erasure, DPIA); regular leak tests on outputs and logs.",
     "key_points": [
       "Minimization and PII pseudonymization/masking before the call",
@@ -871,6 +920,7 @@
     "section": "Safety and Guardrails",
     "question": "How do you protect against prompt injection and jailbreaking?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "medium",
     "reference": "Assume no prompt-side defense is watertight. Architecture: clearly separate instructions from data (markup, system messages), treat all external content (documents, pages, tool results) as untrusted, limit capabilities (least privilege, no dangerous tools reachable from an untrusted context, human approval for sensitive actions), destination allow-lists. Detection: injection and jailbreak classifiers on input, output monitoring (system prompt leak, forbidden content). Hardening: clear priority instructions, recent better-trained models, continuous adversarial testing (red teaming) and logging of attempts. The goal is to limit impact, not only to block.",
     "key_points": [
       "No prompt defense is watertight: limit the impact",
@@ -888,6 +938,7 @@
     "section": "Safety and Guardrails",
     "question": "How would you build a system that detects whether content violates policy or contains offensive material?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "medium",
     "reference": "Define the policy as precise categories with examples and edge cases (harassment, hate, violence, sexual, spam...) and severity levels. Layered pipeline: fast rules (lists, regex) for the obvious, a classifier trained on annotated data (or a moderation API) for volume, an LLM with the policy in the prompt for ambiguous cases, a human for the gray zone and appeals. Data: representative annotated set, with inter-annotator agreement, adversarial samples, balance across languages and dialects. Measure precision/recall per category, pick thresholds according to the cost of false positives and negatives, monitor drift, and offer users a way to appeal.",
     "key_points": [
       "Explicit policy: categories, severity, examples and edge cases",
@@ -906,6 +957,7 @@
     "section": "Safety and Guardrails",
     "question": "Your application generates code that gets executed. How do you prevent malicious code generation and execution?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "medium",
     "reference": "Never run generated code in a trusted environment: isolated, ephemeral sandbox (container/microVM), no network or an allow-list, no secrets, with time, CPU, memory and disk limits and an unprivileged user. Before execution: static analysis (forbidden imports, system calls, network or file access outside the perimeter), library allow-list, human approval for actions with side effects. Input control: the user or a document can inject malicious instructions into the prompt. After: log, cap output size, destroy the environment. Regular adversarial testing.",
     "key_points": [
       "Isolated, ephemeral sandbox with no network or secrets and resource limits",
@@ -924,13 +976,14 @@
     "section": "Fine-tuning and Training",
     "question": "When would you fine-tune vs use prompt engineering vs RAG?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "easy",
     "reference": "Start with prompt engineering (fast, no annotated data, reversible); move to RAG when the need is to access external, private or changing knowledge, with traceability; use fine-tuning when the model's behavior must change rather than its knowledge: very specific style or format, narrow high-volume task where a small fine-tuned model beats a large model on cost/latency, prompt-length reduction, domain with particular vocabulary. Fine-tuning requires quality data and an evaluation, and is not suited to injecting fresh facts (retraining needed). The approaches combine (RAG + fine-tuned model).",
     "key_points": [
       "Order: prompt -> RAG -> fine-tuning, from least to most costly",
       "RAG for external/fresh knowledge with traceability",
       "Fine-tuning for behavior (style, format, narrow task, cost/latency at volume)",
       "Fine-tuning unsuited to changing facts; requires data and evaluation",
-      "Combinations possible"
+      "The approaches combine, for example RAG with a fine-tuned model"
     ],
     "common_mistakes": [
       "Fine-tuning to 'learn' documents",
@@ -942,6 +995,7 @@
     "section": "Fine-tuning and Training",
     "question": "What is instruction tuning and how does it differ from pre-training?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "easy",
     "reference": "Pre-training trains the model to predict the next token on a massive unannotated corpus: it acquires language, knowledge and general abilities, but yields a model that continues text rather than answering. Instruction tuning is supervised fine-tuning on (instruction, desired answer) pairs, far smaller in volume, which teaches the model to follow instructions, adopt a dialogue format and an assistant behavior. It is often followed by preference alignment (RLHF, DPO). It creates no new knowledge: it reveals and steers what pre-training learned.",
     "key_points": [
       "Pre-training: next-token prediction, massive unannotated corpus, general abilities",
@@ -959,6 +1013,7 @@
     "section": "Fine-tuning and Training",
     "question": "What is PEFT/LoRA and when would you use it?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "medium",
     "reference": "PEFT (parameter-efficient fine-tuning) covers methods that train only a small fraction of the parameters. LoRA freezes the model weights and adds, on some matrices (attention, MLP), a low-rank correction dW = A.B with small A and B; only A and B are trained (often < 1% of the parameters). Benefits: reduced memory and compute (QLoRA combines it with quantization of the base model), lightweight adapters swappable per task, less catastrophic forgetting. Use it when fine-tuning a large model on a limited GPU, for style/format/domain adaptations, or to maintain several variants. Limits: less adaptation capacity than full fine-tuning for deep changes; hyperparameters (rank, alpha, target modules) to tune.",
     "key_points": [
       "PEFT: train only a small fraction of the parameters",
@@ -977,6 +1032,7 @@
     "section": "Fine-tuning and Training",
     "question": "Explain the RLHF pipeline: supervised fine-tuning, reward model training, and PPO. How does DPO simplify this?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "expert",
     "reference": "RLHF: 1) SFT, supervised fine-tuning on demonstrations of good answers; 2) a reward model trained on human comparisons (answer A preferred over B) to predict a score; 3) reinforcement optimization (PPO): the model generates, the reward scores, you maximize the reward with a KL penalty so as not to drift too far from the SFT model and to avoid reward hacking. It is costly and unstable (four models in memory, delicate hyperparameters). DPO (Direct Preference Optimization) removes the reward model and the RL: it derives a classification loss directly on preferred/rejected pairs, with the reference model as an implicit anchor; simpler and more stable, but offline (no exploration) and sensitive to pair quality.",
     "key_points": [
       "SFT on demonstrations",
@@ -995,6 +1051,7 @@
     "section": "Fine-tuning and Training",
     "question": "Explain quantization. What are the trade-offs between model size, speed, and accuracy?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "medium",
     "reference": "Quantization represents the weights (and sometimes the activations) with fewer bits: FP16/BF16 -> INT8 -> INT4, or even less. It reduces memory (a 7B model goes from ~14 GB in FP16 to ~4 GB in INT4), speeds up inference when the hardware supports it (less memory bandwidth, integer kernels) and lets you serve larger models on a given GPU. Methods: post-training (PTQ, with calibration: GPTQ, AWQ) or quantization-aware training. Cost: precision loss, small in INT8, more visible in INT4 and on small models or reasoning tasks; some sensitive layers stay in higher precision. Always re-evaluate the quantized model on your own task.",
     "key_points": [
       "Principle: fewer bits per weight/activation (FP16 -> INT8 -> INT4)",
@@ -1013,6 +1070,7 @@
     "section": "Fine-tuning and Training",
     "question": "How do you convert implicit user behavior (edits, acceptance, rejection) into training signals for model improvement?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "expert",
     "reference": "Log events with their context (prompt, answer, action: accepted as is, edited with the final version, rejected, regenerated); derive labels: acceptance = positive example for SFT, edit = pair (initial answer rejected, edited version preferred) for DPO or a reward model, rejection/regeneration = negative or pair with the answer finally kept. Beware of biases: position, inattentive users, edits for reasons unrelated to quality; weight by confidence, filter, deduplicate, aggregate per user. Respect privacy (consent, anonymization). Validate on an annotated set that the implicit signal correlates with quality before training on it, then measure the effect in an A/B test.",
     "key_points": [
       "Log events with full context",
@@ -1031,6 +1089,7 @@
     "section": "Fine-tuning and Training",
     "question": "How would you design a model that can solve math problems? Walk through data collection, supervised fine-tuning, post-training, and evaluation.",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "expert",
     "reference": "Data: problems with step-by-step solutions and verifiable final answers (existing sets, LLM synthesis verified by execution or a solver, diversity of levels and domains), decontamination against the test benchmarks. SFT: start from a strong base model, fine-tune on detailed reasoning (chain-of-thought) with an explicit final-answer format. Post-training: rejection sampling (keep the solutions whose answer is correct), then reinforcement learning with a verifiable reward (exact answer, tests), possibly a process reward model; teach tool use (calculation, code). Evaluation: accuracy on held-out sets (several levels), pass@k and majority vote, error analysis by type, robustness to rephrasing.",
     "key_points": [
       "Data: step-by-step solutions, verifiable answers, diversity, decontamination",
@@ -1048,6 +1107,7 @@
     "section": "LLM Theory",
     "question": "How do transformers work?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "easy",
     "reference": "A Transformer processes a sequence of tokens in parallel. Each token is converted into an embedding to which position information is added (positional encoding or RoPE). Then a stack of identical blocks: a multi-head self-attention layer where each position computes queries, keys and values and weights the other positions by query-key similarity (with a causal mask for generation), followed by a feed-forward network applied position by position, each with a residual connection and normalization. The output is projected onto the vocabulary to predict the next token. Parallelism over the sequence makes training efficient on GPUs; attention cost grows as O(n^2) with length.",
     "key_points": [
       "Embeddings + position information",
@@ -1066,6 +1126,7 @@
     "section": "LLM Theory",
     "question": "What is the self-attention mechanism?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "medium",
     "reference": "For each token, three vectors are computed by linear projection: query Q, key K, value V. The attention score between a token and every other is the dot product Q.K, divided by the square root of the dimension then passed through a softmax, which gives weights; the output is the weighted sum of the values V. Each token thus builds a contextual representation that depends on the relevant tokens, whatever their distance. Several heads in parallel capture different kinds of relations, then are concatenated and projected. In a decoder, a causal mask prevents looking at the future. Complexity is quadratic in sequence length.",
     "key_points": [
       "Q, K, V projections per token",
@@ -1084,6 +1145,7 @@
     "section": "LLM Theory",
     "question": "Explain the difference between encoder-only, decoder-only, and encoder-decoder Transformer architectures. When would you use each?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "medium",
     "reference": "Encoder-only (BERT): bidirectional attention, trained by token masking; produces contextual representations: ideal for classification, NER, embeddings, search (bi-encoders, cross-encoders), but does not generate text. Decoder-only (GPT, Llama, Claude): causal attention, trained to predict the next token; text generation, chat, reasoning, in-context learning; this is the architecture of today's LLMs. Encoder-decoder (T5, BART): the encoder reads the input bidirectionally, the decoder generates while attending to the encoder; suited to sequence-to-sequence tasks (translation, summarization) with a clear input/output separation. Today, large-scale decoder-only models cover most generative uses; encoders remain widely used for embeddings and efficient classification.",
     "key_points": [
       "Encoder-only: bidirectional, masking, representations -> classification, NER, embeddings",
@@ -1101,6 +1163,7 @@
     "section": "LLM Theory",
     "question": "What is KV cache? How does it help in LLM inference?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "medium",
     "reference": "In autoregressive generation, each new token must attend to all previous tokens. Without a cache, the keys K and values V of the whole sequence would be recomputed at every step for every layer. The KV cache stores those already-computed K and V; at each step only the Q, K, V of the new token are computed and it attends to the cache, which brings the per-token cost from quadratic to linear in length. Cost: GPU memory proportional to layers x heads x length x dimension, which limits batch size and context; hence techniques such as multi-query/grouped-query attention, cache quantization, paged attention. API prompt caching reuses the KV cache of a prefix across requests.",
     "key_points": [
       "Problem: recomputing the K/V of the whole sequence for every token",
@@ -1119,6 +1182,7 @@
     "section": "LLM Theory",
     "question": "What is Mixture of Experts (MoE)? How does it improve efficiency?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+    "difficulty": "medium",
     "reference": "In an MoE, the feed-forward layer of each block is replaced by several 'expert' sub-networks and a router that, for each token, selects a small number of experts (top-k, often 1 or 2). The model therefore has many parameters in total (capacity) but activates only a fraction per token (compute). At comparable quality, this reduces training and inference cost per token compared with a dense model of the same capacity. Trade-offs: all expert memory must be loaded (memory and communication cost), load balancing across experts (auxiliary losses), trickier training, more sensitive fine-tuning.",
     "key_points": [
       "Several FFN experts + top-k router per token",
@@ -1136,13 +1200,14 @@
     "section": "LLM Theory",
     "question": "What are the differences between BPE, WordPiece, and character-level tokenization? What are the trade-offs?",
     "source": "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
-    "reference": "Tokenization splits text into units. Character level: tiny vocabulary, no unknown word, but very long sequences (attention cost) and units carrying little meaning. BPE (GPT, Llama): starts from characters/bytes and iteratively merges the most frequent pairs up to the desired vocabulary size; frequent subwords become one token, rare words are split; the byte-level variant handles any text without an unknown token. WordPiece (BERT): similar but picks the merges that maximize the corpus likelihood, with the '##' prefix for continuations. Trade-offs: vocabulary size vs sequence length, coverage of languages and code (an English-biased vocabulary costs other languages more tokens), handling of numbers and case. The tokeniser is frozen with the model.",
+    "difficulty": "medium",
+    "reference": "Tokenization splits text into units. Character level: tiny vocabulary, no unknown word, but very long sequences (attention cost) and units carrying little meaning. BPE (GPT, Llama): starts from characters/bytes and iteratively merges the most frequent pairs up to the desired vocabulary size; frequent subwords become one token, rare words are split; the byte-level variant handles any text without an unknown token. WordPiece (BERT): similar but picks the merges that maximize the corpus likelihood, with the '##' prefix for continuations. Trade-offs: vocabulary size vs sequence length, coverage of languages and code (an English-biased vocabulary costs other languages more tokens), handling of numbers and case. The tokenizer is frozen with the model.",
     "key_points": [
       "Character: no unknowns, long sequences, little semantics",
       "BPE: frequency-based merges, subwords; byte-level without unknown tokens",
       "WordPiece: likelihood-based merges, ## prefix (BERT)",
       "Trade-offs: vocabulary vs length, multilingual/code coverage, numbers",
-      "Tokeniser tied to the model"
+      "Tokenizer tied to the model"
     ],
     "common_mistakes": [
       "Saying LLMs tokenize by words",

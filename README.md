@@ -223,7 +223,8 @@ Score history by section and weak points on the tab's home. Every saved answer c
 
 Bank: `bank/theory/*.json`, 231 questions imported without answers by `tools.import_theory_questions` from
 `tools/sources/` (65 from the AI engineering field guide, 166 from data-science-interviews, source kept on each
-question), each with a grid generated once: `reference` (concise reference answer), `key_points` (3 to 6),
+question), each with a grid generated once and reviewed on 2026-11-03, and a mandatory `difficulty` (easy, medium or
+expert): `reference` (concise reference answer), `key_points` (3 to 6),
 `common_mistakes`, and `uncertain`/`note` when the grid is judged unsure. Validation: `python -m tools.check_theory`.
 To add or fix grids: a draft `GRIDS = {id: {...}}`, then `python -m tools.add_theory_grids draft.py`.
 

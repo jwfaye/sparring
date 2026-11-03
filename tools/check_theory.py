@@ -2,7 +2,8 @@
 """Validate the theory interview bank (bank/theory/*.json) and list questions without a grading grid.
 
 A complete grid = reference (concise reference answer), key_points (3 to 6), common_mistakes (>= 1).
-`uncertain: true` + `note` flags a question judged too uncertain for a reliable grid (shown in the app).
+Every question carries a difficulty (easy | medium | expert). `uncertain: true` + `note` flags a question judged too
+uncertain for a reliable grid (shown in the app).
 Usage: python -m tools.check_theory [--missing]
 """
 import glob
@@ -15,10 +16,13 @@ Question = dict[str, Any]
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BANK = os.path.join(ROOT, "bank", "theory")
+DIFFICULTIES = ("easy", "medium", "expert")
 
 
 def check_grid(q: Question) -> list[str]:
     errors: list[str] = []
+    if q.get("difficulty") not in DIFFICULTIES:
+        errors.append("difficulty must be one of " + ", ".join(DIFFICULTIES))
     ref = q.get("reference", "")
     if not ref.strip():
         errors.append("missing reference")
