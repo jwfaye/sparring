@@ -1,0 +1,34 @@
+# Local checks, mirroring the CI jobs. Install once with `pre-commit install`
+# (pre-commit comes with the dev extra). The format check is not enabled
+# because the tree is not formatted with ruff yet; only the linter runs.
+# tools/sources/ holds imported source documents and is kept verbatim.
+exclude: ^tools/sources/
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-json
+      - id: check-yaml
+      - id: check-toml
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.4
+    hooks:
+      - id: ruff-check
+
+  - repo: local
+    hooks:
+      - id: mypy
+        name: mypy (.venv-check)
+        entry: .venv-check/bin/python -m mypy .
+        language: system
+        types: [python]
+        pass_filenames: false
+      - id: eslint
+        name: eslint (npm run lint)
+        entry: npm run lint
+        language: system
+        files: ^(app/js/.*\.js|eslint\.config\.js|package(-lock)?\.json)$
+        pass_filenames: false

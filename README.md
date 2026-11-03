@@ -199,7 +199,8 @@ The API key never appears in the code, the page or the repository: the SDK reads
 ## Development
 
 ```bash
-.venv-check/bin/python -m pip install -e ".[check,dev]"   # once: pandas/numpy as in Pyodide, pytest, ruff, mypy
+.venv-check/bin/python -m pip install -e ".[check,dev]"   # once: pandas/numpy as in Pyodide, pytest, ruff, mypy, pre-commit
+.venv-check/bin/pre-commit install                        # once: git hook running ruff, mypy, eslint and the file checks before each commit
 ruff check .                                              # lint
 .venv-check/bin/python -m mypy .                          # type check
 .venv-check/bin/python -m pytest -q                       # unit tests + the three bank checkers (browser tests excluded)
@@ -215,7 +216,9 @@ real is called), the HTTP API on a live server, and a smoke test that the shippe
 `e2e` profile: page boot, an exercise check, a quiz answer, an offline interview answer, the theme toggle. The suite
 is opt-in (`-m e2e` overrides the `addopts` of `pyproject.toml`) and its modules skip when the `e2e` extra is not
 installed. The same steps run in GitHub Actions on every push to `main`
-and every pull request (`.github/workflows/ci.yml`: jobs `test`, `js`, `e2e`).
+and every pull request (`.github/workflows/ci.yml`): the Python steps on a matrix of Python 3.12 and 3.13 (jobs
+`unit (3.12)` and `unit (3.13)`, summarized by the required check `test`), the lint in `js`, the browser tests in
+`e2e`. Dependabot (`.github/dependabot.yml`) opens weekly update pull requests for pip, npm and the actions.
 
 ## Code review with repoach
 
