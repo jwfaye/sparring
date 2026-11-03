@@ -191,12 +191,12 @@
 
   // ------------------------------------------------------------ init
   // Next or Skip: another question of the same selection; back to the setup screen when it has none left to give.
-  const nextQuestion = () => { stopTimer(); if (!pickQuestion()) { leave(); window.TTAPP.switchView('setup'); } };
+  const nextQuestion = () => { stopTimer(); if (!pickQuestion()) window.TTAPP.openSetup(); };
   $('#th-next2').onclick = nextQuestion;
   $('#th-submit').onclick = submit;
   $('#th-skip').onclick = nextQuestion;
   // Back: to the history page when the answer was reopened from it, else to the setup screen.
-  $('#th-back').onclick = () => { const fromHistory = st.fromHistory; leave(); if (fromHistory) openHistory(); else window.TTAPP.switchView('setup'); };
+  $('#th-back').onclick = () => { if (st.fromHistory) { leave(); openHistory(); } else window.TTAPP.openSetup(); };
   $('#th-regrade').onclick = regrade;
   $('#th-all').onclick = () => { const boxes = $$('#th-sections input'); const all = boxes.every(b => b.checked); boxes.forEach(b => b.checked = !all); };
   $('#th-answer').addEventListener('keydown', e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && !$('#th-actions').classList.contains('hidden')) { e.preventDefault(); submit(); } });

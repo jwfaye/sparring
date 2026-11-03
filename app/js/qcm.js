@@ -141,7 +141,7 @@
     $('#qcm-replay').onclick = () => startSession(shuffle(failed.map(a => a.id)));
     st.session = null; renderSetup();
   }
-  function backToSetup() { st.session = null; window.TTAPP.switchView('setup'); }
+  const backToSetup = () => window.TTAPP.openSetup();
 
   // ------------------------------------------------------------ keyboard
   document.addEventListener('keydown', e => {

@@ -87,7 +87,9 @@ Inputs:
 
 Outputs:
 - `window.TTAPP.switchView(view)`: shows one of `setup`, `exercises`, `qcm`, `theory`, `recap`; sets
-  `body[data-view]`, the mode label and the Setup button.
+  `body[data-view]`, the mode label and the Setup button. `window.TTAPP.openSetup()`: leaves the current mode
+  (drops the quiz session, stops the interview timer) and shows the setup screen; the modes' Quit and Back buttons
+  call it.
 - `window.TTQCM.start()` -> boolean (false: no question, message in `#qcm-msg`); `openHistory()`; `leave()`.
 - `window.TTTHEORY.start()` -> boolean (false: message in `#th-msg`); `openHistory()`; `leave()`.
 

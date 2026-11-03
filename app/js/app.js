@@ -397,8 +397,14 @@
     showExercise(Math.max(0, state.order.indexOf(lastId)));
     return true;
   }
-  const STARTERS = { exercises: startExercises, qcm: () => !!window.TTQCM?.start(), theory: () => !!window.TTTHEORY?.start() };
+  const notLoaded = sel => { $(sel).textContent = 'This mode did not load: reload the page.'; return false; };
+  const STARTERS = {
+    exercises: startExercises,
+    qcm: () => (window.TTQCM ? window.TTQCM.start() : notLoaded('#qcm-msg')),
+    theory: () => (window.TTTHEORY ? window.TTTHEORY.start() : notLoaded('#th-msg')),
+  };
   const start = () => launch(state.setup.mode, STARTERS[state.setup.mode]);
+  // Back to the setup screen from any view: the mode being left drops its session or stops its timer.
   function openSetup() {
     if (state.view === 'qcm') window.TTQCM?.leave();
     if (state.view === 'theory') window.TTTHEORY?.leave();
@@ -439,7 +445,7 @@
     $('#exam-minutes').onchange = examMinutes;
     $$('.tab').forEach(t => t.onclick = () => selectMode(t.dataset.mode));
     $('#btn-start').onclick = start;
-    $('#qcm-review').onclick = () => launch('qcm', () => !!window.TTQCM?.review());
+    $('#qcm-review').onclick = () => launch('qcm', () => (window.TTQCM ? window.TTQCM.review() : notLoaded('#qcm-msg')));
     $('#btn-setup').onclick = openSetup;
     $('#btn-recap').onclick = () => switchView('recap');
     $('#btn-qcm-history').onclick = () => { window.TTQCM?.openHistory(); switchView('qcm'); };
@@ -452,7 +458,7 @@
       const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'progress.json'; a.click();
     };
     twoClick($('#btn-reset-progress'), 'Reset progress', () => { state.progress = {}; saveProgress(); restoreOrCreateOrder(true); renderRecap(); showExercise(state.order.length ? 0 : -1); });
-    window.TTAPP = { switchView };
+    window.TTAPP = { switchView, openSetup };
     window.addEventListener('beforeunload', () => { saveCode(); saveProgress(); });
     setInterval(tick, 1000);
     renderExam();

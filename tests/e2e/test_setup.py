@@ -37,6 +37,7 @@ def test_page_opens_on_the_setup_screen_and_remembers_the_last_setup(page, app_u
     expect(page.locator("#qcm-n")).to_have_value("20")
     expect(page.locator("#f-difficulty")).to_have_value("easy")
     expect(page.locator("#exam-minutes")).to_have_value("30")
+    expect(page.locator("#exam-enabled")).to_be_checked()
     page.evaluate("localStorage.clear()")
 
 
