@@ -1,4 +1,5 @@
 """The CI workflow, the Dependabot configuration, the pre-commit configuration and the coverage floor (SP-CI)."""
+
 import os
 import re
 import tomllib
@@ -60,6 +61,12 @@ class TestWorkflow:
         assert upload["with"]["path"] == "coverage.xml"
         assert upload["with"]["if-no-files-found"] == "error"
 
+    def test_the_lint_step_checks_the_formatting(self):
+        unit = load(WORKFLOW)["jobs"]["unit"]
+        (lint,) = [step for step in unit["steps"] if step.get("name") == "Lint"]
+        commands = lint["run"].splitlines()
+        assert commands == ["ruff check .", "ruff format --check ."]
+
     def test_checkout_never_persists_credentials(self):
         for name, job in load(WORKFLOW)["jobs"].items():
             for step in job["steps"]:
@@ -110,8 +117,15 @@ class TestPreCommit:
         repos = load(PRE_COMMIT)["repos"]
         hooks = {hook["id"] for repo in repos for hook in repo["hooks"]}
         assert hooks == {
-            "end-of-file-fixer", "trailing-whitespace", "check-json", "check-yaml", "check-toml",
-            "ruff-check", "mypy", "eslint",
+            "end-of-file-fixer",
+            "trailing-whitespace",
+            "check-json",
+            "check-yaml",
+            "check-toml",
+            "ruff-check",
+            "ruff-format",
+            "mypy",
+            "eslint",
         }
         for repo in repos:
             if repo["repo"] != "local":
@@ -120,6 +134,10 @@ class TestPreCommit:
         assert local["mypy"]["entry"] == ".venv-check/bin/python -m mypy ."
         assert local["eslint"]["entry"] == "npm run lint"
         assert all(hook["language"] == "system" for hook in local.values())
+
+    def test_the_ruff_repository_runs_the_linter_then_the_formatter(self):
+        (ruff,) = [repo for repo in load(PRE_COMMIT)["repos"] if "ruff-pre-commit" in repo["repo"]]
+        assert [hook["id"] for hook in ruff["hooks"]] == ["ruff-check", "ruff-format"]
 
 
 class TestCoverage:

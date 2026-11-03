@@ -23,6 +23,7 @@ Section "grader":
 - claude_bin: non-empty string, path to the Claude Code CLI
 - timeout_seconds: positive integer, maximum duration of one grading call through Claude Code
 """
+
 import json
 import os
 from typing import Any, Callable

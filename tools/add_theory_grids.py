@@ -5,6 +5,7 @@ Usage: python -m tools.add_theory_grids DRAFT.py [--dry-run]
 DRAFT.py defines GRIDS = {question_id: {reference, key_points, common_mistakes, uncertain?, note?}}.
 Only valid grids (see tools/check_theory.py) are written; the id must exist in the bank.
 """
+
 import glob
 import importlib.util
 import json
@@ -61,7 +62,10 @@ def main() -> int:
     for qid in grids:
         rejected += 1
         print(f"KO  {qid}: unknown id in the bank")
-    print(f"\n{accepted} grid(s) accepted, {rejected} rejected" + (" (dry-run)" if dry else f" -> {', '.join(written) or 'nothing written'}"))
+    print(
+        f"\n{accepted} grid(s) accepted, {rejected} rejected"
+        + (" (dry-run)" if dry else f" -> {', '.join(written) or 'nothing written'}")
+    )
     return 1 if rejected else 0
 
 

@@ -14,6 +14,7 @@ answer is the announced one (and that no other choice matches the result).
 
 Usage: python -m tools.check_qcm [file_or_directory ...]   (default: bank/qcm)
 """
+
 import contextlib
 import glob
 import io
@@ -31,9 +32,21 @@ Question = dict[str, Any]
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 REQUIRED = ["id", "theme", "question", "choices", "answer", "explanation", "source"]
 THEMES = {
-    "regression", "validation", "classification", "regularization", "trees-ensembles", "neural-networks",
-    "nlp", "clustering", "dimensionality-reduction", "recommender-systems", "time-series",
-    "python", "pandas", "sql", "git",
+    "regression",
+    "validation",
+    "classification",
+    "regularization",
+    "trees-ensembles",
+    "neural-networks",
+    "nlp",
+    "clustering",
+    "dimensionality-reduction",
+    "recommender-systems",
+    "time-series",
+    "python",
+    "pandas",
+    "sql",
+    "git",
 }
 EXEC_LANGS = {"python", "sql"}
 

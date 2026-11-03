@@ -1,4 +1,5 @@
 """Interview tab: answer a question in offline mode and find it in the history."""
+
 import pytest
 
 playwright = pytest.importorskip("playwright.sync_api")
@@ -6,8 +7,10 @@ expect = playwright.expect
 
 pytestmark = pytest.mark.e2e
 
-ANSWER = "Overfitting: the model fits the noise of the training set, so the training error keeps dropping while the " \
-         "validation error rises. Regularize, get more data or simplify the model."
+ANSWER = (
+    "Overfitting: the model fits the noise of the training set, so the training error keeps dropping while the "
+    "validation error rises. Regularize, get more data or simplify the model."
+)
 
 
 def history(page, profile):

@@ -1,4 +1,5 @@
 """Shared fixtures. Run from the project root with `python -m pytest` (the root must be on sys.path)."""
+
 import importlib.util
 import os
 

@@ -1,4 +1,5 @@
 """Argument parsing of the bank import tools (tools/add_exercises.py, tools/add_qcm.py, tools/add_theory_grids.py)."""
+
 import json
 import sys
 

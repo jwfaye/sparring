@@ -3,6 +3,7 @@
 
 Usage: python -m tools.import_grades GRADES.json [--profile NAME]
 """
+
 import argparse
 import json
 

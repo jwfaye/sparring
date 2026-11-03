@@ -1,4 +1,5 @@
 """Subresource Integrity on the third-party assets of app/index.html (SP-WEB-ASSETS)."""
+
 import os
 import re
 from html.parser import HTMLParser
@@ -59,16 +60,19 @@ def test_integrity_values_are_sha384_digests(tag, url, attributes):
     assert SHA384_DIGEST.match(attributes.get("integrity") or ""), f"<{tag}> {url} has a malformed digest"
 
 
-@pytest.mark.parametrize("value", [
-    "",
-    "sha384-",
-    "sha256-" + "A" * 43 + "=",
-    "sha512-" + "A" * 86 + "==",
-    "sha384-" + "A" * 63,
-    "sha384-" + "A" * 64 + "=",
-    "sha384-" + "A" * 63 + "!",
-    "SHA384-" + "A" * 64,
-])
+@pytest.mark.parametrize(
+    "value",
+    [
+        "",
+        "sha384-",
+        "sha256-" + "A" * 43 + "=",
+        "sha512-" + "A" * 86 + "==",
+        "sha384-" + "A" * 63,
+        "sha384-" + "A" * 64 + "=",
+        "sha384-" + "A" * 63 + "!",
+        "SHA384-" + "A" * 64,
+    ],
+)
 def test_digest_pattern_rejects_other_algorithms_and_malformed_values(value):
     assert not SHA384_DIGEST.match(value)
 

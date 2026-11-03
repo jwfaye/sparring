@@ -14,6 +14,7 @@ Check mode response: {"ok": bool, "tests": [{"name", "ok", "message", "stdout"}]
 
 Message strings returned to the browser are displayed as-is in the UI.
 """
+
 import contextlib
 import io
 import json
@@ -37,6 +38,7 @@ MAX_ROWS = 60
 def _pd() -> ModuleType | None:
     try:
         import pandas as pd
+
         return pd
     except ImportError:
         return None
@@ -45,6 +47,7 @@ def _pd() -> ModuleType | None:
 def _np() -> ModuleType | None:
     try:
         import numpy as np
+
         return np
     except ImportError:
         return None
@@ -156,8 +159,9 @@ def _sorted_frame(df: Any) -> Any:
         return df.iloc[key.argsort(kind="mergesort").to_numpy()].reset_index(drop=True)
 
 
-def assert_eq(got: Any, expected: Any, msg: str = "", *, ignore_order: bool = False, ignore_index: bool = False,
-              tol: float = 1e-6) -> None:
+def assert_eq(
+    got: Any, expected: Any, msg: str = "", *, ignore_order: bool = False, ignore_index: bool = False, tol: float = 1e-6
+) -> None:
     """Compare `got` with `expected`.
 
     - DataFrame: same columns (order included), same values; dtypes are not checked strictly.
@@ -172,8 +176,12 @@ def assert_eq(got: Any, expected: Any, msg: str = "", *, ignore_order: bool = Fa
             _fail(expected, got, msg or f"A DataFrame is expected, not {type(got).__name__}.")
         g, e = got, expected
         if list(g.columns) != list(e.columns):
-            _fail(expected, got, (msg + "\n" if msg else "")
-                  + f"Different columns.\nExpected: {list(e.columns)}\nGot:      {list(g.columns)}")
+            _fail(
+                expected,
+                got,
+                (msg + "\n" if msg else "")
+                + f"Different columns.\nExpected: {list(e.columns)}\nGot:      {list(g.columns)}",
+            )
         if ignore_order:
             g, e = _sorted_frame(g), _sorted_frame(e)
             ignore_index = True
@@ -181,9 +189,18 @@ def assert_eq(got: Any, expected: Any, msg: str = "", *, ignore_order: bool = Fa
             g, e = g.reset_index(drop=True), e.reset_index(drop=True)
         try:
             pd.testing.assert_frame_equal(
-                g, e, check_dtype=False, check_index_type=False, check_column_type=False,
-                check_names=False, check_exact=False, rtol=tol, atol=tol,
-                check_categorical=False, check_freq=False)
+                g,
+                e,
+                check_dtype=False,
+                check_index_type=False,
+                check_column_type=False,
+                check_names=False,
+                check_exact=False,
+                rtol=tol,
+                atol=tol,
+                check_categorical=False,
+                check_freq=False,
+            )
         except AssertionError as ex:
             _fail(expected, got, (msg + "\n" if msg else "") + _first_lines(ex))
         return
@@ -197,8 +214,17 @@ def assert_eq(got: Any, expected: Any, msg: str = "", *, ignore_order: bool = Fa
             g, e = g.reset_index(drop=True), e.reset_index(drop=True)
         try:
             pd.testing.assert_series_equal(
-                g, e, check_dtype=False, check_index_type=False, check_names=False,
-                check_exact=False, rtol=tol, atol=tol, check_categorical=False, check_freq=False)
+                g,
+                e,
+                check_dtype=False,
+                check_index_type=False,
+                check_names=False,
+                check_exact=False,
+                rtol=tol,
+                atol=tol,
+                check_categorical=False,
+                check_freq=False,
+            )
         except AssertionError as ex:
             _fail(expected, got, (msg + "\n" if msg else "") + _first_lines(ex))
         return
@@ -234,8 +260,7 @@ def _format_tb(exc: BaseException, keep: tuple[str, ...] = (USER_FILE, TEST_FILE
     return "".join(parts).rstrip()
 
 
-def run_python(setup: str, code: str, mode: str, tests: list[Json] | None = None,
-               run_call: str | None = None) -> Json:
+def run_python(setup: str, code: str, mode: str, tests: list[Json] | None = None, run_call: str | None = None) -> Json:
     if mode == "run":
         ns, buf = _fresh_ns(), io.StringIO()
         error: str | None = None
@@ -243,8 +268,10 @@ def run_python(setup: str, code: str, mode: str, tests: list[Json] | None = None
             try:
                 _exec(setup or "", ns, SETUP_FILE)
             except Exception as exc:
-                return {"output": buf.getvalue(),
-                        "error": "Error in the exercise setup (not in your code):\n" + _format_tb(exc)}
+                return {
+                    "output": buf.getvalue(),
+                    "error": "Error in the exercise setup (not in your code):\n" + _format_tb(exc),
+                }
             try:
                 _exec(code, ns, USER_FILE)
                 if run_call:
@@ -269,8 +296,7 @@ def run_python(setup: str, code: str, mode: str, tests: list[Json] | None = None
                 message = str(exc)
             except Exception as exc:
                 message = "Exception raised:\n" + _format_tb(exc)
-        results.append({"name": t.get("name", "test"), "ok": ok, "message": message,
-                        "stdout": buf.getvalue()[-2000:]})
+        results.append({"name": t.get("name", "test"), "ok": ok, "message": message, "stdout": buf.getvalue()[-2000:]})
     return {"ok": bool(results) and all(r["ok"] for r in results), "tests": results}
 
 
@@ -343,8 +369,13 @@ def run_sql(setup: str, query: str, mode: str, tests: list[Json] | None = None) 
             elif not all(_eq(a, b, 1e-6) for a, b in zip(g, e)):
                 problems.append("Different rows" + ("" if ordered else " (order ignored)") + ".")
             if problems:
-                message = ("\n".join(problems) + "\n\nExpected:\n" + format_table(exp_cols or cols, exp_rows)
-                           + "\n\nGot:\n" + format_table(cols, rows))
+                message = (
+                    "\n".join(problems)
+                    + "\n\nExpected:\n"
+                    + format_table(exp_cols or cols, exp_rows)
+                    + "\n\nGot:\n"
+                    + format_table(cols, rows)
+                )
             else:
                 ok = True
         except Exception as exc:
@@ -358,14 +389,20 @@ def run(payload: Json) -> Json:
     mode = payload.get("mode", "run")
     if payload.get("language") == "sql":
         return run_sql(payload.get("setup", ""), payload.get("code", ""), mode, payload.get("tests") or [])
-    return run_python(payload.get("setup", ""), payload.get("code", ""), mode,
-                      payload.get("tests") or [], payload.get("run_call"))
+    return run_python(
+        payload.get("setup", ""), payload.get("code", ""), mode, payload.get("tests") or [], payload.get("run_call")
+    )
 
 
 def run_json(payload_json: str) -> str:
     try:
         res = run(json.loads(payload_json))
     except Exception as exc:
-        res = {"output": "", "ok": False, "tests": [],
-               "error": "Harness internal error:\n" + "".join(traceback.format_exception(type(exc), exc, exc.__traceback__))}
+        res = {
+            "output": "",
+            "ok": False,
+            "tests": [],
+            "error": "Harness internal error:\n"
+            + "".join(traceback.format_exception(type(exc), exc, exc.__traceback__)),
+        }
     return json.dumps(res, default=str)

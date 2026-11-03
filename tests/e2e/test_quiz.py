@@ -1,4 +1,5 @@
 """Quiz tab: start a session and answer with the keyboard."""
+
 import re
 
 import pytest

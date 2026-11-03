@@ -1,4 +1,5 @@
 """Tests of app/py/harness.py, the execution harness shared by the browser and the bank checkers."""
+
 import json
 import math
 
@@ -30,7 +31,9 @@ class TestPythonRunMode:
         assert "harness.py" not in res["error"]
 
     def test_run_call_error_points_to_the_call(self, harness):
-        res = run(harness, mode="run", language="python", setup="", code="def f():\n    raise KeyError('k')", run_call="f()")
+        res = run(
+            harness, mode="run", language="python", setup="", code="def f():\n    raise KeyError('k')", run_call="f()"
+        )
         assert harness.CALL_FILE in res["error"]
         assert "KeyError" in res["error"]
 
@@ -46,8 +49,10 @@ class TestPythonRunMode:
 
 class TestPythonCheckMode:
     def test_every_test_runs_in_a_fresh_namespace(self, harness):
-        tests = [{"name": "a", "code": "x = 5\nassert_eq(f(), 3)"},
-                 {"name": "b", "code": "assert 'x' not in dir()\nassert_eq(f(), 3)"}]
+        tests = [
+            {"name": "a", "code": "x = 5\nassert_eq(f(), 3)"},
+            {"name": "b", "code": "assert 'x' not in dir()\nassert_eq(f(), 3)"},
+        ]
         res = run(harness, mode="check", language="python", setup="", code="def f():\n    return 3", tests=tests)
         assert res["ok"] is True
         assert [t["ok"] for t in res["tests"]] == [True, True]
@@ -63,7 +68,14 @@ class TestPythonCheckMode:
 
     def test_exception_in_user_code_is_reported_with_stdout(self, harness):
         tests = [{"name": "t", "code": "f()"}]
-        res = run(harness, mode="check", language="python", setup="", code="def f():\n    print('before')\n    raise RuntimeError('x')", tests=tests)
+        res = run(
+            harness,
+            mode="check",
+            language="python",
+            setup="",
+            code="def f():\n    print('before')\n    raise RuntimeError('x')",
+            tests=tests,
+        )
         test = res["tests"][0]
         assert test["ok"] is False
         assert test["message"].startswith("Exception raised:")
@@ -76,8 +88,14 @@ class TestPythonCheckMode:
 
     def test_pandas_is_available_in_the_namespace(self, harness):
         tests = [{"name": "t", "code": "assert_eq(solve(df), pd.Series([1, 2], name='a'))"}]
-        res = run(harness, mode="check", language="python", setup="df = pd.DataFrame({'a': [1, 2]})",
-                  code="def solve(df):\n    return df['a']", tests=tests)
+        res = run(
+            harness,
+            mode="check",
+            language="python",
+            setup="df = pd.DataFrame({'a': [1, 2]})",
+            code="def solve(df):\n    return df['a']",
+            tests=tests,
+        )
         assert res["ok"] is True
 
 
@@ -183,16 +201,24 @@ class TestSql:
         assert res["error"] == "ValueError: Empty query."
 
     def test_check_ordered_and_unordered(self, harness):
-        tests = [{"name": "ordered", "expected": [[1, "x"], [2, "y"]]},
-                 {"name": "unordered", "expected": [[2, "y"], [1, "x"]], "ordered": False}]
-        res = run(harness, mode="check", language="sql", setup=self.SETUP, code="SELECT a, b FROM t ORDER BY a", tests=tests)
+        tests = [
+            {"name": "ordered", "expected": [[1, "x"], [2, "y"]]},
+            {"name": "unordered", "expected": [[2, "y"], [1, "x"]], "ordered": False},
+        ]
+        res = run(
+            harness, mode="check", language="sql", setup=self.SETUP, code="SELECT a, b FROM t ORDER BY a", tests=tests
+        )
         assert res["ok"] is True
 
     def test_check_detects_row_differences(self, harness):
-        tests = [{"name": "swapped", "expected": [[2, "y"], [1, "x"]]},
-                 {"name": "count", "expected": [[1, "x"]]},
-                 {"name": "columns", "expected": [[1, "x"], [2, "y"]], "columns": ["A", "c"]}]
-        res = run(harness, mode="check", language="sql", setup=self.SETUP, code="SELECT a, b FROM t ORDER BY a", tests=tests)
+        tests = [
+            {"name": "swapped", "expected": [[2, "y"], [1, "x"]]},
+            {"name": "count", "expected": [[1, "x"]]},
+            {"name": "columns", "expected": [[1, "x"], [2, "y"]], "columns": ["A", "c"]},
+        ]
+        res = run(
+            harness, mode="check", language="sql", setup=self.SETUP, code="SELECT a, b FROM t ORDER BY a", tests=tests
+        )
         messages = {t["name"]: t["message"] for t in res["tests"]}
         assert res["ok"] is False
         assert messages["swapped"].startswith("Different rows.")
@@ -206,7 +232,14 @@ class TestSql:
         assert res["ok"] is True
 
     def test_check_reports_sql_errors(self, harness):
-        res = run(harness, mode="check", language="sql", setup=self.SETUP, code="SELECT zz FROM t", tests=[{"name": "t", "expected": []}])
+        res = run(
+            harness,
+            mode="check",
+            language="sql",
+            setup=self.SETUP,
+            code="SELECT zz FROM t",
+            tests=[{"name": "t", "expected": []}],
+        )
         assert res["tests"][0]["message"].startswith("SQL error: OperationalError:")
 
     def test_null_and_float_cells(self, harness):

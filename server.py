@@ -21,6 +21,7 @@ the installed sparring_data package; answers go to data/ in a clone, else to the
 The API has no authentication: it is meant for a loopback address only. Requests whose Host is not local, or that
 carry a foreign Origin, or POSTs that are not application/json, are rejected (see SECURITY.md).
 """
+
 import argparse
 import glob
 import http.server
@@ -267,8 +268,10 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         SystemExit: code 2 on a port outside 1-65535 or a positional port that disagrees with --port, code 0 after
             --help or --version, as argparse does.
     """
-    parser = argparse.ArgumentParser(description="Sparring: local training server for technical tests and interviews.",
-                                     epilog="The host and the port default to the settings file, section 'server'.")
+    parser = argparse.ArgumentParser(
+        description="Sparring: local training server for technical tests and interviews.",
+        epilog="The host and the port default to the settings file, section 'server'.",
+    )
     parser.add_argument("port_arg", metavar="port", nargs="?", type=int, help="port to listen on (same as --port)")
     parser.add_argument("--host", help="address to bind (keep a loopback address: the API has no authentication)")
     parser.add_argument("--port", type=int, help="port to listen on")
@@ -296,8 +299,11 @@ def main(argv: list[str] | None = None) -> None:
     """
     global bind_host
     args = parse_args(argv)
-    logging.basicConfig(level=os.environ.get("SPARRING_LOG_LEVEL", "INFO").upper(),
-                        format="%(asctime)s %(levelname)s %(message)s", datefmt="%H:%M:%S")
+    logging.basicConfig(
+        level=os.environ.get("SPARRING_LOG_LEVEL", "INFO").upper(),
+        format="%(asctime)s %(levelname)s %(message)s",
+        datefmt="%H:%M:%S",
+    )
     srv = config.section("server")
     port = int(srv["port"]) if args.port is None else args.port
     bind_host = args.host or str(srv["host"])
@@ -308,16 +314,26 @@ def main(argv: list[str] | None = None) -> None:
         log.warning(err)
     claude_bin = config.section("grader")["claude_bin"]
     if settings_from_cwd() and claude_bin != config.DEFAULTS["grader"]["claude_bin"]:
-        log.warning("The settings file of the current directory sets grader.claude_bin = %r, a program the grader "
-                    "runs: start sparring from a directory you trust, or name the file with SPARRING_CONFIG", claude_bin)
+        log.warning(
+            "The settings file of the current directory sets grader.claude_bin = %r, a program the grader "
+            "runs: start sparring from a directory you trust, or name the file with SPARRING_CONFIG",
+            claude_bin,
+        )
     if not is_loopback(bind_host):
-        log.warning("Server bound to %s: the API has no authentication, anyone on the network can read and delete "
-                    "your answers and spend your grading quota", bind_host)
+        log.warning(
+            "Server bound to %s: the API has no authentication, anyone on the network can read and delete "
+            "your answers and spend your grading quota",
+            bind_host,
+        )
     bank = load_bank("exercises")
     qcm, th = load_bank("qcm"), load_bank("theory")
-    log.info("Bank: %d exercise(s), %d quiz question(s), %d interview question(s) (%d with a grid)",
-             len(bank["items"]), len(qcm["items"]), len(th["items"]),
-             sum(1 for q in th["items"] if q.get("key_points")))
+    log.info(
+        "Bank: %d exercise(s), %d quiz question(s), %d interview question(s) (%d with a grid)",
+        len(bank["items"]),
+        len(qcm["items"]),
+        len(th["items"]),
+        sum(1 for q in th["items"] if q.get("key_points")),
+    )
     for err in bank["errors"] + qcm["errors"] + th["errors"]:
         log.warning(err)
     st = grader.status()

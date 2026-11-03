@@ -48,7 +48,9 @@ jobs:
       - name: Install dependencies
         run: python -m pip install -e ".[${{ matrix.extras }}]" ${{ matrix.pins }}
       - name: Lint
-        run: ruff check .
+        run: |
+          ruff check .
+          ruff format --check .
       - name: Type check
         run: python -m mypy .
       - name: Tests (includes the bank checkers; the browser suite is excluded by addopts and has its own job)

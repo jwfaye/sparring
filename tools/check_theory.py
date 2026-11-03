@@ -6,6 +6,7 @@ Every question carries a difficulty (easy | medium | expert). `uncertain: true` 
 uncertain for a reliable grid (shown in the app).
 Usage: python -m tools.check_theory [--missing]
 """
+
 import glob
 import json
 import os

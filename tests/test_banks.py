@@ -1,4 +1,5 @@
 """Smoke tests: the shipped banks pass their own checkers (which execute every solution and quiz snippet)."""
+
 import glob
 import json
 import os

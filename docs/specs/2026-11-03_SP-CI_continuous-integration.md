@@ -1,7 +1,7 @@
 ---
 id: SP-CI
 title: Continuous integration and repository hygiene
-version: 0.5
+version: 0.6
 status: approved
 author: agent
 created: 2026-11-03
@@ -30,9 +30,11 @@ contributors the same checks before each commit. It exists so that a regression,
 action tag or a silent loss of test coverage is caught before it reaches `main`.
 
 ## Context
-The checks themselves belong to other components: `ruff check .`, `python -m mypy .` and `python -m pytest -q`
-(the Python code and its bank checkers), `npm run lint` (SP-WEB-QA) and `python -m pytest -q -m e2e tests/e2e`
-(SP-WEB-QA). This component only orchestrates them: the GitHub Actions workflow `CI`
+The checks themselves belong to other components: `ruff check .`, `ruff format --check .`, `python -m mypy .` and
+`python -m pytest -q` (the Python code and its bank checkers), `npm run lint` (SP-WEB-QA) and
+`python -m pytest -q -m e2e tests/e2e` (SP-WEB-QA). The Python tree is formatted with `ruff format` under the
+settings of `[tool.ruff]` in `pyproject.toml` (line length 120, `tools/sources/` excluded), so the formatter runs
+with no option of its own. This component only orchestrates them: the GitHub Actions workflow `CI`
 (`.github/workflows/ci.yml`), the Dependabot configuration (`.github/dependabot.yml`) and the pre-commit
 configuration (`.pre-commit-config.yaml`), plus `tests/test_ci_config.py`, which reads the three files and checks
 the properties below. Coverage is measured by `pytest-cov` (`dev` extra), configured in the `[tool.coverage.*]`
@@ -52,8 +54,11 @@ the `pytest-cov` entry of the `dev` extra). `repoach.toml` waits on the check na
 - G5: Dependabot proposes weekly updates for pip, npm and the actions, with minor and patch bumps grouped, never
   touches the pandas and numpy pins of the `check` extra, and moves the packages that must change together
   (`eslint` with `@eslint/js`, the GitHub Actions) in one pull request whatever the bump.
-- G6: `pre-commit install` gives a contributor the linter, the type checker, ESLint and the file checks before each
-  commit, with the project's own interpreter and `node_modules`.
+- G6: `pre-commit install` gives a contributor the linter, the formatter, the type checker, ESLint and the file
+  checks before each commit, with the project's own interpreter and `node_modules`.
+- G8: the Python tree stays formatted with `ruff format`: the CI lint step runs `ruff check .` then
+  `ruff format --check .`, and the pre-commit configuration runs the `ruff-format` hook after `ruff-check`, so a
+  formatting drift fails the pull request and is fixed locally by `ruff format .`.
 - G7: the `unit (3.12)` leg measures branch coverage of `backend/`, `server.py` and `tools/` (without
   `tools/sources/`), fails under the `fail_under` floor of `pyproject.toml` and publishes `coverage.xml` as a run
   artifact; the floor is the measured total rounded down to the whole percent minus two points, so it never fails
@@ -62,8 +67,8 @@ the `pytest-cov` entry of the `dev` extra). `repoach.toml` waits on the check na
 
 ## Non-Goals
 - NG1: changing what the checks test; the commands are those of the Development section of the README.
-- NG2: formatting the tree with `ruff format`: the tree is not formatted yet, so the pre-commit configuration runs
-  the linter only.
+- NG2: a formatter configuration of its own: the formatter reads `[tool.ruff]` of `pyproject.toml` (SP-PACKAGING)
+  and this component adds no `[tool.ruff.format]` table; `tools/sources/` stays verbatim.
 - NG3: running the browser suite on more than one Python version or more than one browser.
 - NG4: publishing anything; releases are a separate component.
 - NG5: coverage of the JavaScript and the browser suite, and a per-file floor; one total floor only.
@@ -101,8 +106,8 @@ Errors:
 ### Nominal
 1. A push or pull request starts `CI`; the concurrency group `CI-<ref>` cancels the run in progress for the same
    pull request ref and lets runs on `main` finish.
-2. `unit` installs the project with pip on each Python version, then runs `ruff check .`, `python -m mypy .` and
-   `python -m pytest -q ${{ matrix.pytest-options }}`: `--cov --cov-report=term-missing --cov-report=xml` on 3.12,
+2. `unit` installs the project with pip on each Python version, then runs the `Lint` step (`ruff check .` followed
+   by `ruff format --check .`), `python -m mypy .` and `python -m pytest -q ${{ matrix.pytest-options }}`: `--cov --cov-report=term-missing --cov-report=xml` on 3.12,
    nothing on 3.13. The 3.12 leg then uploads `coverage.xml` with `actions/upload-artifact` (`if:
    matrix.python-version == '3.12'`, `if-no-files-found: error`).
 3. `test` depends on `unit`, runs even when a leg failed (`if: always()`), and exits 0 only when
@@ -111,8 +116,8 @@ Errors:
    and, with `npm ci` on Node 22, the `axe-core` package that `tests/e2e/test_a11y.py` (SP-A11Y) injects, then runs
    the browser suite on Python 3.12.
 5. Locally, `pre-commit install` registers the hook; each commit runs end-of-file-fixer, trailing-whitespace,
-   check-json, check-yaml, check-toml, `ruff check`, `.venv-check/bin/python -m mypy .` (when a Python file is
-   staged) and `npm run lint` (when a file under `app/js`, `eslint.config.js` or a package file is staged).
+   check-json, check-yaml, check-toml, `ruff check`, `ruff format`, `.venv-check/bin/python -m mypy .` (when a
+   Python file is staged) and `npm run lint` (when a file under `app/js`, `eslint.config.js` or a package file is staged).
 
 ### Edge cases
 - Only one leg fails -> the other leg still finishes (`fail-fast: false`) and `test` fails.
@@ -121,6 +126,8 @@ Errors:
 - The total rises -> nothing changes until a pull request raises `fail_under` (measured total rounded down minus
   two).
 - A pull request receives a second push while CI runs -> the first run is cancelled.
+- A Python file is committed unformatted -> the `ruff-format` hook rewrites it and fails the commit, so the
+  contributor stages the result; pushed anyway, `ruff format --check .` fails the `Lint` step of both `unit` legs.
 - A Dependabot update of an action -> the SHA and its trailing version comment are both updated by Dependabot.
 - A new pandas or numpy release -> no Dependabot pull request: the `pip` entry ignores every version of both
   (`ignore` with `dependency-name` only), because the pins follow Pyodide, not PyPI.
@@ -179,9 +186,14 @@ parse the three files and check their shape; what they cannot see is named as ob
   the `github-actions` entry has one `actions` group for minor, patch and major
   (`tests/test_ci_config.py::TestDependabot::test_actions_arrive_in_one_group_including_majors`).
 - [ ] AC5: the pre-commit configuration pins its hook repositories to commits and declares the file checks,
-  `ruff-check`, mypy and eslint
+  `ruff-check`, `ruff-format`, mypy and eslint
   (`tests/test_ci_config.py::TestPreCommit::test_hook_repositories_are_pinned_to_commits_and_the_hooks_mirror_ci`);
   `pre-commit run --all-files` from `.venv-check` passes on the tree after this change.
+- [ ] AC9: the `Lint` step of the `unit` job runs exactly `ruff check .` then `ruff format --check .`
+  (`tests/test_ci_config.py::TestWorkflow::test_the_lint_step_checks_the_formatting`), and the ruff hook
+  repository of `.pre-commit-config.yaml` runs `ruff-check` then `ruff-format`
+  (`tests/test_ci_config.py::TestPreCommit::test_the_ruff_repository_runs_the_linter_then_the_formatter`);
+  `ruff format --check .` from `.venv-check` reports no file to reformat on the tree after this change.
 - [ ] AC8: the `unit` matrix gives the 3.12 leg the options `--cov --cov-report=term-missing --cov-report=xml` and
   the 3.13 leg none, the pytest step consumes them, and an `actions/upload-artifact` step guarded by
   `matrix.python-version == '3.12'` uploads `coverage.xml`

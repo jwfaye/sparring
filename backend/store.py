@@ -8,6 +8,7 @@ on the first access of the profile, then renamed to `answers.json.migrated`; not
 The data directory comes from backend/paths.py: SPARRING_DATA_DIR when set, else data/ at the root of a clone, else
 the per-user data directory ($XDG_DATA_HOME/sparring or ~/.local/share/sparring) of an installed `sparring`.
 """
+
 import json
 import logging
 import os
@@ -42,7 +43,9 @@ CREATE TABLE IF NOT EXISTS answers (
 );
 CREATE INDEX IF NOT EXISTS answers_qid ON answers (qid);
 """
-_INSERT = "INSERT {} INTO answers (id, qid, at, duration, answer, mode, grade, graded_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+_INSERT = (
+    "INSERT {} INTO answers (id, qid, at, duration, answer, mode, grade, graded_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+)
 _SELECT = "SELECT id, qid, at, duration, answer, mode, grade, graded_at FROM answers"
 _lock = threading.Lock()
 log = logging.getLogger("sparring")
@@ -60,8 +63,16 @@ def _path(profile: str | None) -> str:
 def _row(rec: Answer) -> tuple[Any, ...]:
     """The column values of a record, `grade` serialized as JSON text."""
     grade = rec.get("grade")
-    return (rec["id"], rec["qid"], rec["at"], rec.get("duration"), rec["answer"], rec.get("mode", "offline"),
-            json.dumps(grade, ensure_ascii=False) if grade is not None else None, rec.get("graded_at"))
+    return (
+        rec["id"],
+        rec["qid"],
+        rec["at"],
+        rec.get("duration"),
+        rec["answer"],
+        rec.get("mode", "offline"),
+        json.dumps(grade, ensure_ascii=False) if grade is not None else None,
+        rec.get("graded_at"),
+    )
 
 
 def _record(row: tuple[Any, ...]) -> Answer:
@@ -125,10 +136,19 @@ def pending(profile: str | None = None) -> list[Answer]:
     return [a for a in list_answers(profile) if not a.get("grade")]
 
 
-def add_answer(qid: str, answer: str, duration: float | None = None, profile: str | None = None,
-               mode: str = "offline") -> Answer:
-    rec: Answer = {"id": time.strftime("%Y%m%d-%H%M%S-") + uuid.uuid4().hex[:6], "qid": qid, "at": int(time.time() * 1000),
-                   "duration": duration, "answer": answer, "mode": mode, "grade": None, "graded_at": None}
+def add_answer(
+    qid: str, answer: str, duration: float | None = None, profile: str | None = None, mode: str = "offline"
+) -> Answer:
+    rec: Answer = {
+        "id": time.strftime("%Y%m%d-%H%M%S-") + uuid.uuid4().hex[:6],
+        "qid": qid,
+        "at": int(time.time() * 1000),
+        "duration": duration,
+        "answer": answer,
+        "mode": mode,
+        "grade": None,
+        "graded_at": None,
+    }
     conn = _open(profile)
     try:
         with conn:
@@ -142,8 +162,10 @@ def set_grade(answer_id: str, grade: dict[str, Any], profile: str | None = None)
     conn = _open(profile)
     try:
         with conn:
-            cur = conn.execute("UPDATE answers SET grade = ?, graded_at = ? WHERE id = ?",
-                               (json.dumps(grade, ensure_ascii=False), int(time.time() * 1000), answer_id))
+            cur = conn.execute(
+                "UPDATE answers SET grade = ?, graded_at = ? WHERE id = ?",
+                (json.dumps(grade, ensure_ascii=False), int(time.time() * 1000), answer_id),
+            )
             if cur.rowcount == 0:
                 return None
             row = conn.execute(_SELECT + " WHERE id = ?", (answer_id,)).fetchone()

@@ -1,4 +1,5 @@
 """Tests of backend/grader.py with a fake Anthropic SDK and a fake `claude` CLI. Nothing real is called."""
+
 import subprocess
 import sys
 import types
@@ -15,8 +16,14 @@ QUESTION = {
     "common_mistakes": ["confusing it with underfitting"],
 }
 
-GRADE = {"score": 7, "covered": ["memorises noise"], "missing": ["train/test gap"], "wrong": [],
-         "feedback": "Good start.", "improved_answer": "Overfitting is ..."}
+GRADE = {
+    "score": 7,
+    "covered": ["memorises noise"],
+    "missing": ["train/test gap"],
+    "wrong": [],
+    "feedback": "Good start.",
+    "improved_answer": "Overfitting is ...",
+}
 
 
 def fake_anthropic(response=None, error=None):
@@ -54,17 +61,27 @@ def fake_anthropic(response=None, error=None):
         def __init__(self):
             self.messages = Messages()
 
-    for name, attr in (("APIStatusError", APIStatusError), ("AuthenticationError", AuthenticationError),
-                       ("RateLimitError", RateLimitError), ("BadRequestError", BadRequestError),
-                       ("APIConnectionError", APIConnectionError), ("Anthropic", Anthropic), ("Messages", Messages),
-                       ("calls", calls)):
+    for name, attr in (
+        ("APIStatusError", APIStatusError),
+        ("AuthenticationError", AuthenticationError),
+        ("RateLimitError", RateLimitError),
+        ("BadRequestError", BadRequestError),
+        ("APIConnectionError", APIConnectionError),
+        ("Anthropic", Anthropic),
+        ("Messages", Messages),
+        ("calls", calls),
+    ):
         setattr(mod, name, attr)
     return mod
 
 
 def api_response(text, stop_reason="end_turn"):
-    return SimpleNamespace(stop_reason=stop_reason, model="claude-test", usage=SimpleNamespace(input_tokens=11, output_tokens=5),
-                           content=[SimpleNamespace(type="text", text=text)])
+    return SimpleNamespace(
+        stop_reason=stop_reason,
+        model="claude-test",
+        usage=SimpleNamespace(input_tokens=11, output_tokens=5),
+        content=[SimpleNamespace(type="text", text=text)],
+    )
 
 
 @pytest.fixture
@@ -85,7 +102,9 @@ def claude_cli(grader_module, monkeypatch):
         if state["raise"] is not None:
             raise state["raise"]
         if cmd[1:3] == ["auth", "status"]:
-            return SimpleNamespace(stdout='{"loggedIn": %s}' % ("true" if state["logged_in"] else "false"), stderr="", returncode=0)
+            return SimpleNamespace(
+                stdout='{"loggedIn": %s}' % ("true" if state["logged_in"] else "false"), stderr="", returncode=0
+            )
         return state["result"]
 
     monkeypatch.setattr(grader_module, "BACKEND", "claude-code")
@@ -184,7 +203,9 @@ class TestPrompt:
         assert grader_module.build_prompt(QUESTION, "   ").endswith("(empty)")
 
     def test_finish_normalises_the_payload(self, grader_module):
-        data = grader_module._finish({"score": 15, "covered": [1, "a"], "feedback": None}, "m", {"input": 1, "output": 2})
+        data = grader_module._finish(
+            {"score": 15, "covered": [1, "a"], "feedback": None}, "m", {"input": 1, "output": 2}
+        )
         assert data["score"] == 10
         assert data["covered"] == ["1", "a"] and data["missing"] == [] and data["wrong"] == []
         assert data["feedback"] == "" and data["improved_answer"] == ""
@@ -234,13 +255,16 @@ class TestApiBackend:
         with pytest.raises(api_available.GraderError, match="invalid JSON"):
             api_available.grade(QUESTION, "answer")
 
-    @pytest.mark.parametrize("error_name, args, expected", [
-        ("AuthenticationError", ("bad key", 401), "API key rejected: bad key"),
-        ("RateLimitError", ("slow down", 429), "Rate limit"),
-        ("BadRequestError", ("bad request", 400), "Request rejected by the API: bad request"),
-        ("APIStatusError", ("boom", 503), "API error 503: boom"),
-        ("APIConnectionError", ("down",), "Cannot reach the API"),
-    ])
+    @pytest.mark.parametrize(
+        "error_name, args, expected",
+        [
+            ("AuthenticationError", ("bad key", 401), "API key rejected: bad key"),
+            ("RateLimitError", ("slow down", 429), "Rate limit"),
+            ("BadRequestError", ("bad request", 400), "Request rejected by the API: bad request"),
+            ("APIStatusError", ("boom", 503), "API error 503: boom"),
+            ("APIConnectionError", ("down",), "Cannot reach the API"),
+        ],
+    )
     def test_typed_errors_become_grader_errors(self, api_available, monkeypatch, error_name, args, expected):
         mod = fake_anthropic()
         monkeypatch.setitem(sys.modules, "anthropic", mod)
@@ -254,14 +278,24 @@ class TestClaudeCodeBackend:
     def cli_result(self, payload, returncode=0, stdout=None, stderr=""):
         import json
 
-        return SimpleNamespace(stdout=json.dumps(payload) if stdout is None else stdout, stderr=stderr, returncode=returncode)
+        return SimpleNamespace(
+            stdout=json.dumps(payload) if stdout is None else stdout, stderr=stderr, returncode=returncode
+        )
 
     def test_successful_grading_uses_structured_output(self, grader_module, claude_cli):
-        claude_cli["result"] = self.cli_result({
-            "is_error": False, "structured_output": GRADE,
-            "usage": {"input_tokens": 2, "cache_creation_input_tokens": 1000, "cache_read_input_tokens": 3, "output_tokens": 50},
-            "modelUsage": {"claude-opus-5-5": {}},
-        })
+        claude_cli["result"] = self.cli_result(
+            {
+                "is_error": False,
+                "structured_output": GRADE,
+                "usage": {
+                    "input_tokens": 2,
+                    "cache_creation_input_tokens": 1000,
+                    "cache_read_input_tokens": 3,
+                    "output_tokens": 50,
+                },
+                "modelUsage": {"claude-opus-5-5": {}},
+            }
+        )
         data = grader_module.grade(QUESTION, "it memorises noise")
         assert data["score"] == 7
         assert data["model"] == "claude-opus-5-5 (Claude Code)"
@@ -281,7 +315,9 @@ class TestClaudeCodeBackend:
     def test_falls_back_to_result_text(self, grader_module, claude_cli):
         import json
 
-        claude_cli["result"] = self.cli_result({"is_error": False, "result": json.dumps(GRADE), "usage": {}, "modelUsage": {}})
+        claude_cli["result"] = self.cli_result(
+            {"is_error": False, "result": json.dumps(GRADE), "usage": {}, "modelUsage": {}}
+        )
         data = grader_module.grade(QUESTION, "answer")
         assert data["score"] == 7 and data["model"] == f"{grader_module.MODEL} (Claude Code)"
 

@@ -1,4 +1,5 @@
 """Command line of server.py (the `sparring` entry point): positional port, --host, --port, --version."""
+
 import importlib.metadata
 import logging
 
@@ -128,7 +129,9 @@ def test_main_warns_when_the_local_settings_file_changes_claude_bin(fake_server,
     with caplog.at_level(logging.WARNING, logger="sparring"):
         server.main([])
     warnings = [record.getMessage() for record in caplog.records if record.levelno == logging.WARNING]
-    assert any(message.startswith(LOCAL_CLAUDE_BIN_WARNING) and "'/somewhere/claude'" in message for message in warnings)
+    assert any(
+        message.startswith(LOCAL_CLAUDE_BIN_WARNING) and "'/somewhere/claude'" in message for message in warnings
+    )
 
 
 def test_main_does_not_warn_for_a_named_or_per_user_settings_file(fake_server, monkeypatch, tmp_path, caplog):
