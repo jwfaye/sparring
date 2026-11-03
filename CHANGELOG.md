@@ -14,6 +14,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Accessibility pass on the page: landmarks, ARIA tabs with arrow keys, labels on every control, live status
   regions, a visible focus ring in both themes, a keyboard path out of the code editor (Escape, then Tab) and WCAG
   AA contrast; an axe-core audit runs in the browser test suite (#25).
+- Visual identity: a brand mark next to the name in the top bar, an SVG favicon with PNG fallbacks, and a README
+  that opens with a banner, the CI and license badges, the three modes and screenshots in both themes (#27).
 
 ### Changed
 - Python sources formatted with `ruff format`, checked in CI and by the pre-commit hook (#26).
