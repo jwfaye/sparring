@@ -6,6 +6,7 @@ CDNs; the other modules keep the normal context. Moderate and minor findings do 
 reported as a pytest warning so they stay visible in the run summary.
 """
 import os
+import re
 import warnings
 
 import pytest
@@ -84,6 +85,13 @@ def test_tabs_follow_the_aria_tab_pattern(axe_page):
     expect(page.locator("#view-recap")).to_be_visible()
     page.keyboard.press("ArrowRight")
     expect(page.locator("#view-exercises")).to_be_visible()
+    page.keyboard.press("ArrowLeft")
+    expect(page.locator("#view-recap")).to_be_visible()
+    page.keyboard.press("ArrowLeft")
+    expect(page.locator("#view-theory")).to_be_visible()
+    page.keyboard.press("Home")
+    expect(page.locator("#view-exercises")).to_be_visible()
+    assert page.evaluate("document.activeElement.dataset.view") == "exercises"
 
 
 def test_theme_toggle_label_reflects_the_state(axe_page):
@@ -106,3 +114,23 @@ def test_escape_then_tab_leaves_the_code_editor(axe_page):
     page.keyboard.press("Tab")
     assert page.evaluate("document.activeElement.closest('.CodeMirror')") is None
     assert page.evaluate("document.activeElement.id") == "splitter"
+
+
+def test_splitter_arrow_keys_resize_the_output_pane_within_bounds(axe_page):
+    page = axe_page
+    page.click('.tab[data-view="exercises"]')
+    page.focus("#splitter")
+    height = "document.querySelector('#output-pane').getBoundingClientRect().height"
+    page.keyboard.press("ArrowUp")
+    expect(page.locator("#output-pane")).not_to_have_class(re.compile(r"\bcollapsed\b"))
+    before = page.evaluate(height)
+    page.keyboard.press("ArrowUp")
+    after = page.evaluate(height)
+    assert after == pytest.approx(before + 20, abs=1)
+    expect(page.locator("#splitter")).to_have_attribute("aria-valuenow", str(round(after)))
+    page.keyboard.press("ArrowDown")
+    assert page.evaluate(height) == pytest.approx(before, abs=1)
+    for _ in range(30):
+        page.keyboard.press("ArrowDown")
+    assert page.evaluate(height) == pytest.approx(60, abs=1)
+    expect(page.locator("#splitter")).to_have_attribute("aria-valuenow", "60")

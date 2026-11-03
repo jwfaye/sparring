@@ -72,8 +72,8 @@ added). Code-only: `resources: []`.
   code editor).
 - NG2: a screen-reader rendering of the syntax highlighting or of the progress bars (the numbers next to them carry
   the information).
-- NG3: restyling the page: the focus ring, the three token changes and the dark-theme Check button are the only
-  visible differences.
+- NG3: restyling the page: the focus ring, the two light-theme token changes (`--muted`, `--fail`), the line-number
+  color and the dark-theme Check button are the only visible differences.
 - NG4: `prefers-reduced-motion`: the stylesheet has no transition or animation and the scrolls are instant, so
   there is nothing to reduce.
 
@@ -138,8 +138,8 @@ N/A: attributes and one test; no flow of its own.
 - [ ] AC1: axe-core reports no serious or critical violation on each of the four tabs in the light and the dark
   theme (`tests/e2e/test_a11y.py::test_no_serious_or_critical_violation`).
 - [ ] AC2: the tab bar is a `tablist` of four `tab`s controlling `tabpanel`s, `aria-selected` and the roving
-  `tabindex` follow the active tab, and Right, End and wrap-around Right select the next tabs from the keyboard
-  (`tests/e2e/test_a11y.py::test_tabs_follow_the_aria_tab_pattern`).
+  `tabindex` follow the active tab, and Right, Left, Home and End (wrapping at both ends) select tabs from the
+  keyboard (`tests/e2e/test_a11y.py::test_tabs_follow_the_aria_tab_pattern`).
 - [ ] AC3: the theme toggle's `aria-label` names the theme it switches to, before and after a click
   (`tests/e2e/test_a11y.py::test_theme_toggle_label_reflects_the_state`).
 - [ ] AC4: Escape then Tab leaves the code editor and lands on the splitter
@@ -148,6 +148,8 @@ N/A: attributes and one test; no flow of its own.
   `--bg3` and their tinted backgrounds) reaches 4.5:1 in both themes, and the Check button's text reaches 4.5:1 on
   its green in the dark theme (computed from the tokens; covered by the `color-contrast` rule of AC1 for the
   elements rendered at audit time).
+- [ ] AC7: Up and Down on the focused splitter resize the output pane by 20 px, keep `aria-valuenow` equal to its
+  height and stop at the 60 px floor (`tests/e2e/test_a11y.py::test_splitter_arrow_keys_resize_the_output_pane_within_bounds`).
 - [ ] AC6: manual keyboard walk in Chrome, both themes: Tab reaches the tabs, the exam controls, the theme toggle,
   the filters, the exercise list, the toolbar, the editor, the splitter, the output toggle; arrows move between
   tabs; the quiz is answered with 1-4 and Enter; the interview textarea and buttons are reachable; the focus ring is
