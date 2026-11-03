@@ -12,3 +12,4 @@ repoach.toml.local
 .mypy_cache/
 .repoach.env
 node_modules/
+*.egg-info/

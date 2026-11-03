@@ -53,12 +53,15 @@ Everything lives in `config.json` at the project root (defaults in `backend/conf
 - `grader.effort`: `low` | `medium` | `high`
 - `grader.claude_bin`: path to the Claude Code CLI, non-empty string
 - `grader.timeout_seconds`: positive integer
-- `SPARRING_LOG_LEVEL`: server log level (default `INFO`)
+- `SPARRING_CONFIG`: environment variable, path of the settings file instead of `config.json` at the project root
+  (the browser tests use it to start a server on a free port with the grader offline)
+- `SPARRING_LOG_LEVEL`: environment variable, server log level (default `INFO`)
 
 Every value is validated at startup: an invalid value keeps its default and is logged as a warning, as are
 unknown sections and keys, so a typo never prevents the server from starting.
 
-The only thing that stays in the environment is the API key, never in a file of the repository:
+Apart from those two variables, the only thing that stays in the environment is the API key, never in a file of the
+repository:
 `export ANTHROPIC_API_KEY=sk-ant-...` (with `.venv/bin/python -m pip install -e ".[api]"`, then
 `.venv/bin/python server.py`). Without a key and without Claude Code, exercises and quizzes are fully functional and
 the interview mode falls back to offline grading.
@@ -199,18 +202,19 @@ The API key never appears in the code, the page or the repository: the SDK reads
 .venv-check/bin/python -m pip install -e ".[check,dev]"   # once: pandas/numpy as in Pyodide, pytest, ruff, mypy
 ruff check .                                              # lint
 .venv-check/bin/python -m mypy .                          # type check
-.venv-check/bin/python -m pytest -q                       # unit tests + the three bank checkers
+.venv-check/bin/python -m pytest -q                       # unit tests + the three bank checkers (browser tests excluded)
 npm ci && npm run lint                                    # ESLint on app/js (eslint.config.js)
 .venv-check/bin/python -m pip install -e ".[e2e]" && .venv-check/bin/python -m playwright install chromium   # once: Playwright + Chromium
-.venv-check/bin/python -m pytest -q -m e2e tests/e2e                                                           # browser tests (headless)
+.venv-check/bin/python -m pytest -q -m e2e tests/e2e                                                           # browser tests (headless, opt-in)
 ```
 
 Tests live in `tests/` and run from the project root with `python -m pytest`, which puts the root on `sys.path`.
 They cover the execution harness, the answer store, the grader (with a fake SDK and a fake `claude` CLI, nothing
 real is called), the HTTP API on a live server, and a smoke test that the shipped banks pass their checkers.
 `tests/e2e/` drives the page in headless Chromium (Playwright) against a `server.py` started on a free port with the
-`e2e` profile: page boot, an exercise check, a quiz answer, an offline interview answer, the theme toggle; the
-modules skip when the `e2e` extra is not installed. The same steps run in GitHub Actions on every push to `main`
+`e2e` profile: page boot, an exercise check, a quiz answer, an offline interview answer, the theme toggle. The suite
+is opt-in (`-m e2e` overrides the `addopts` of `pyproject.toml`) and its modules skip when the `e2e` extra is not
+installed. The same steps run in GitHub Actions on every push to `main`
 and every pull request (`.github/workflows/ci.yml`: jobs `test`, `js`, `e2e`).
 
 ## Code review with repoach

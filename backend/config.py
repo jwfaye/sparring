@@ -1,6 +1,8 @@
 """Application settings: config.json at the project root, merged over the defaults below.
 
-Only the API key stays in the environment (ANTHROPIC_API_KEY), never in this file nor in the repository.
+SPARRING_CONFIG, when set and non-empty, names another settings file instead (the browser tests use it to run a server
+on a free port with the grader offline). Only the API key (ANTHROPIC_API_KEY), SPARRING_CONFIG and SPARRING_LOG_LEVEL
+live in the environment; every option lives in the file, never in the repository.
 
 Every value is validated. An invalid value keeps its default and adds a message to ERRORS, so the server still
 starts and logs the problem; unknown sections and keys are reported the same way.
@@ -21,7 +23,8 @@ import os
 from typing import Any, Callable
 
 ROOT: str = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PATH: str = os.path.join(ROOT, "config.json")
+DEFAULT_PATH: str = os.path.join(ROOT, "config.json")
+ENV_VAR = "SPARRING_CONFIG"
 
 Section = dict[str, Any]
 Config = dict[str, Section]
@@ -84,10 +87,15 @@ VALIDATORS: dict[str, dict[str, Validator]] = {
 }
 
 
-def _load() -> tuple[Config, list[str]]:
+def settings_path() -> str:
+    """The settings file: SPARRING_CONFIG when set and non-empty, else config.json at the project root."""
+    return os.environ.get(ENV_VAR) or DEFAULT_PATH
+
+
+def _load(path: str) -> tuple[Config, list[str]]:
     cfg: Config = {name: dict(values) for name, values in DEFAULTS.items()}
     try:
-        with open(PATH, encoding="utf-8") as fh:
+        with open(path, encoding="utf-8") as fh:
             user = json.load(fh)
     except FileNotFoundError:
         return cfg, []
@@ -113,9 +121,10 @@ def _load() -> tuple[Config, list[str]]:
     return cfg, errors
 
 
+PATH: str = settings_path()
 CONFIG: Config
 ERRORS: list[str]
-CONFIG, ERRORS = _load()
+CONFIG, ERRORS = _load(PATH)
 
 
 def section(name: str) -> Section:

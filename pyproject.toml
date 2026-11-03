@@ -24,7 +24,8 @@ py-modules = ["server"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
-markers = ["e2e: browser end-to-end tests (Playwright, headless Chromium); need the e2e extra"]
+addopts = "-m 'not e2e'"
+markers = ["e2e: browser end-to-end tests (Playwright, headless Chromium); need the e2e extra; opt in with -m e2e"]
 
 [tool.ruff]
 line-length = 120
