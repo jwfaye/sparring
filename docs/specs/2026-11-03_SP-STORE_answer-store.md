@@ -149,7 +149,8 @@ flowchart TD
 - [ ] AC1: add, list, grade and delete round trip through the database with the record shape above
   (`tests/test_store.py::test_add_answer_persists_a_record`, `tests/test_store.py::test_list_and_pending`,
   `tests/test_store.py::test_set_grade_stamps_the_record`, `tests/test_store.py::test_delete_answer`,
-  `tests/test_store.py::test_missing_database_means_no_answers`).
+  `tests/test_store.py::test_missing_database_means_no_answers`,
+  `tests/test_store.py::test_non_ascii_answer_round_trips`).
 - [ ] AC2: `list_answers` orders by `at` ascending whatever the insertion order
   (`tests/test_store.py::test_answers_are_ordered_by_time`,
   `tests/test_store.py::test_equal_timestamps_keep_insertion_order`).
@@ -163,7 +164,8 @@ flowchart TD
   id rolls the import back and keeps the file (`tests/test_store.py::test_malformed_legacy_file_is_left_in_place`,
   `tests/test_store.py::test_legacy_record_without_id_rolls_back_and_keeps_the_file`).
 - [ ] AC5: concurrent `add_answer` calls from threads all land, with distinct ids
-  (`tests/test_store.py::test_concurrent_adds_from_threads`).
+  (`tests/test_store.py::test_concurrent_adds_from_threads`), and a writer waits for a database another
+  connection holds locked (`tests/test_store.py::test_add_answer_waits_for_a_locked_database`).
 - [ ] AC6: profile names are stripped to `[a-zA-Z0-9_-]` and cannot leave the data directory
   (`tests/test_store.py::test_profile_names_cannot_escape_the_data_directory`).
 - [ ] AC7: `DATA` and `DATA_DIR` keep following `SPARRING_DATA_DIR` and the clone layout

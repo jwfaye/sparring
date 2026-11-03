@@ -39,6 +39,22 @@ def test_add_answer_persists_a_record(store_dir):
     assert not (store_dir / "answers.json").exists()
 
 
+def test_non_ascii_answer_round_trips(store_dir):
+    rec = store.add_answer("q1", "réponse en français, 日本語, emoji \U0001f600", duration=1.5)
+    assert store.list_answers() == [rec]
+    assert store.list_answers()[0]["duration"] == 1.5
+
+
+def test_add_answer_waits_for_a_locked_database(store_dir):
+    store.add_answer("q1", "a")
+    holder = sqlite3.connect(store_dir / "answers.sqlite3", check_same_thread=False)
+    holder.execute("BEGIN IMMEDIATE")
+    threading.Timer(0.3, holder.commit).start()
+    rec = store.add_answer("q1", "b")
+    holder.close()
+    assert [a["id"] for a in store.list_answers()][-1] == rec["id"]
+
+
 def test_list_and_pending(store_dir):
     first = store.add_answer("q1", "a")
     store.add_answer("q2", "b")
