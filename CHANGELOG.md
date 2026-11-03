@@ -19,8 +19,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Interview answers are kept in a SQLite database per profile (`data/theory[/<profile>]/answers.sqlite3`) instead
   of a JSON file rewritten on every request; an existing `answers.json` is imported on first use and renamed
   `answers.json.migrated` (#24).
-
-### Changed
 - Theory interview bank reviewed question by question (factual fixes, gradeable key points, American spelling) and
   `difficulty` set on every question (#23).
 
