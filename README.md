@@ -201,13 +201,17 @@ ruff check .                                              # lint
 .venv-check/bin/python -m mypy .                          # type check
 .venv-check/bin/python -m pytest -q                       # unit tests + the three bank checkers
 npm ci && npm run lint                                    # ESLint on app/js (eslint.config.js)
+.venv-check/bin/python -m pip install -e ".[e2e]" && .venv-check/bin/python -m playwright install chromium   # once: Playwright + Chromium
+.venv-check/bin/python -m pytest -q -m e2e tests/e2e                                                           # browser tests (headless)
 ```
 
 Tests live in `tests/` and run from the project root with `python -m pytest`, which puts the root on `sys.path`.
 They cover the execution harness, the answer store, the grader (with a fake SDK and a fake `claude` CLI, nothing
 real is called), the HTTP API on a live server, and a smoke test that the shipped banks pass their checkers.
-The same steps run in GitHub Actions on every push to `main` and every pull request (`.github/workflows/ci.yml`:
-jobs `test` and `js`).
+`tests/e2e/` drives the page in headless Chromium (Playwright) against a `server.py` started on a free port with the
+`e2e` profile: page boot, an exercise check, a quiz answer, an offline interview answer, the theme toggle; the
+modules skip when the `e2e` extra is not installed. The same steps run in GitHub Actions on every push to `main`
+and every pull request (`.github/workflows/ci.yml`: jobs `test`, `js`, `e2e`).
 
 ## Code review with repoach
 
