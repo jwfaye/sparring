@@ -59,6 +59,14 @@ On load, the page fetches from pinned third-party origins: CodeMirror 5.65.16 fr
 0.27.7 (and the pandas/numpy/sqlite3 packages) from cdn.jsdelivr.net, and the Inter / JetBrains Mono fonts from
 fonts.googleapis.com and fonts.gstatic.com. The browser caches them afterwards. No telemetry is sent anywhere.
 
+The cdnjs assets are integrity-checked: each CodeMirror tag in `app/index.html` carries a Subresource Integrity
+hash (`integrity="sha384-..."`, `crossorigin="anonymous"`), so the browser refuses a file that does not match the
+reviewed version. Pyodide is pinned to a version but not integrity-checked: `pyodide.js` fetches `pyodide.asm.js`,
+the WebAssembly binary and the packages itself at runtime, and a hash on the loader alone would leave those
+unverified while suggesting otherwise. Vendoring Pyodide under `app/` (about 15 MB) would remove that trust in
+cdn.jsdelivr.net; it is a possible future change. The Google Fonts stylesheet is generated per browser and cannot
+carry a hash; the fonts are cosmetic and fall back to system fonts when unreachable.
+
 To work fully offline, vendor those assets under `app/` and point `app/index.html` and `PYODIDE_URL` in
 `app/js/app.js` at the local copies; the fonts fall back to system fonts when unreachable.
 
