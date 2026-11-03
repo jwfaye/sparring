@@ -23,8 +23,8 @@ jobs:
         run: ruff check .
       - name: Type check
         run: python -m mypy .
-      - name: Tests (includes the bank checkers; the browser suite has its own job)
-        run: python -m pytest -q -m "not e2e"
+      - name: Tests (includes the bank checkers; the browser suite is excluded by addopts and has its own job)
+        run: python -m pytest -q
 
   js:
     runs-on: ubuntu-latest
