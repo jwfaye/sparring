@@ -21,7 +21,7 @@ sparring = "server:main"
 [project.optional-dependencies]
 api = ["anthropic~=2.3"]
 check = ["pandas==2.2.3", "numpy==2.0.2"]
-dev = ["pytest~=9.2", "ruff~=0.15.4", "mypy~=2.4", "pre-commit~=4.7", "pyyaml~=6.0"]
+dev = ["pytest~=9.2", "pytest-cov~=7.1", "ruff~=0.15.4", "mypy~=2.4", "pre-commit~=4.7", "pyyaml~=6.0"]
 e2e = ["playwright~=1.64.1", "pytest-playwright~=0.10.0"]
 
 [tool.setuptools]
@@ -44,6 +44,16 @@ testpaths = ["tests"]
 pythonpath = ["."]
 addopts = "-m 'not e2e'"
 markers = ["e2e: browser end-to-end tests (Playwright, headless Chromium); need the e2e extra; opt in with -m e2e"]
+
+[tool.coverage.run]
+source = ["backend", "server", "tools"]
+branch = true
+omit = ["tools/sources/*"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+fail_under = 65
 
 [tool.ruff]
 line-length = 120

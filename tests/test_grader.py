@@ -128,6 +128,14 @@ class TestStatus:
         assert cmd[1:] == ["auth", "status"]
         assert "CLAUDECODE" not in kwargs["env"]
 
+    def test_claude_code_auth_status_failure_reads_as_not_logged_in(self, grader_module, claude_cli):
+        claude_cli["raise"] = OSError("cannot execute")
+        s = grader_module.status()
+        assert s["available"] is False and "not logged in" in s["reason"]
+        claude_cli["raise"] = subprocess.TimeoutExpired(cmd="claude", timeout=30)
+        s = grader_module.status(refresh=True)
+        assert s["available"] is False and "not logged in" in s["reason"]
+
     def test_claude_code_not_logged_in(self, grader_module, claude_cli):
         claude_cli["logged_in"] = False
         st = grader_module.status()
@@ -296,6 +304,11 @@ class TestClaudeCodeBackend:
     def test_unreadable_output(self, grader_module, claude_cli):
         claude_cli["result"] = self.cli_result({"is_error": False, "result": "plain text"})
         with pytest.raises(grader_module.GraderError, match="invalid JSON"):
+            grader_module.grade(QUESTION, "answer")
+
+    def test_truncated_json_on_a_failed_exit(self, grader_module, claude_cli):
+        claude_cli["result"] = self.cli_result({}, returncode=1, stdout='{"is_error": true, "result": "cut', stderr="")
+        with pytest.raises(grader_module.GraderError, match="Claude Code failed: "):
             grader_module.grade(QUESTION, "answer")
 
     def test_timeout_and_missing_binary(self, grader_module, claude_cli):

@@ -1,7 +1,7 @@
 ---
 id: SP-CI
 title: Continuous integration and repository hygiene
-version: 0.3
+version: 0.4
 status: approved
 author: agent
 created: 2026-11-03
@@ -18,14 +18,16 @@ constraints:
   python_versions: ["3.12", "3.13"]
   unit_timeout_minutes: 15
   e2e_timeout_minutes: 30
+  coverage_fail_under_percent: 65
 ---
 
 # Continuous integration and repository hygiene
 
 ## Intent
 Run the project's checks on every pull request and every push to `main`, on both supported Python versions, with
-every third-party action pinned to a commit, and give contributors the same checks before each commit. It exists so
-that a regression, a drifting dependency or a tampered action tag is caught before it reaches `main`.
+every third-party action pinned to a commit, measure the test coverage of the Python code against a floor, and give
+contributors the same checks before each commit. It exists so that a regression, a drifting dependency, a tampered
+action tag or a silent loss of test coverage is caught before it reaches `main`.
 
 ## Context
 The checks themselves belong to other components: `ruff check .`, `python -m mypy .` and `python -m pytest -q`
@@ -33,7 +35,9 @@ The checks themselves belong to other components: `ruff check .`, `python -m myp
 (SP-WEB-QA). This component only orchestrates them: the GitHub Actions workflow `CI`
 (`.github/workflows/ci.yml`), the Dependabot configuration (`.github/dependabot.yml`) and the pre-commit
 configuration (`.pre-commit-config.yaml`), plus `tests/test_ci_config.py`, which reads the three files and checks
-the properties below. `repoach.toml` waits on the check named `test`
+the properties below. Coverage is measured by `pytest-cov` (`dev` extra), configured in the `[tool.coverage.*]`
+tables of `pyproject.toml` (the file belongs to SP-PACKAGING; this component owns the content of those tables and
+the `pytest-cov` entry of the `dev` extra). `repoach.toml` waits on the check named `test`
 (`auto_merge.required_checks`) and re-arms on the workflow named `CI` (`rearm_workflows`); branch protection on
 `main` requires the checks `test`, `js` and `e2e`. Code-only: `resources: []`.
 
@@ -50,6 +54,11 @@ the properties below. `repoach.toml` waits on the check named `test`
   (`eslint` with `@eslint/js`, the GitHub Actions) in one pull request whatever the bump.
 - G6: `pre-commit install` gives a contributor the linter, the type checker, ESLint and the file checks before each
   commit, with the project's own interpreter and `node_modules`.
+- G7: the `unit (3.12)` leg measures branch coverage of `backend/`, `server.py` and `tools/` (without
+  `tools/sources/`), fails under the `fail_under` floor of `pyproject.toml` and publishes `coverage.xml` as a run
+  artifact; the floor is the measured total rounded down to the whole percent minus two points, so it never fails
+  on noise and cannot drift down silently. A plain `pytest -q` does not measure (no `--cov` in `addopts`), so the
+  local run and the `e2e` job stay as fast as before.
 
 ## Non-Goals
 - NG1: changing what the checks test; the commands are those of the Development section of the README.
@@ -57,6 +66,7 @@ the properties below. `repoach.toml` waits on the check named `test`
   the linter only.
 - NG3: running the browser suite on more than one Python version or more than one browser.
 - NG4: publishing anything; releases are a separate component.
+- NG5: coverage of the JavaScript and the browser suite, and a per-file floor; one total floor only.
 
 ## Assumptions
 - A1: `ubuntu-latest` provides the pinned action versions' runtime and a Chromium-capable environment.
@@ -75,6 +85,8 @@ Inputs:
 Outputs:
 - Checks on a pull request: `unit (3.12)`, `unit (3.13)`, `test`, `js`, `e2e`; `test` is the one required by
   `repoach.toml` and branch protection.
+- A run artifact `coverage-xml` holding `coverage.xml` from the `unit (3.12)` leg, and the `term-missing` report in
+  that leg's log.
 - Dependabot pull requests with the commit prefix `build(deps)`.
 - A git pre-commit hook that runs the configured checks on the staged files.
 
@@ -82,13 +94,17 @@ Errors:
 - A failing, cancelled or skipped matrix leg fails `test` (`if: always()` on the aggregate job with a result check).
 - A job exceeding its `timeout-minutes` (15 for a matrix leg, 5 for `test`, 10 for `js`, 30 for `e2e`) is
   cancelled and reported as failed.
+- A total coverage below `fail_under` fails the `unit (3.12)` leg (pytest exits non-zero after the report), hence
+  `test`.
 
 ## Behavior
 ### Nominal
 1. A push or pull request starts `CI`; the concurrency group `CI-<ref>` cancels the run in progress for the same
    pull request ref and lets runs on `main` finish.
 2. `unit` installs the project with pip on each Python version, then runs `ruff check .`, `python -m mypy .` and
-   `python -m pytest -q`.
+   `python -m pytest -q ${{ matrix.pytest-options }}`: `--cov --cov-report=term-missing --cov-report=xml` on 3.12,
+   nothing on 3.13. The 3.12 leg then uploads `coverage.xml` with `actions/upload-artifact` (`if:
+   matrix.python-version == '3.12'`, `if-no-files-found: error`).
 3. `test` depends on `unit`, runs even when a leg failed (`if: always()`), and exits 0 only when
    `needs.unit.result == 'success'`.
 4. `js` runs `npm ci` and `npm run lint` on Node 22; `e2e` installs the `check`, `dev` and `e2e` extras, Chromium,
@@ -99,6 +115,10 @@ Errors:
 
 ### Edge cases
 - Only one leg fails -> the other leg still finishes (`fail-fast: false`) and `test` fails.
+- The total drops below the floor -> only `unit (3.12)` fails, with the `Missing` column naming the uncovered
+  lines; the 3.13 leg is unaffected.
+- The total rises -> nothing changes until a pull request raises `fail_under` (measured total rounded down minus
+  two).
 - A pull request receives a second push while CI runs -> the first run is cancelled.
 - A Dependabot update of an action -> the SHA and its trailing version comment are both updated by Dependabot.
 - A new pandas or numpy release -> no Dependabot pull request: the `pip` entry ignores every version of both
@@ -117,7 +137,9 @@ Errors:
 ## Architecture Impact
 - Adds dependency: none (the workflow invokes commands, it imports no module).
 - New / changed coupling, cycles, or shared state: the check name `test` is shared with `repoach.toml`
-  (`auto_merge.required_checks`) and with the branch protection of `main`; renaming it requires changing both.
+  (`auto_merge.required_checks`) and with the branch protection of `main`; renaming it requires changing both. The
+  `[tool.coverage.*]` tables and the `pytest-cov` pin live in `pyproject.toml`, a file owned by SP-PACKAGING; this
+  component owns their content, nothing else in that file.
 
 ## Diagram
 ```mermaid
@@ -159,6 +181,15 @@ parse the three files and check their shape; what they cannot see is named as ob
   `ruff-check`, mypy and eslint
   (`tests/test_ci_config.py::TestPreCommit::test_hook_repositories_are_pinned_to_commits_and_the_hooks_mirror_ci`);
   `pre-commit run --all-files` from `.venv-check` passes on the tree after this change.
+- [ ] AC8: the `unit` matrix gives the 3.12 leg the options `--cov --cov-report=term-missing --cov-report=xml` and
+  the 3.13 leg none, the pytest step consumes them, and an `actions/upload-artifact` step guarded by
+  `matrix.python-version == '3.12'` uploads `coverage.xml`
+  (`tests/test_ci_config.py::TestWorkflow::test_only_the_3_12_leg_measures_coverage_and_uploads_the_report`);
+  `pyproject.toml` measures `backend`, `server` and `tools` with branches, omits `tools/sources/*`, sets an integer
+  `fail_under`, keeps `--cov` out of `addopts` and lists `pytest-cov` in the `dev` extra
+  (`tests/test_ci_config.py::TestCoverage::test_the_floor_is_configured_and_plain_pytest_does_not_measure`);
+  `python -m pytest -q --cov --cov-report=term-missing` from `.venv-check` passes the floor on the tree after this
+  change.
 - [ ] AC6: `gh api repos/jwfaye/sparring/branches/main/protection` reports `required_status_checks.strict == true`
   with the contexts `test`, `js` and `e2e`, `enforce_admins.enabled == false`, `required_linear_history.enabled ==
   true`, `allow_force_pushes.enabled == false`, `allow_deletions.enabled == false`, and no required reviews.
