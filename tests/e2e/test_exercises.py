@@ -46,3 +46,21 @@ def test_sql_solution_passes_every_test(ready_page, exercises):
     page.click('#ex-list li[data-i="0"]')
     ex = check_current_exercise(page, exercises)
     assert ex["language"] == "sql"
+
+
+def test_stop_interrupts_an_infinite_loop_and_python_keeps_working(ready_page):
+    page = ready_page
+    assert page.evaluate("self.crossOriginIsolated") is True
+    page.select_option("#f-language", "python")
+    page.click('#ex-list li[data-i="0"]')
+    page.evaluate("code => window.tt.editor.setValue(code)", "while True:\n    pass\n")
+    page.click("#btn-run")
+    expect(page.locator("#btn-stop")).to_be_enabled()
+    expect(page.locator("#output")).to_have_text("Running…")
+    page.click("#btn-stop")
+    expect(page.locator("#output")).to_contain_text("Execution interrupted")
+    expect(page.locator("#btn-stop")).to_be_disabled()
+    expect(page.locator("#py-status")).to_have_text("Python ready", timeout=120_000)
+    page.evaluate("code => window.tt.editor.setValue(code)", "print('after stop')\n")
+    page.click("#btn-run")
+    expect(page.locator("#output")).to_contain_text("after stop")

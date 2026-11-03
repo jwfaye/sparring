@@ -23,7 +23,7 @@ constraints:
 
 ## Intent
 Give the web page the two checks it lacked: a linter for `app/js` and a browser-driven test of the five flows a
-user relies on (page boot, exercise check, quiz, interview answer, theme). It exists so that a change to the page
+user relies on (page boot, exercise check and Stop, quiz, interview answer, theme). It exists so that a change to the page
 is caught by CI instead of by the next person opening the app.
 
 ## Context
@@ -118,5 +118,8 @@ flowchart TD
 - [ ] AC6: the theme toggle flips `data-theme` on the root element and back
   (`tests/e2e/test_page.py::test_theme_toggle_flips_the_root_attribute`).
 - [ ] AC7: without the `e2e` extra, `tests/e2e/` is collected as skipped and `python -m pytest -q` passes.
+- [ ] AC8: the page is cross-origin isolated, Stop interrupts `while True: pass` with an `Execution interrupted`
+  message, and the next Run prints its output (`tests/e2e/test_exercises.py::test_stop_interrupts_an_infinite_loop_and_python_keeps_working`),
+  which automates AC4 to AC6 of SP-PY-RUNTIME.
 
 ## Open Questions
