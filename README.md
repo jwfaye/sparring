@@ -1,24 +1,73 @@
-# Sparring
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/img/banner-dark.webp">
+    <img src="docs/img/banner-light.webp" alt="Sparring: a sparring partner for data science and ML interviews" width="800">
+  </picture>
+</p>
 
-Your training partner for data science / ML engineer technical tests and interviews.
+<p align="center">Your training partner for data science / ML engineer technical tests and interviews.</p>
 
-A local web app: Python/pandas and SQL exercises run in the browser (Pyodide), multiple-choice quizzes, and a
-theory-interview mode where a model grades your free-text answers against a key-point grid. The page is usable with
-the keyboard alone and with a screen reader (ARIA tabs, landmarks, live status regions); inside the code editor Tab
-indents, so press Escape, then Tab, to leave it.
+<p align="center">
+  <a href="https://github.com/jwfaye/sparring/actions/workflows/ci.yml"><img src="https://github.com/jwfaye/sparring/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0--or--later-blue" alt="License: AGPL-3.0-or-later"></a>
+</p>
 
-## Run
+## What it is
 
-As a command, from any directory (Python 3.12 or later, no other dependency):
+A local web app with three training modes:
+
+- **Exercises**: Python/pandas and SQL exercises run in the browser (Pyodide), with hidden tests, hints, a
+  reference solution and an optional exam countdown.
+- **Quiz**: multiple-choice questions on Python, pandas, SQL, git and ML theory, answered with the keyboard, with an
+  explanation after each answer and an error history by theme.
+- **Interview**: a theory-interview mode where a model grades your free-text answers against a key-point grid, or
+  records them for later grading when no model is available.
+
+The page is usable with the keyboard alone and with a screen reader (ARIA tabs, landmarks, live status regions);
+inside the code editor Tab indents, so press Escape, then Tab, to leave it. Light or dark theme follows the system
+setting; the "Dark / Light" button in the top bar forces one (remembered by the browser).
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/img/exercises-dark.webp">
+    <img src="docs/img/exercises-light.webp" alt="Exercises view: exercise list, statement, code editor and output" width="800">
+  </picture>
+</p>
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/img/quiz-dark.webp">
+    <img src="docs/img/quiz-light.webp" alt="Quiz view: a question, four choices and the explanation after the answer" width="390">
+  </picture>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/img/interview-dark.webp">
+    <img src="docs/img/interview-light.webp" alt="Interview view: a theory question, the answer box and the timer" width="390">
+  </picture>
+</p>
+
+## Quick start
+
+Python 3.12 or later, no other dependency:
 
 ```bash
 pipx install git+https://github.com/jwfaye/sparring   # or: pip install git+https://github.com/jwfaye/sparring
 sparring                                              # then open http://127.0.0.1:8765/
+```
+
+First load downloads Pyodide + pandas (about 15 MB) from a CDN, then the browser caches them. An internet connection
+is needed on first load (and for CodeMirror and the fonts). To try the app without touching your progress:
+`http://127.0.0.1:8765/?profile=test` (separate storage).
+
+## Run
+
+The installed command, from any directory:
+
+```bash
+sparring                                              # http://127.0.0.1:8765/
 sparring 9000                                         # another port, also: --port 9000, --host 127.0.0.1
 sparring --version                                    # version from the package metadata; --help lists the options
 ```
 
-From a clone, exactly as before (`pip install .` from the clone gives the same `sparring` command):
+From a clone (`pip install .` from the clone gives the same `sparring` command):
 
 ```bash
 python3 server.py            # then open http://127.0.0.1:8765/
@@ -39,14 +88,6 @@ python3 -m pip install -e ".[api]"          # Anthropic API grading backend (or:
 python3 -m pip install -e ".[check]"        # pandas 2.2.3 / numpy 2.0.2, the versions shipped by Pyodide (for .venv-check)
 python3 -m pip install -e ".[dev]"          # pytest, ruff, mypy
 ```
-
-First load downloads Pyodide + pandas (about 15 MB) from a CDN, then the browser caches them. An internet connection
-is needed on first load (and for CodeMirror and the fonts).
-
-Light or dark theme follows the system setting; the "Dark / Light" button in the top bar forces one (remembered by
-the browser).
-
-To try the app without touching your progress: `http://127.0.0.1:8765/?profile=test` (separate storage).
 
 ## Configuration
 
@@ -101,11 +142,12 @@ the interview mode falls back to offline grading.
 server.py                  static server + /api/* (merges bank/*/*.json); the `sparring` command is its main()
 pyproject.toml             package metadata: the sparring command, app/ and bank/ shipped as sparring_data
 config.json                settings (server, grader)
-app/                       web page: index.html, css/, js/common.js, js/app.js, js/py-client.js, js/py-worker.js, js/qcm.js, js/theory.js, py/harness.py
+app/                       web page: index.html, css/, img/ (favicon and touch icon), js/common.js, js/app.js, js/py-client.js, js/py-worker.js, js/qcm.js, js/theory.js, py/harness.py
 backend/                   config.py, paths.py (shipped files and data directory), store.py (interview answers), grader.py (Claude Code or Anthropic API)
 bank/exercises/*.json      exercise bank (one file = one list of exercises)
 bank/qcm/*.json            quiz bank
 bank/theory/*.json         interview questions + grading grids
+docs/specs/                one spec per change (see CONTRIBUTING.md); docs/img/ holds the logo, the banner and the screenshots of this README
 sparring_data/             empty package: the wheel maps app/ and bank/ under it, a clone never reads it
 data/theory/               your answers and grades, answers.sqlite3 per profile, in a clone (local, never committed); installed: ~/.local/share/sparring/theory/
 tools/                     scripts, run from the root of a clone: python -m tools.<name>
@@ -247,9 +289,10 @@ npm ci && npm run lint                                    # ESLint on app/js (es
 
 Tests live in `tests/` and run from the project root with `python -m pytest`, which puts the root on `sys.path`.
 They cover the execution harness, the answer store, the grader (with a fake SDK and a fake `claude` CLI, nothing
-real is called), the HTTP API on a live server, the command line and the path resolution of an installed copy, and
-a smoke test that the shipped banks pass their checkers. To check the package itself, build the wheel and look at
-it: `python -m pip wheel . --no-deps -w /tmp/wheel && unzip -l /tmp/wheel/sparring-*.whl` (it must list
+real is called), the HTTP API on a live server, the command line and the path resolution of an installed copy, the
+brand assets (favicon links, image sizes) and a smoke test that the shipped banks pass their checkers. To check the
+package itself, build the wheel and look at it:
+`python -m pip wheel . --no-deps -w /tmp/wheel && unzip -l /tmp/wheel/sparring-*.whl` (it must list
 `sparring_data/app/` and `sparring_data/bank/`, nothing from `data/` or `tests/`).
 `tests/e2e/` drives the page in headless Chromium (Playwright) against a `server.py` started on a free port with the
 `e2e` profile: page boot, an exercise check, a quiz answer, an offline interview answer, the theme toggle, and an
@@ -262,6 +305,10 @@ and every pull request (`.github/workflows/ci.yml`): the Python steps on a matri
 `unit (3.12)` and `unit (3.13)`, summarized by the required check `test`; the 3.12 leg measures coverage, fails under
 the `fail_under` floor of `pyproject.toml` and uploads `coverage.xml` as an artifact), the lint in `js`, the browser
 tests in `e2e`. Dependabot (`.github/dependabot.yml`) opens weekly update pull requests for pip, npm and the actions.
+
+The brand mark is an SVG drawn by hand (`docs/img/logo.svg`, inlined in the top bar of `app/index.html` with
+`currentColor`, and `app/img/favicon.svg` with a `prefers-color-scheme` rule); the banner and the screenshots under
+`docs/img/` are rendered with headless Chromium and kept under 400 KB each as WebP.
 
 ## Code review with repoach
 

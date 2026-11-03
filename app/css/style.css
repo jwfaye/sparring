@@ -29,7 +29,8 @@ a { color: var(--accent); }
 
 /* ---- top bar */
 .topbar { display: flex; align-items: center; gap: 20px; padding: 0 20px; height: 48px; background: var(--bg); border-bottom: 1px solid var(--border); flex-wrap: wrap; flex: none; }
-.brand { font-weight: 600; font-size: 14px; margin: 0; }
+.brand { display: inline-flex; align-items: center; gap: 7px; font-weight: 600; font-size: 14px; margin: 0; }
+.brand .mark { flex: none; }
 .tabs { height: 100%; }
 .tablist { display: flex; gap: 2px; height: 100%; }
 .tab { background: transparent; border: 0; border-bottom: 2px solid transparent; color: var(--muted); padding: 0 12px; cursor: pointer; font-weight: 500; }
