@@ -36,6 +36,7 @@ class IconLinks(HTMLParser):
 
 
 def icon_links():
+    """The icon links of app/index.html, as attribute dictionaries."""
     parser = IconLinks()
     with open(INDEX_HTML, encoding="utf-8") as fh:
         parser.feed(fh.read())
