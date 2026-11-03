@@ -31,7 +31,8 @@ loses the candidate's unsaved work.
 `app/js/app.js` (shared file: only its runtime section, the `initPython` / `runPy` / Stop wiring, follows this spec;
 the rest stays frontier) calls the client `window.TTPY` from `app/js/py-client.js`. The client spawns
 `app/js/py-worker.js`, a classic worker that `importScripts` Pyodide 0.27.7 from the pinned jsdelivr URL, loads
-numpy, pandas and sqlite3, runs `app/py/harness.py` once and then answers run requests with `run_json(payload)`.
+and imports numpy, pandas and sqlite3, runs `app/py/harness.py` once and then answers run requests with
+`run_json(payload)`.
 `server.py` (frontier) serves the worker file with the same Content-Security-Policy as the page and, for this spec,
 the two cross-origin isolation headers that unlock `SharedArrayBuffer`. The component is code-only: `resources: []`.
 
@@ -115,6 +116,9 @@ Errors:
 - The code finishes between the interrupt request and the worker's reply -> the normal result is returned and the
   buffer is reset to 0 so that the next run is not interrupted by a stale signal.
 - The user code catches `KeyboardInterrupt` (bare `except:`) -> the grace timer expires and the worker is restarted.
+- The interrupt lands inside an `import` -> the worker drops from `sys.modules` every module imported since init,
+  so the half-initialized module is imported again from scratch on the next run (numpy, pandas and sqlite3 are
+  imported at init, before any user run, so they are never in that situation).
 - Stop pressed while nothing runs -> no-op; the button is disabled outside a run.
 - `run()` called while Python restarts -> the page shows "Python is still loading" (the existing message).
 - Page not cross-origin isolated (another server, headers stripped by a proxy) -> same user experience, every
