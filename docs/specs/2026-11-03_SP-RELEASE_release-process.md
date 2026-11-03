@@ -1,14 +1,14 @@
 ---
 id: SP-RELEASE
 title: Release process
-version: 0.2
+version: 0.3
 status: approved
 author: agent
 created: 2026-11-03
 updated: 2026-11-03
 
 owns:
-  code: [CHANGELOG.md, CONTRIBUTING.md, .github/workflows/release.yml]
+  code: [CHANGELOG.md, CONTRIBUTING.md, .github/workflows/release.yml, .github/release-requirements.txt]
   resources: []
 
 depends_on: []
@@ -44,8 +44,9 @@ is code-only in the sense of the template (`resources: []`), its artifacts being
   `## [X.Y.Z]` changelog section as notes and the dist files attached.
 - G3: the workflow fails before building when the tag does not equal `project.version` in `pyproject.toml`, and
   before publishing when `CHANGELOG.md` has no section for that version.
-- G4: every action is pinned to a full commit SHA with its version in a trailing comment, and `contents: write` is
-  granted to the release job only.
+- G4: every action is pinned to a full commit SHA with its version in a trailing comment, the build-time Python
+  dependencies are pinned by version and hash, and `contents: write` is granted to the release job only, which
+  runs in the `release` environment so that protection rules set on it gate the publication.
 - G5: `CONTRIBUTING.md` is short, factual, and does not duplicate the README's commands.
 
 ## Non-Goals
@@ -54,10 +55,14 @@ is code-only in the sense of the template (`resources: []`), its artifacts being
   section is dated.
 - NG3: editing `pyproject.toml` (packaging component) or `ci.yml` (hygiene component).
 - NG4: enforcing the changelog rule or the commit conventions with a check; they are reviewed by hand and by repoach.
+- NG5: configuring the `release` environment (required reviewers) or a tag ruleset on `v*`: repository settings,
+  outside the files of this component.
 
 ## Assumptions
 - A1: `project.version` in `pyproject.toml` is the single source of the version; the tag is `v` followed by it.
-- A2: `python -m build` with the setuptools backend produces exactly one sdist and one wheel in `dist/`.
+- A2: `python -m build --no-isolation` with the setuptools backend of `.github/release-requirements.txt` produces
+  exactly one sdist and one wheel in `dist/`; the file is updated by hand when a pin is bumped (`pip download
+  --no-deps --only-binary :all:` then `pip hash --algorithm sha256`).
 - A3: the default `GITHUB_TOKEN` with `contents: write` may create a release and upload its assets on this
   repository.
 - A4: `CHANGELOG.md` keeps the heading form `## [X.Y.Z] - YYYY-MM-DD` and the link references `[X.Y.Z]: <url>` at the
@@ -84,13 +89,14 @@ Errors:
 ## Behavior
 ### Nominal
 1. Job `version`: check out the tag, compare `${GITHUB_REF_NAME#v}` with `project.version`; stop on mismatch.
-2. Job `build` (needs `version`): `pip install build==1.6.1` (pinned like the actions), `python -m build`,
-   `pip install dist/*.whl`, then from a directory outside the checkout `python -c "import server, backend"`;
-   upload `dist/` as the artifact `dist`.
-3. Job `release` (needs `build`, `contents: write`): check out the tag, extract the changelog section with awk
-   (print the lines after the matching `## [` heading up to the next `## ` heading or the first `[...]: ` link
-   reference), fail if the result is blank, download `dist`, create the release with the notes as body and
-   `dist/*` as assets.
+2. Job `build` (needs `version`): `pip install --require-hashes -r .github/release-requirements.txt` (build,
+   packaging, pyproject_hooks and setuptools pinned by version and wheel hash), `python -m build --no-isolation`
+   so that the build backend comes from that hashed set, `pip install dist/*.whl`, then from a directory outside
+   the checkout `python -c "import server, backend"`; upload `dist/` as the artifact `dist`.
+3. Job `release` (needs `build`, `contents: write`, environment `release`): check out the tag, extract the
+   changelog section with awk (print the lines after the matching `## [` heading up to the next `## ` heading or
+   the first `[...]: ` link reference), fail if the result is blank, download `dist`, create the release with the
+   notes as body and `dist/*` as assets.
 
 ### Edge cases
 - A tag on a commit whose `pyproject.toml` still carries the previous version -> the `version` job fails; bump the
