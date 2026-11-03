@@ -2,7 +2,7 @@
 (() => {
   'use strict';
 
-  const { $, $$, NS, loadJSON, saveJSON, escapeHtml, fmtTime, shuffle, renderMd, twoClick } = window.TT;
+  const { $, $$, NS, loadJSON, saveJSON, escapeHtml, fmtTime, shuffle, inline, renderMd, twoClick } = window.TT;
   const LS = { progress: NS + 'progress', settings: NS + 'settings', exam: NS + 'exam', order: NS + 'order', lastId: NS + 'lastId' };
   const DIFF_RANK = { easy: 0, medium: 1, hard: 2 };
 

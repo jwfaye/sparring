@@ -200,12 +200,14 @@ The API key never appears in the code, the page or the repository: the SDK reads
 ruff check .                                              # lint
 .venv-check/bin/python -m mypy .                          # type check
 .venv-check/bin/python -m pytest -q                       # unit tests + the three bank checkers
+npm ci && npm run lint                                    # ESLint on app/js (eslint.config.js)
 ```
 
 Tests live in `tests/` and run from the project root with `python -m pytest`, which puts the root on `sys.path`.
 They cover the execution harness, the answer store, the grader (with a fake SDK and a fake `claude` CLI, nothing
 real is called), the HTTP API on a live server, and a smoke test that the shipped banks pass their checkers.
-The same steps run in GitHub Actions on every push to `main` and every pull request (`.github/workflows/ci.yml`).
+The same steps run in GitHub Actions on every push to `main` and every pull request (`.github/workflows/ci.yml`:
+jobs `test` and `js`).
 
 ## Code review with repoach
 

@@ -1,7 +1,7 @@
 /* Interview tab: theory question, free-text answer, grading through the API (or offline recording), history by theme. */
 (() => {
   'use strict';
-  const { $, $$, PROFILE, loadJSON, saveJSON, escapeHtml, fmtTime, fmtDate, shuffle, renderMd, twoClick, NS } = window.TT;
+  const { $, $$, PROFILE, loadJSON, saveJSON, escapeHtml, fmtTime, fmtDate, shuffle, renderMd, NS } = window.TT;
   const KEY = { prefs: NS + 'theory.prefs' };
   const api = path => '/api/theory/' + path + (PROFILE ? (path.includes('?') ? '&' : '?') + 'profile=' + encodeURIComponent(PROFILE) : '');
   const st = { questions: [], byId: {}, sections: [], history: [], status: { available: false, reason: '' }, current: null, timer: null, timerLeft: 0, started: 0, loaded: false };
@@ -126,11 +126,11 @@
       const d = await r.json();
       await refreshHistory();
       if (d.record) st.current.answerId = d.record.id;
-      renderResult(d.record, d.error, d.offline);
-    } catch (e) { renderResult(null, 'Server unreachable: ' + e.message, true); }
+      renderResult(d.record, d.error);
+    } catch (e) { renderResult(null, 'Server unreachable: ' + e.message); }
     $('#th-actions').classList.add('hidden'); $('#th-after').classList.remove('hidden');
   }
-  function renderResult(rec, error, offline) {
+  function renderResult(rec, error) {
     const q = st.current.q, box = $('#th-result'); box.classList.remove('hidden');
     let html = '';
     if (error) html += `<div class="notice warn">${escapeHtml(error)}${rec ? ' Your answer is saved and can be graded later.' : ''}</div>`;
@@ -172,7 +172,7 @@
     $('#th-q-note').innerHTML = `<div class="muted small">Answered on ${fmtDate(rec.at)}${rec.duration ? ' · ' + fmtTime(rec.duration) : ''}</div>`;
     $('#th-answer').value = rec.answer; $('#th-answer').disabled = true; $('#th-clock').textContent = '';
     $('#th-actions').classList.add('hidden'); $('#th-after').classList.remove('hidden');
-    renderResult(rec, null, !rec.grade);
+    renderResult(rec, null);
     $('#th-regrade').classList.toggle('hidden', !(st.status.available && !rec.grade && hasGrid(q)));
   }
   async function regrade() {
@@ -181,7 +181,7 @@
     const r = await fetch(api('grade'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, profile: PROFILE }) });
     const d = await r.json(); await refreshHistory();
     b.disabled = false; b.textContent = 'Grade now';
-    renderResult(d.record || st.history.find(a => a.id === id), d.error, false);
+    renderResult(d.record || st.history.find(a => a.id === id), d.error);
     if (d.record) b.classList.add('hidden');
   }
 
