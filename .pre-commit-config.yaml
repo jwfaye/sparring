@@ -1,11 +1,13 @@
 # Local checks, mirroring the CI jobs. Install once with `pre-commit install`
 # (pre-commit comes with the dev extra). The format check is not enabled
 # because the tree is not formatted with ruff yet; only the linter runs.
+# Hook repositories are pinned to commits, with the tag in a comment; bump
+# them with `pre-commit autoupdate --freeze`.
 # tools/sources/ holds imported source documents and is kept verbatim.
 exclude: ^tools/sources/
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v6.0.0
+    rev: 3e8a8703264a2f4a69428a0aa4dcb512790b2c8c # v6.0.0
     hooks:
       - id: end-of-file-fixer
       - id: trailing-whitespace
@@ -14,7 +16,7 @@ repos:
       - id: check-toml
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.4
+    rev: a27a2e47c7751b639d2b5badf0ef6ff11fee893f # v0.15.4
     hooks:
       - id: ruff-check
 

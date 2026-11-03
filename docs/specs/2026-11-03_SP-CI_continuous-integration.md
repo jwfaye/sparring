@@ -1,14 +1,14 @@
 ---
 id: SP-CI
 title: Continuous integration and repository hygiene
-version: 0.1
+version: 0.2
 status: approved
 author: agent
 created: 2026-11-03
 updated: 2026-11-03
 
 owns:
-  code: [.github/workflows/ci.yml, .github/dependabot.yml, .pre-commit-config.yaml]
+  code: [.github/workflows/ci.yml, .github/dependabot.yml, .pre-commit-config.yaml, tests/test_ci_config.py]
   resources: []
 
 depends_on: []
@@ -32,7 +32,8 @@ The checks themselves belong to other components: `ruff check .`, `python -m myp
 (the Python code and its bank checkers), `npm run lint` (SP-WEB-QA) and `python -m pytest -q -m e2e tests/e2e`
 (SP-WEB-QA). This component only orchestrates them: the GitHub Actions workflow `CI`
 (`.github/workflows/ci.yml`), the Dependabot configuration (`.github/dependabot.yml`) and the pre-commit
-configuration (`.pre-commit-config.yaml`). `repoach.toml` waits on the check named `test`
+configuration (`.pre-commit-config.yaml`), plus `tests/test_ci_config.py`, which reads the three files and checks
+the properties below. `repoach.toml` waits on the check named `test`
 (`auto_merge.required_checks`) and re-arms on the workflow named `CI` (`rearm_workflows`); branch protection on
 `main` requires the checks `test`, `js` and `e2e`. Code-only: `resources: []`.
 
@@ -41,8 +42,8 @@ configuration (`.pre-commit-config.yaml`). `repoach.toml` waits on the check nam
   other's result.
 - G2: exactly one check named `test` summarizes the matrix, so `repoach.toml` and branch protection keep a single
   stable name.
-- G3: every `uses:` is pinned to a full commit SHA, with the version tag in a trailing comment, so a moved tag
-  cannot change what runs.
+- G3: every `uses:` of the workflow and every hook repository of the pre-commit configuration is pinned to a full
+  commit SHA, with the version tag in a trailing comment, so a moved tag cannot change what runs.
 - G4: a superseded pull request run is cancelled, and no job runs without a time limit.
 - G5: Dependabot proposes weekly updates for pip, npm and the actions, with minor and patch bumps grouped.
 - G6: `pre-commit install` gives a contributor the linter, the type checker, ESLint and the file checks before each
@@ -120,17 +121,27 @@ flowchart TD
 ```
 
 ## Acceptance Criteria
-No pytest selector applies: this component is configuration read by GitHub and by pre-commit, not code the test
-suite can import. Each criterion names what is observable on GitHub or in a shell instead.
+This component is configuration read by GitHub and by pre-commit, not code the suite imports: the selectors below
+parse the three files and check their shape; what they cannot see is named as observable on GitHub or in a shell.
 
 - [ ] AC1: a pull request shows the checks `unit (3.12)`, `unit (3.13)`, `test`, `js` and `e2e` from the workflow
-  `CI`, and `test` is green only when both `unit` legs are green (`gh pr checks <N>`).
+  `CI`, and `test` is green only when both `unit` legs are green (`gh pr checks <N>`); the shape is checked by
+  `tests/test_ci_config.py::TestWorkflow::test_unit_matrix_runs_both_python_versions_without_fail_fast` and
+  `tests/test_ci_config.py::TestWorkflow::test_the_required_check_test_aggregates_the_matrix`.
 - [ ] AC2: every `uses:` line of `.github/workflows/ci.yml` is of the form `owner/repo@<40-hex-sha> # vX.Y.Z`
-  (`grep -n 'uses:' .github/workflows/ci.yml`).
-- [ ] AC3: the workflow has a `concurrency` block and every job a `timeout-minutes` key.
+  (`tests/test_ci_config.py::TestWorkflow::test_every_action_is_pinned_to_a_commit_with_its_version_in_a_comment`)
+  and no checkout persists its token
+  (`tests/test_ci_config.py::TestWorkflow::test_checkout_never_persists_credentials`).
+- [ ] AC3: the workflow is named `CI`, has a `concurrency` block and every job a `timeout-minutes` key
+  (`tests/test_ci_config.py::TestWorkflow::test_workflow_is_named_ci_with_a_concurrency_group_and_a_timeout_on_every_job`).
 - [ ] AC4: `.github/dependabot.yml` lists the ecosystems `pip`, `npm` and `github-actions` with a weekly schedule, a
-  minor-and-patch group each and the commit prefix `build(deps)`; GitHub's Dependabot tab shows the three.
-- [ ] AC5: `pre-commit run --all-files` from `.venv-check` passes on the tree after this change.
+  minor-and-patch group each and the commit prefix `build(deps)`
+  (`tests/test_ci_config.py::TestDependabot::test_three_ecosystems_weekly_with_grouped_minor_and_patch_updates`);
+  GitHub's Dependabot tab shows the three.
+- [ ] AC5: the pre-commit configuration pins its hook repositories to commits and declares the file checks,
+  `ruff-check`, mypy and eslint
+  (`tests/test_ci_config.py::TestPreCommit::test_hook_repositories_are_pinned_to_commits_and_the_hooks_mirror_ci`);
+  `pre-commit run --all-files` from `.venv-check` passes on the tree after this change.
 - [ ] AC6: `gh api repos/jwfaye/sparring/branches/main/protection` reports `required_status_checks.strict == true`
   with the contexts `test`, `js` and `e2e`, `enforce_admins.enabled == false`, `required_linear_history.enabled ==
   true`, `allow_force_pushes.enabled == false`, `allow_deletions.enabled == false`, and no required reviews.
