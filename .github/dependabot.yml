@@ -1,5 +1,6 @@
 # Weekly dependency updates. Minor and patch bumps of one ecosystem arrive in
-# a single pull request; major bumps get one each.
+# a single pull request. Major bumps get one each, except where listed below:
+# the ESLint packages and the GitHub Actions move together whatever the bump.
 version: 2
 updates:
   - package-ecosystem: pip
@@ -8,6 +9,13 @@ updates:
       interval: weekly
     commit-message:
       prefix: build(deps)
+    # The check extra pins pandas and numpy to the versions shipped by Pyodide
+    # 0.27.7, the runtime the exercises use in the browser, and .venv-check
+    # mirrors them. Bumping them would check the solutions against versions the
+    # learner never runs, so Dependabot leaves every version of both alone.
+    ignore:
+      - dependency-name: pandas
+      - dependency-name: numpy
     groups:
       python-minor-and-patch:
         update-types: [minor, patch]
@@ -19,7 +27,13 @@ updates:
     commit-message:
       prefix: build(deps)
     groups:
+      # eslint and @eslint/js must move together, majors included: the config
+      # package follows the linter's version.
+      javascript:
+        patterns: ["eslint*", "@eslint/*"]
+        update-types: [minor, patch, major]
       npm-minor-and-patch:
+        exclude-patterns: ["eslint*", "@eslint/*"]
         update-types: [minor, patch]
 
   - package-ecosystem: github-actions
@@ -29,5 +43,7 @@ updates:
     commit-message:
       prefix: build(deps)
     groups:
-      actions-minor-and-patch:
-        update-types: [minor, patch]
+      # The actions arrive in one pull request whatever the bump, majors included.
+      actions:
+        patterns: ["*"]
+        update-types: [minor, patch, major]

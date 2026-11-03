@@ -54,6 +54,11 @@ class TestWorkflow:
 
 
 class TestDependabot:
+    @staticmethod
+    def entry(ecosystem):
+        (entry,) = [e for e in load(DEPENDABOT)["updates"] if e["package-ecosystem"] == ecosystem]
+        return entry
+
     def test_three_ecosystems_weekly_with_grouped_minor_and_patch_updates(self):
         updates = load(DEPENDABOT)["updates"]
         assert {entry["package-ecosystem"] for entry in updates} == {"pip", "npm", "github-actions"}
@@ -61,8 +66,29 @@ class TestDependabot:
             assert entry["directory"] == "/"
             assert entry["schedule"]["interval"] == "weekly"
             assert entry["commit-message"]["prefix"] == "build(deps)"
-            (group,) = entry["groups"].values()
-            assert sorted(group["update-types"]) == ["minor", "patch"]
+            covered = [set(group["update-types"]) for group in entry["groups"].values()]
+            assert any({"minor", "patch"} <= types for types in covered), entry["package-ecosystem"]
+
+    def test_pip_groups_minor_and_patch_and_ignores_every_version_of_the_pyodide_pins(self):
+        pip = self.entry("pip")
+        (group,) = pip["groups"].values()
+        assert sorted(group["update-types"]) == ["minor", "patch"]
+        assert sorted(rule["dependency-name"] for rule in pip["ignore"]) == ["numpy", "pandas"]
+        for rule in pip["ignore"]:
+            assert set(rule) == {"dependency-name"}, rule
+
+    def test_npm_moves_eslint_and_its_config_together_including_majors(self):
+        groups = self.entry("npm")["groups"]
+        assert set(groups) == {"javascript", "npm-minor-and-patch"}
+        assert sorted(groups["javascript"]["patterns"]) == ["@eslint/*", "eslint*"]
+        assert sorted(groups["javascript"]["update-types"]) == ["major", "minor", "patch"]
+        assert sorted(groups["npm-minor-and-patch"]["exclude-patterns"]) == ["@eslint/*", "eslint*"]
+        assert sorted(groups["npm-minor-and-patch"]["update-types"]) == ["minor", "patch"]
+
+    def test_actions_arrive_in_one_group_including_majors(self):
+        (group,) = self.entry("github-actions")["groups"].values()
+        assert group["patterns"] == ["*"]
+        assert sorted(group["update-types"]) == ["major", "minor", "patch"]
 
 
 class TestPreCommit:

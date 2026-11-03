@@ -1,7 +1,7 @@
 ---
 id: SP-WEB-QA
 title: JavaScript lint and browser end-to-end tests
-version: 0.2
+version: 0.3
 status: approved
 author: agent
 created: 2026-11-03
@@ -42,7 +42,8 @@ contract of SP-CONFIG, through which the server under test gets its port and the
   `e2e` profile, and leaves no process and no data behind.
 - G3: `python -m pytest -q` keeps passing and fast on every machine: the e2e suite is opt-in (`addopts = "-m 'not
   e2e'"` in `pyproject.toml`, overridden by an explicit `-m e2e`) and its modules skip without Playwright.
-- G4: CI runs the lint and the e2e suite in their own jobs; the `test` job runs a plain `python -m pytest -q`.
+- G4: CI runs the lint and the e2e suite in their own jobs; the `unit` matrix job runs a plain `python -m pytest -q`
+  and the required check `test` only aggregates its legs.
 
 ## Non-Goals
 - NG1: changing the behavior of the page beyond what the lint rules require.
