@@ -1,7 +1,7 @@
 ---
 id: SP-RELEASE
 title: Release process
-version: 0.3
+version: 0.4
 status: approved
 author: agent
 created: 2026-11-03
@@ -91,8 +91,10 @@ Errors:
 1. Job `version`: check out the tag, compare `${GITHUB_REF_NAME#v}` with `project.version`; stop on mismatch.
 2. Job `build` (needs `version`): `pip install --require-hashes -r .github/release-requirements.txt` (build,
    packaging, pyproject_hooks and setuptools pinned by version and wheel hash), `python -m build --no-isolation`
-   so that the build backend comes from that hashed set, `pip install dist/*.whl`, then from a directory outside
-   the checkout `python -c "import server, backend"`; upload `dist/` as the artifact `dist`.
+   so that the build backend comes from that hashed set, upload `dist/` as the artifact `dist` right away, then
+   `pip install dist/*.whl` and, from a directory outside the checkout, `python -c "import server, backend"`; the
+   files are uploaded before anything the wheel pulls in runs, so a failing check leaves no release but a
+   tampered artifact is impossible.
 3. Job `release` (needs `build`, `contents: write`, environment `release`): check out the tag, extract the
    changelog section with awk (print the lines after the matching `## [` heading up to the next `## ` heading or
    the first `[...]: ` link reference), fail if the result is blank, download `dist`, create the release with the
