@@ -142,15 +142,15 @@
   {
     "id": "qcm-th-011",
     "theme": "validation",
-    "question": "What is overfitting?",
+    "question": "After a cross-validated grid search, your best model reaches 0.99 accuracy on the training set and 0.71 on the validation folds. What is the most likely diagnosis, and what is the right first move?",
     "choices": [
-      "The model is too simple to capture the structure of the data",
-      "The model performs very well on the training set but generalizes poorly to new data",
-      "The model takes too long to train",
-      "The model has too few parameters"
+      "Underfitting: the model is too simple; add capacity or train longer",
+      "Overfitting: the model has memorized the training sample; regularize or simplify it, then check that the gap on the validation folds closes",
+      "Data leakage: a feature encodes the target; audit the pipeline before touching the model",
+      "Not enough signal: collect more features so the validation score catches up"
     ],
     "answer": 1,
-    "explanation": "The model has memorized the noise of the sample. Remedies: more data, regularization, a simpler model, cross-validation, early stopping.",
+    "explanation": "A training score far above a cross-validated score is the signature of overfitting: the model fits the noise of the training sample and does not generalize. Leakage would inflate the validation score too rather than open a gap, and underfitting would show a low training score as well. Adding features or training longer only adds capacity and widens the gap. The first move is to constrain the model (regularization, a simpler model, more data when available) and confirm on the validation folds that the gap closes.",
     "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
   },
   {
@@ -388,7 +388,7 @@
       "There is no practical difference"
     ],
     "answer": 1,
-    "explanation": "The L1 penalty (sum of |w|) produces **sparse** solutions; L2 (sum of w²) has a closed-form solution and handles multicollinearity well by spreading the weight across correlated features.",
+    "explanation": "The L1 penalty (sum of |w|) produces **sparse** solutions; L2 (sum of w²) has a closed-form solution and handles multicollinearity well by spreading the weight across correlated features. A Lasso therefore doubles as a feature selector: keep the features whose coefficient is non-zero. L2 cannot play that role: it shrinks every coefficient but never sets one exactly to zero.",
     "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
   },
   {
@@ -444,35 +444,7 @@
       "w is the p-value of x"
     ],
     "answer": 1,
-    "explanation": "In logistic regression, w is the change in **log-odds**. To compare feature importance, you need normalized features (or methods like SHAP).",
-    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
-  },
-  {
-    "id": "qcm-th-033",
-    "theme": "regularization",
-    "question": "Does a larger weight mean the feature is more important?",
-    "choices": [
-      "Yes, always",
-      "Only if the features are on the same scale (normalized)",
-      "No, never",
-      "Only for binary features"
-    ],
-    "answer": 1,
-    "explanation": "A feature expressed in millions will have a tiny coefficient for a huge effect. Comparing weights assumes comparable scales.",
-    "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
-  },
-  {
-    "id": "qcm-th-034",
-    "theme": "regularization",
-    "question": "Can L2 regularization be used to select features?",
-    "choices": [
-      "Yes, it zeroes out useless coefficients",
-      "No: L2 shrinks the coefficients but does not set them exactly to zero; L1 is the one that produces zero coefficients",
-      "Yes, but only with trees",
-      "No, no regularization allows selection"
-    ],
-    "answer": 1,
-    "explanation": "You can keep the features with a non-zero coefficient after a Lasso. L2 is rather used to stabilize the model against multicollinearity.",
+    "explanation": "In logistic regression, w is the change in **log-odds**. A feature expressed in millions gets a tiny coefficient for a huge effect, so weights are comparable only when the features are on the same scale. To compare feature importance, normalize the features first (or use methods like SHAP).",
     "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0), rewritten as a multiple-choice question"
   },
   {

@@ -22,6 +22,19 @@ def test_quiz_bank_is_valid(capsys):
     assert int(summary.split()[0]) >= 100
 
 
+def test_quiz_questions_are_unique():
+    ids: dict[str, str] = {}
+    questions: dict[str, str] = {}
+    for path in sorted(glob.glob(os.path.join(ROOT, "bank", "qcm", "*.json"))):
+        for item in check_qcm.load_items(path):
+            assert item["id"] not in ids, f"{item['id']} in both {ids[item['id']]} and {path}"
+            ids[item["id"]] = path
+            text = check_qcm.norm(item["question"] + "\n" + item.get("code", "")).lower()
+            assert text not in questions, f"{item['id']} asks the same question as {questions[text]}"
+            questions[text] = item["id"]
+    assert len(ids) >= 100
+
+
 def test_theory_bank_is_valid(capsys):
     assert check_theory.main([]) == 0
     summary = capsys.readouterr().out.strip().splitlines()[-1]
