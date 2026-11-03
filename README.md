@@ -55,6 +55,9 @@ Everything lives in one `config.json` (defaults in `backend/config.py`), the fir
 3. `$XDG_CONFIG_HOME/sparring/config.json`, that is `~/.config/sparring/config.json` (the installed command; create
    it to change a default, a missing file means the defaults).
 
+Because of step 2, start the installed command from a directory you trust: a `config.json` found there can set
+`grader.claude_bin`, a program the grader runs, and the server warns at startup when that happens.
+
 
 ```json
 {

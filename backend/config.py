@@ -99,7 +99,11 @@ def user_config_path() -> str:
 
 
 def settings_path() -> str:
-    """The settings file: SPARRING_CONFIG when set and non-empty, else ./config.json when present, else the user's."""
+    """The settings file: SPARRING_CONFIG when set and non-empty, else ./config.json when present, else the user's.
+
+    `./config.json` is resolved against the current working directory on every call, so the answer depends on where
+    the server is started from; the server logs it at startup.
+    """
     override = os.environ.get(ENV_VAR)
     if override:
         return override

@@ -51,7 +51,8 @@ module and the tests of the command line. Code-only: `resources: []`.
   `./config.json` is present.
 - G5: `sparring [port] [--host HOST] [--port PORT] [--version] [--help]`: the positional port stays; `--version`
   prints the version from the package metadata, `unknown` without metadata.
-- G6: the server logs the settings file and the data directory in use at startup, one line each.
+- G6: the server logs the settings file and the data directory in use at startup, one line each, and warns when a
+  settings file picked up from the current directory changes `grader.claude_bin`, a program the grader runs.
 
 ## Non-Goals
 - NG1: moving `app/`, `bank/` or `tools/` in the repository: the layout of a clone is unchanged.
@@ -89,7 +90,8 @@ Outputs:
 - `server.parse_args(argv: list[str] | None) -> argparse.Namespace` with `host: str | None`, `port: int | None`.
 - `server.version() -> str`: `importlib.metadata.version("sparring")`, or `unknown`.
 - `server.main(argv: list[str] | None = None) -> None`: the console script.
-- `store.DATA`: `<data_dir()>/theory`, computed at import.
+- `store.DATA_DIR`, `store.DATA`: `data_dir()` and `<data_dir()>/theory`, computed at import.
+- `server.settings_from_cwd() -> bool`: the settings file was picked up from the current directory.
 
 Errors:
 - `FileNotFoundError` from `resource_dir()` when the directory exists neither next to `server.py` nor in the
@@ -104,6 +106,9 @@ Errors:
 2. `APP_DIR` and `BANK_DIR` in `server.py` are `paths.resource_dir("app")` and `paths.resource_dir("bank")`; the
    `_file` tag of a bank item is relative to the parent of `BANK_DIR` (`bank/<kind>/<file>.json` in both layouts).
 3. `store.DATA` is `<data_dir()>/theory`; profiles nest under it as before.
+4. When the settings file comes from the current directory (neither `SPARRING_CONFIG` nor the per-user file) and
+   sets `grader.claude_bin` to something other than the default, the server logs one warning naming the program:
+   an installed command started inside an untrusted checkout must not silently run that checkout's binary.
 
 ### Edge cases
 - Editable install (`pip install -e .`) -> `ROOT` is the clone, `is_clone()` is true, nothing is read from
@@ -143,7 +148,10 @@ flowchart TD
   `tests/test_cli.py::test_main_falls_back_to_the_settings`).
 - [ ] AC1b: the server logs the settings file, with a caveat when it is missing, and the data directory at startup
   (`tests/test_cli.py::test_main_logs_settings_and_data_directory`,
-  `tests/test_cli.py::test_main_logs_an_existing_settings_file_without_a_caveat`).
+  `tests/test_cli.py::test_main_logs_an_existing_settings_file_without_a_caveat`), and warns about a local
+  settings file that changes `grader.claude_bin`, never about a named or per-user one
+  (`tests/test_cli.py::test_main_warns_when_the_local_settings_file_changes_claude_bin`,
+  `tests/test_cli.py::test_main_does_not_warn_for_a_named_or_per_user_settings_file`).
 - [ ] AC2: `--version` prints the package metadata version and `unknown` without metadata; `--help` lists every
   option (`tests/test_cli.py::test_version_prints_the_package_version`,
   `tests/test_cli.py::test_version_comes_from_the_package_metadata`,

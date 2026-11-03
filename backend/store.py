@@ -15,7 +15,8 @@ from backend import paths
 
 Answer = dict[str, Any]
 
-DATA = os.path.join(paths.data_dir(), "theory")
+DATA_DIR = paths.data_dir()
+DATA = os.path.join(DATA_DIR, "theory")
 _lock = threading.Lock()
 
 

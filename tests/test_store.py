@@ -77,6 +77,7 @@ def data_dir_override(tmp_path, monkeypatch):
 
 
 def test_data_dir_override_moves_the_answers(data_dir_override):
+    assert store.DATA_DIR == str(data_dir_override)
     assert store.DATA == os.path.join(str(data_dir_override), "theory")
     rec = store.add_answer("q1", "elsewhere", profile="p")
     with open(data_dir_override / "theory" / "p" / "answers.json", encoding="utf-8") as fh:

@@ -255,7 +255,18 @@ def version() -> str:
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
-    """Command line: an optional positional port (kept for compatibility), --host, --port, --version."""
+    """Command line: an optional positional port (kept for compatibility), --host, --port, --version.
+
+    Args:
+        argv: the arguments to parse; None means sys.argv[1:].
+
+    Returns:
+        A namespace with `host` (str or None) and `port` (int or None): None means the settings file decides.
+
+    Raises:
+        SystemExit: code 2 on a port outside 1-65535 or a positional port that disagrees with --port, code 0 after
+            --help or --version, as argparse does.
+    """
     parser = argparse.ArgumentParser(description="Sparring: local training server for technical tests and interviews.",
                                      epilog="The host and the port default to the settings file, section 'server'.")
     parser.add_argument("port_arg", metavar="port", nargs="?", type=int, help="port to listen on (same as --port)")
@@ -272,6 +283,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     return args
 
 
+def settings_from_cwd() -> bool:
+    """True when the settings file was picked up from the current directory rather than named or per-user."""
+    return not os.environ.get(config.ENV_VAR) and config.PATH != config.user_config_path()
+
+
 def main(argv: list[str] | None = None) -> None:
     """Entry point of the `sparring` command and of `python server.py`: argv defaults to sys.argv[1:]."""
     global bind_host
@@ -283,9 +299,13 @@ def main(argv: list[str] | None = None) -> None:
     bind_host = args.host or str(srv["host"])
     server = http.server.ThreadingHTTPServer((bind_host, port), Handler)
     log.info("Settings: %s%s", config.PATH, "" if os.path.isfile(config.PATH) else " (not found, using defaults)")
-    log.info("Data directory: %s", os.path.dirname(store.DATA))
+    log.info("Data directory: %s", store.DATA_DIR)
     for err in config.ERRORS:
         log.warning(err)
+    claude_bin = config.section("grader")["claude_bin"]
+    if settings_from_cwd() and claude_bin != config.DEFAULTS["grader"]["claude_bin"]:
+        log.warning("The settings file of the current directory sets grader.claude_bin = %r, a program the grader "
+                    "runs: start sparring from a directory you trust, or name the file with SPARRING_CONFIG", claude_bin)
     if not is_loopback(bind_host):
         log.warning("Server bound to %s: the API has no authentication, anyone on the network can read and delete "
                     "your answers and spend your grading quota", bind_host)
