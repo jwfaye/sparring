@@ -3,7 +3,7 @@
 
 Usage: python server.py [port]   (default: config.json, section "server")
 
-- Serves the static files of app/
+- Serves the static files of app/ (with the cross-origin isolation headers Pyodide's interrupt buffer needs)
 - GET /api/exercises  -> merged exercise bank (every bank/exercises/*.json)
 - GET /api/qcm        -> merged quiz bank (every bank/qcm/*.json)
 - GET /api/theory/questions, /status, /history?profile=  -> interview questions, grader status, answer history
@@ -111,6 +111,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("Referrer-Policy", "no-referrer")
         self.send_header("Content-Security-Policy", CSP)
+        self.send_header("Cross-Origin-Opener-Policy", "same-origin")
+        self.send_header("Cross-Origin-Embedder-Policy", "require-corp")
         super().end_headers()
 
     def _request_host(self) -> str:

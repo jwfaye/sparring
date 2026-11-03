@@ -173,3 +173,18 @@ class TestHttpApi:
         with pytest.raises(urllib.error.HTTPError) as info:
             urllib.request.urlopen(req, timeout=5)
         assert info.value.code == 400
+
+
+# Cross-origin isolation headers (SP-PY-RUNTIME): they unlock SharedArrayBuffer for the Pyodide interrupt buffer.
+def test_coop_header_is_same_origin(live):
+    _, _, headers = live.call("/api/health")
+    assert headers["Cross-Origin-Opener-Policy"] == "same-origin"
+
+
+def test_coep_header_is_require_corp(live):
+    _, _, api_headers = live.call("/api/health")
+    assert api_headers["Cross-Origin-Embedder-Policy"] == "require-corp"
+    with urllib.request.urlopen(live.base + "/js/py-worker.js", timeout=5) as resp:
+        assert resp.headers["Cross-Origin-Embedder-Policy"] == "require-corp"
+        assert resp.headers["Cross-Origin-Opener-Policy"] == "same-origin"
+        assert "Content-Security-Policy" in resp.headers

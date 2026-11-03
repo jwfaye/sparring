@@ -20,15 +20,19 @@ Built-in guards (`server.py`): API requests are refused when the `Host` header i
 configured bind host), when an `Origin` header does not match the page's origin, and when a POST is not
 `application/json`; POST bodies are capped at 1 MB; `qid`, `id` and `profile` must match `[A-Za-z0-9_.-]{1,80}`;
 an already graded answer is not re-graded unless `force: true` is sent. Every response carries
-`X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer` and a `Content-Security-Policy` restricted to the
-pinned CDNs (Pyodide needs `'unsafe-eval'` and `'wasm-unsafe-eval'`). The server logs a warning when bound to a
-non-loopback address.
+`X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`, a `Content-Security-Policy` restricted to the
+pinned CDNs (Pyodide needs `'unsafe-eval'` and `'wasm-unsafe-eval'`; the worker file gets the same policy),
+`Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Embedder-Policy: require-corp`. The last two make the
+page cross-origin isolated, which enables `SharedArrayBuffer` for Pyodide's interrupt buffer (Stop button, run
+timeout) and, as a side effect, isolates the page from cross-origin windows and from any cross-origin resource that
+does not opt in with CORP or CORS. The server logs a warning when bound to a non-loopback address.
 
 ## What runs where
 
 - **Exercise code** (yours, the setup, the tests, the solutions) runs in the browser, inside Pyodide (WebAssembly
-  Python) and an in-memory SQLite. Nothing you type in the editor is executed on the server. The Pyodide sandbox is the
-  browser's sandbox: the code can use CPU and memory of the tab, nothing else.
+  Python) and an in-memory SQLite, in a dedicated Web Worker (`app/js/py-worker.js`). Nothing you type in the editor
+  is executed on the server. The Pyodide sandbox is the browser's sandbox: the code can use CPU and memory of the
+  worker, nothing else, and a run is interrupted by the Stop button or after 20 s.
 - **Bank checkers** (`python -m tools.check_bank`, `check_qcm`, `add_exercises`, `add_qcm`, `add_theory_grids`)
   execute the code of the bank files and of draft modules **on your machine, with your privileges**. They are meant
   for banks shipped in this repository and for drafts you wrote or reviewed yourself. Do not run them on a bank or a
@@ -61,14 +65,15 @@ fonts.googleapis.com and fonts.gstatic.com. The browser caches them afterwards. 
 
 The cdnjs assets are integrity-checked: each CodeMirror tag in `app/index.html` carries a Subresource Integrity
 hash (`integrity="sha384-..."`, `crossorigin="anonymous"`), so the browser refuses a file that does not match the
-reviewed version. Pyodide is pinned to a version but not integrity-checked: `pyodide.js` fetches `pyodide.asm.js`,
-the WebAssembly binary and the packages itself at runtime, and a hash on the loader alone would leave those
-unverified while suggesting otherwise. Vendoring Pyodide under `app/` (about 15 MB) would remove that trust in
+reviewed version. Pyodide is pinned to a version but not integrity-checked: the worker loads `pyodide.js` with
+`importScripts`, which takes no integrity attribute, and `pyodide.js` fetches `pyodide.asm.js`, the WebAssembly
+binary and the packages itself at runtime, so a hash on the loader alone would leave those unverified while
+suggesting otherwise. Vendoring Pyodide under `app/` (about 15 MB) would remove that trust in
 cdn.jsdelivr.net; it is a possible future change. The Google Fonts stylesheet is generated per browser and cannot
 carry a hash; the fonts are cosmetic and fall back to system fonts when unreachable.
 
 To work fully offline, vendor those assets under `app/` and point `app/index.html` and `PYODIDE_URL` in
-`app/js/app.js` at the local copies; the fonts fall back to system fonts when unreachable.
+`app/js/py-worker.js` at the local copies; the fonts fall back to system fonts when unreachable.
 
 ## Reporting an issue
 

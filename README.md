@@ -68,7 +68,7 @@ the interview mode falls back to offline grading.
 ```
 server.py                  static server + /api/* (merges bank/*/*.json)
 config.json                settings (server, grader)
-app/                       web page: index.html, css/, js/common.js, js/app.js, js/qcm.js, js/theory.js, py/harness.py
+app/                       web page: index.html, css/, js/common.js, js/app.js, js/py-client.js, js/py-worker.js, js/qcm.js, js/theory.js, py/harness.py
 backend/                   config.py, store.py (interview answers), grader.py (Claude Code or Anthropic API)
 bank/exercises/*.json      exercise bank (one file = one list of exercises)
 bank/qcm/*.json            quiz bank
@@ -131,6 +131,12 @@ Exercise format:
 
 Shortcuts: `Ctrl+Enter` run, `Ctrl+Shift+Enter` check, `Ctrl+/` comment. Progress, code and exam timer live in the
 browser's `localStorage` (Summary tab: Export / Reset).
+
+Your code runs in a Web Worker (`app/js/py-worker.js`), so the page never freezes. The **Stop** button interrupts
+the current run, and a run is interrupted automatically after 20 s (`RUN_TIMEOUT_MS` in `app/js/py-client.js`);
+the output then shows `Execution interrupted after N s`. The interruption is immediate when the page is cross-origin
+isolated (the default with `server.py`); otherwise, or when the code swallows the `KeyboardInterrupt`, Python is
+reloaded in the worker (a few seconds) and the next run waits for "Python ready".
 
 ## Quiz
 
@@ -219,10 +225,13 @@ Sparring is a local, single-user tool. The server has no authentication and must
 (`server.host` = `127.0.0.1`, the default): exposing it on a network exposes your saved answers and lets anyone spend
 your API credits or Claude Code quota. The API refuses requests whose Host is not local, cross-origin requests and
 non-JSON POSTs, the page is served with a Content-Security-Policy, and the CodeMirror assets loaded from cdnjs are
-integrity-checked. Exercise code runs in the browser (Pyodide), never on the server; the bank checkers in `tools/` do
-execute bank and draft code on your machine, so run them only on banks you trust. The API key lives in the environment
-only, and `data/` is never committed. Details, network calls made by the page and how to report an issue:
-[SECURITY.md](SECURITY.md).
+integrity-checked. The server also sends `Cross-Origin-Opener-Policy: same-origin` and
+`Cross-Origin-Embedder-Policy: require-corp`: this cross-origin isolation is what unlocks `SharedArrayBuffer`, which
+the Stop button and the run timeout use to interrupt Python without reloading it (every pinned CDN answers with
+`Cross-Origin-Resource-Policy: cross-origin`, so nothing is blocked). Exercise code runs in the browser (Pyodide, in a
+Web Worker), never on the server; the bank checkers in `tools/` do execute bank and draft code on your machine, so run
+them only on banks you trust. The API key lives in the environment only, and `data/` is never committed. Details,
+network calls made by the page and how to report an issue: [SECURITY.md](SECURITY.md).
 
 ## License
 
