@@ -144,10 +144,10 @@ parse the three files and check their shape; what they cannot see is named as ob
   (`tests/test_ci_config.py::TestWorkflow::test_checkout_never_persists_credentials`).
 - [ ] AC3: the workflow is named `CI`, has a `concurrency` block and every job a `timeout-minutes` key
   (`tests/test_ci_config.py::TestWorkflow::test_workflow_is_named_ci_with_a_concurrency_group_and_a_timeout_on_every_job`).
-- [ ] AC4: `.github/dependabot.yml` lists the ecosystems `pip`, `npm` and `github-actions` with a weekly schedule
-  and the commit prefix `build(deps)`
-  (`tests/test_ci_config.py::TestDependabot::test_three_ecosystems_weekly_with_the_build_deps_prefix`); GitHub's
-  Dependabot tab shows the three.
+- [ ] AC4: `.github/dependabot.yml` lists the ecosystems `pip`, `npm` and `github-actions` with a weekly schedule, a
+  group covering minor and patch bumps each and the commit prefix `build(deps)`
+  (`tests/test_ci_config.py::TestDependabot::test_three_ecosystems_weekly_with_grouped_minor_and_patch_updates`);
+  GitHub's Dependabot tab shows the three.
 - [ ] AC7: the `pip` entry groups minor and patch bumps and ignores every version of `pandas` and `numpy`
   (`tests/test_ci_config.py::TestDependabot::test_pip_groups_minor_and_patch_and_ignores_every_version_of_the_pyodide_pins`);
   the `npm` entry has a `javascript` group with the patterns `eslint*` and `@eslint/*` for minor, patch and major,

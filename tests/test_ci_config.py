@@ -59,13 +59,15 @@ class TestDependabot:
         (entry,) = [e for e in load(DEPENDABOT)["updates"] if e["package-ecosystem"] == ecosystem]
         return entry
 
-    def test_three_ecosystems_weekly_with_the_build_deps_prefix(self):
+    def test_three_ecosystems_weekly_with_grouped_minor_and_patch_updates(self):
         updates = load(DEPENDABOT)["updates"]
         assert {entry["package-ecosystem"] for entry in updates} == {"pip", "npm", "github-actions"}
         for entry in updates:
             assert entry["directory"] == "/"
             assert entry["schedule"]["interval"] == "weekly"
             assert entry["commit-message"]["prefix"] == "build(deps)"
+            covered = [set(group["update-types"]) for group in entry["groups"].values()]
+            assert any({"minor", "patch"} <= types for types in covered), entry["package-ecosystem"]
 
     def test_pip_groups_minor_and_patch_and_ignores_every_version_of_the_pyodide_pins(self):
         pip = self.entry("pip")
