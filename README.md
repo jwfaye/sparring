@@ -80,7 +80,7 @@ Because of step 2, start the installed command from a directory you trust: a `co
 - `grader.timeout_seconds`: positive integer
 - `SPARRING_CONFIG`: environment variable, path of the settings file, ahead of `./config.json` and the per-user file
   (the browser tests use it to start a server on a free port with the grader offline)
-- `SPARRING_DATA_DIR`: environment variable, directory of your answers (`<dir>/theory[/<profile>]/answers.json`)
+- `SPARRING_DATA_DIR`: environment variable, directory of your answers (`<dir>/theory[/<profile>]/answers.sqlite3`)
   instead of `data/` in a clone or `$XDG_DATA_HOME/sparring` (`~/.local/share/sparring`) for the installed command
 - `SPARRING_LOG_LEVEL`: environment variable, server log level (default `INFO`)
 
@@ -105,7 +105,7 @@ bank/exercises/*.json      exercise bank (one file = one list of exercises)
 bank/qcm/*.json            quiz bank
 bank/theory/*.json         interview questions + grading grids
 sparring_data/             empty package: the wheel maps app/ and bank/ under it, a clone never reads it
-data/theory/               your answers and grades in a clone (local, never committed); installed: ~/.local/share/sparring/theory/
+data/theory/               your answers and grades, answers.sqlite3 per profile, in a clone (local, never committed); installed: ~/.local/share/sparring/theory/
 tools/                     scripts, run from the root of a clone: python -m tools.<name>
 .venv-check/               venv with pandas 2.2.3 / numpy 2.0.2 = the versions shipped by Pyodide 0.27.7
 ```
@@ -211,9 +211,11 @@ ML theory questions are adapted from alexeygrigorev/data-science-interviews (the
     sessions. Each grading consumes subscription quota like one Claude Code exchange. About 10 s per grading;
   - `api`: official `anthropic` SDK, key read from `ANTHROPIC_API_KEY`.
   With `auto`, the API is used when a key is present, otherwise Claude Code when it is logged in, otherwise offline;
-- **offline**: the answer is saved in `data/theory/answers.json` (never committed). Then ask Claude: "grade my pending
-  interview answers": it runs `python -m tools.theory_pending`, grades with the same grid and imports the scores with
-  `python -m tools.import_grades`; or run `python -m tools.grade_pending` once a key is available.
+- **offline**: the answer is saved in `data/theory/answers.sqlite3` (never committed; a SQLite database, one per
+  profile). Then ask Claude: "grade my pending interview answers": it runs `python -m tools.theory_pending`, grades
+  with the same grid and imports the scores with `python -m tools.import_grades`; or run
+  `python -m tools.grade_pending` once a key is available. Answers saved by an earlier version in `answers.json` are
+  imported into the database the first time the profile is read, and the file is renamed `answers.json.migrated`.
 
 Score history by section and weak points on the tab's home. Every saved answer can be reopened.
 

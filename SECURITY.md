@@ -54,8 +54,10 @@ does not opt in with CORP or CORS. The server logs a warning when bound to a non
 
 - Browser `localStorage`: exercise progress and code, quiz history, theme and preferences. Separate namespaces per
   `?profile=`.
-- `data/theory[/<profile>]/answers.json`: interview answers and grades, written atomically. The profile name is
-  reduced to `[a-zA-Z0-9_-]` before being used as a directory name.
+- `data/theory[/<profile>]/answers.sqlite3`: interview answers and grades, a SQLite database written in one
+  transaction per call (with its `-wal` and `-shm` side files while open). An `answers.json` from an earlier
+  version is imported once and renamed `answers.json.migrated`, never deleted. The profile name is reduced to
+  `[a-zA-Z0-9_-]` before being used as a directory name.
 
 ## Network calls made by the page
 

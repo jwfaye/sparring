@@ -12,6 +12,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   `server.py` and `tools/`, CI fails the Python 3.12 leg under the `fail_under` floor of `pyproject.toml` and
   uploads `coverage.xml` as a run artifact (#22).
 
+### Changed
+- Interview answers are kept in a SQLite database per profile (`data/theory[/<profile>]/answers.sqlite3`) instead
+  of a JSON file rewritten on every request; an existing `answers.json` is imported on first use and renamed
+  `answers.json.migrated` (#24).
+
 ## [0.1.0] - 2026-11-03
 
 ### Added
