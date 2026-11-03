@@ -42,7 +42,8 @@ while a countdown runs), the Python status (hidden in the quiz and interview mod
 hidden on the setup screen) and the theme toggle.
 
 This component promotes the frontier files it reworks into the governed regime: `app/js/app.js` (view switching,
-setup state, start flow, exam countdown, exercises, summary; exposes `window.TTAPP.switchView`), `app/js/qcm.js`
+setup state, start flow, exam countdown, exercises, summary; exposes `window.TTAPP.switchView` and
+`window.TTAPP.openSetup`), `app/js/qcm.js`
 (`window.TTQCM.start/openHistory/leave`), `app/js/theory.js` (`window.TTTHEORY.start/openHistory/leave`) and
 `app/css/style.css`. Shared files touched: `app/index.html` (SP-WEB-ASSETS, its third-party tags untouched),
 `app/js/common.js` (frontier: `selectTab` keys the tabs on `data-mode`), `tests/e2e/` (SP-WEB-QA: `conftest.py`
@@ -111,7 +112,7 @@ Errors:
 
 ### Edge cases
 - Reshuffle on the setup screen -> the order of the undone exercises is redrawn and the next Start begins at its
-  first exercise.
+  first exercise (`tests/e2e/test_setup.py::test_reshuffle_redraws_the_order_and_the_next_start_begins_at_the_first`).
 - An answer reopened from the interview history -> Back returns to the history page, not to the setup screen.
 - The quiz end screen -> "Replay the missed ones" stays in the view, "Back to setup" leaves it.
 - A Summary row click -> the filters are widened when the exercise is not in the current order, then the exercises
@@ -126,8 +127,8 @@ Errors:
 - Adds dependency: SP-SETUP -> SP-A11Y (the tab list the audit checks moved to the setup screen).
 - Adds dependency: SP-SETUP -> SP-PY-RUNTIME (`app.js` drives `window.TTPY` as before).
 - Adds dependency: SP-SETUP -> SP-BRAND (README sections and screenshots describe the new flow).
-- New / changed coupling, cycles, or shared state: `qcm.js` and `theory.js` call `window.TTAPP.switchView` to
-  leave their views; `app.js` calls their `start`, `openHistory` and `leave`. No cycle at load time: the global
+- New / changed coupling, cycles, or shared state: `qcm.js` and `theory.js` call `window.TTAPP.openSetup` to
+  leave their views; `app.js` calls their `start`, `review`, `openHistory` and `leave`. No cycle at load time: the global
   objects are read when a button is pressed.
 
 ## Diagram

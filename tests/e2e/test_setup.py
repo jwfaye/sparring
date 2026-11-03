@@ -140,3 +140,19 @@ def test_summary_row_opens_the_exercise_and_widens_the_filters(ready_page, setup
     expect(page.locator("#ex-list li.active")).to_have_count(1)
     setup_screen(page)
     expect(page.locator("#f-language")).to_have_value("")
+
+
+def test_reshuffle_redraws_the_order_and_the_next_start_begins_at_the_first(ready_page, setup_screen, start):
+    page = ready_page
+    setup_screen(page, "exercises")
+    page.select_option("#f-language", "")
+    start(page, "exercises")
+    page.click('#ex-list li[data-i="2"]')
+    assert page.evaluate("window.tt.idx") == 2
+    setup_screen(page)
+    page.click("#reshuffle")
+    expect(page.locator("#setup-ex-msg")).to_contain_text("Order reshuffled")
+    start(page, "exercises")
+    assert page.evaluate("window.tt.idx") == 0
+    assert page.evaluate("window.tt.order.length") == page.evaluate("window.tt.bank.length")
+    expect(page.locator('#ex-list li[data-i="0"]')).to_have_class("active")
