@@ -18,11 +18,33 @@ window.TT = (() => {
   const currentTheme = () => document.documentElement.dataset.theme || (systemDark() ? 'dark' : 'light');
   function applyTheme(t) {
     if (t) document.documentElement.dataset.theme = t; else delete document.documentElement.dataset.theme;
-    const b = $('#theme-toggle'); if (b) b.textContent = currentTheme() === 'dark' ? 'Light' : 'Dark';
+    const b = $('#theme-toggle');
+    if (b) { const next = currentTheme() === 'dark' ? 'light' : 'dark'; b.textContent = next === 'dark' ? 'Dark' : 'Light'; b.setAttribute('aria-label', `Switch to ${next} theme`); }
     document.dispatchEvent(new CustomEvent('tt:theme', { detail: currentTheme() }));
+  }
+  // ---- tab bar (WAI-ARIA tabs): aria-selected and a roving tabindex follow the active tab; arrows move between tabs.
+  function selectTab(view) {
+    $$('.tab').forEach(t => {
+      const on = t.dataset.view === view;
+      t.classList.toggle('active', on);
+      t.setAttribute('aria-selected', String(on));
+      t.tabIndex = on ? 0 : -1;
+    });
+  }
+  function initTabKeys() {
+    $('[role="tablist"]')?.addEventListener('keydown', e => {
+      const tabs = $$('.tab'), i = tabs.indexOf(document.activeElement);
+      if (i < 0) return;
+      const next = { ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: tabs.length - 1 }[e.key];
+      if (next === undefined) return;
+      e.preventDefault();
+      const t = tabs[(next + tabs.length) % tabs.length];
+      t.focus(); t.click();
+    });
   }
   document.addEventListener('DOMContentLoaded', () => {
     applyTheme(document.documentElement.dataset.theme || null);
+    initTabKeys();
     $('#theme-toggle')?.addEventListener('click', () => {
       const next = currentTheme() === 'dark' ? 'light' : 'dark';
       try { localStorage.setItem('tt.theme', next); } catch {}
@@ -46,7 +68,7 @@ window.TT = (() => {
         const buf = []; i++;
         while (i < lines.length && !lines[i].startsWith('```')) buf.push(lines[i++]);
         i++;
-        html += `<pre class="code"><code>${escapeHtml(buf.join('\n'))}</code></pre>`;
+        html += `<pre class="code" tabindex="0"><code>${escapeHtml(buf.join('\n'))}</code></pre>`;
         continue;
       }
       if (/^\s*[-*] /.test(l)) {
@@ -72,5 +94,5 @@ window.TT = (() => {
       armed = setTimeout(() => { armed = null; btn.textContent = label; }, ms);
     });
   }
-  return { $, $$, PROFILE, NS, currentTheme, loadJSON, saveJSON, escapeHtml, fmtTime, fmtDate, shuffle, inline, renderMd, twoClick };
+  return { $, $$, PROFILE, NS, currentTheme, selectTab, loadJSON, saveJSON, escapeHtml, fmtTime, fmtDate, shuffle, inline, renderMd, twoClick };
 })();

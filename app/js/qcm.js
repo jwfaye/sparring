@@ -95,6 +95,7 @@
     $$('#qcm-choices .choice').forEach(b => b.onclick = () => answer(Number(b.dataset.orig)));
     $('#qcm-feedback').classList.add('hidden'); $('#qcm-next').classList.add('hidden');
     $('#qcm-quiz').scrollIntoView({ block: 'start' });
+    $('#qcm-question').focus({ preventScroll: true });
   }
   function answer(orig) {
     const s = st.session; if (!s || s.answers.length > s.idx) return;
@@ -121,13 +122,13 @@
     $('#qcm-score').innerHTML = `<div class="big">${ok} / ${n}</div><div class="muted">${Math.round(100 * ok / n)} % correct</div>`;
     const byT = {};
     s.answers.forEach(a => { const t = st.byId[a.id].theme; const o = byT[t] ||= { n: 0, ok: 0 }; o.n++; if (a.ok) o.ok++; });
-    $('#qcm-end-themes').innerHTML = `<tr><th>Theme</th><th>Score</th><th></th></tr>` + Object.entries(byT).sort().map(([t, o]) =>
+    $('#qcm-end-themes').innerHTML = `<tr><th>Theme</th><th>Score</th><th><span class="visually-hidden">Progress</span></th></tr>` + Object.entries(byT).sort().map(([t, o]) =>
       `<tr><td>${escapeHtml(label(t))}</td><td>${o.ok} / ${o.n}</td><td><div class="bar"><span style="width:${100 * o.ok / o.n}%"></span></div></td></tr>`).join('');
     const failed = s.answers.filter(a => !a.ok);
     $('#qcm-failed').innerHTML = failed.length ? failed.map(a => {
       const q = st.byId[a.id];
       return `<details class="failed"><summary>${escapeHtml(label(q.theme))} — ${escapeHtml(plain(q.question).slice(0, 110))}</summary>
-        <div class="md">${renderMd(q.question)}</div>${q.code ? `<pre class="code">${escapeHtml(q.code)}</pre>` : ''}
+        <div class="md">${renderMd(q.question)}</div>${q.code ? `<pre class="code" tabindex="0">${escapeHtml(q.code)}</pre>` : ''}
         <p><span class="wrong-txt">Your answer: ${escapeHtml(q.choices[a.picked])}</span><br><span class="ok-txt">Correct answer: ${escapeHtml(q.choices[q.answer])}</span></p>
         <div class="md">${renderMd(q.explanation)}</div></details>`;
     }).join('') : '<p>No mistake in this session.</p>';

@@ -3,7 +3,9 @@
 Your training partner for data science / ML engineer technical tests and interviews.
 
 A local web app: Python/pandas and SQL exercises run in the browser (Pyodide), multiple-choice quizzes, and a
-theory-interview mode where a model grades your free-text answers against a key-point grid.
+theory-interview mode where a model grades your free-text answers against a key-point grid. The page is usable with
+the keyboard alone and with a screen reader (ARIA tabs, landmarks, live status regions); inside the code editor Tab
+indents, so press Escape, then Tab, to leave it.
 
 ## Run
 
@@ -248,7 +250,10 @@ a smoke test that the shipped banks pass their checkers. To check the package it
 it: `python -m pip wheel . --no-deps -w /tmp/wheel && unzip -l /tmp/wheel/sparring-*.whl` (it must list
 `sparring_data/app/` and `sparring_data/bank/`, nothing from `data/` or `tests/`).
 `tests/e2e/` drives the page in headless Chromium (Playwright) against a `server.py` started on a free port with the
-`e2e` profile: page boot, an exercise check, a quiz answer, an offline interview answer, the theme toggle. The suite
+`e2e` profile: page boot, an exercise check, a quiz answer, an offline interview answer, the theme toggle, and an
+accessibility audit (`tests/e2e/test_a11y.py` injects `axe-core` from `node_modules`, installed by `npm ci`, and
+fails on any serious or critical violation on each tab in both themes: run it alone with
+`.venv-check/bin/python -m pytest -q -m e2e tests/e2e/test_a11y.py`). The suite
 is opt-in (`-m e2e` overrides the `addopts` of `pyproject.toml`) and its modules skip when the `e2e` extra is not
 installed. The same steps run in GitHub Actions on every push to `main`
 and every pull request (`.github/workflows/ci.yml`): the Python steps on a matrix of Python 3.12 and 3.13 (jobs

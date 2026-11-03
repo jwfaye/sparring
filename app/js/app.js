@@ -2,7 +2,7 @@
 (() => {
   'use strict';
 
-  const { $, $$, NS, loadJSON, saveJSON, escapeHtml, fmtTime, shuffle, inline, renderMd, twoClick } = window.TT;
+  const { $, $$, NS, selectTab, loadJSON, saveJSON, escapeHtml, fmtTime, shuffle, inline, renderMd, twoClick } = window.TT;
   const LS = { progress: NS + 'progress', settings: NS + 'settings', exam: NS + 'exam', order: NS + 'order', lastId: NS + 'lastId' };
   const DIFF_RANK = { easy: 0, medium: 1, hard: 2 };
 
@@ -20,7 +20,8 @@
     return state.progress[id];
   }
   const saveProgress = () => saveJSON(LS.progress, state.progress);
-  const statusIcon = st => ({ ok: '<span class="st-ok">✓</span>', fail: '<span class="st-fail">✗</span>', todo: '<span class="st-todo">○</span>' }[st] || '<span class="st-todo">○</span>');
+  const statusIcon = st => ({ ok: '<span class="st-ok" aria-hidden="true">✓</span>', fail: '<span class="st-fail" aria-hidden="true">✗</span>' }[st] || '<span class="st-todo" aria-hidden="true">○</span>');
+  const statusWord = st => ({ ok: 'solved', fail: 'failed' }[st] || 'to do');
 
   // ------------------------------------------------------------ filters & order
   const filters = () => ({ theme: $('#f-theme').value, difficulty: $('#f-difficulty').value, language: $('#f-language').value });
@@ -62,8 +63,10 @@
         'Ctrl-/': cm => cm.toggleComment(), 'Cmd-/': cm => cm.toggleComment(),
         'Tab': cm => cm.somethingSelected() ? cm.indentSelection('add') : cm.replaceSelection('    ', 'end'),
         'Shift-Tab': cm => cm.indentSelection('subtract'),
+        'Esc': cm => cm.getInputField().blur(),
       },
     });
+    state.editor.getInputField().setAttribute('aria-label', 'Code editor (Escape, then Tab, leaves it)');
     let t = null;
     state.editor.on('change', () => { clearTimeout(t); t = setTimeout(saveCode, 400); });
   }
@@ -109,9 +112,10 @@
     ol.innerHTML = state.order.map((id, i) => {
       const e = state.byId[id], p = prog(id);
       return `<li data-i="${i}" class="${i === state.idx ? 'active' : ''}" title="${escapeHtml(e.title)}">
-        <span class="st">${statusIcon(p.status)}</span>
+        <button type="button" class="ex-item" ${i === state.idx ? 'aria-current="true"' : ''}>
+        <span class="st">${statusIcon(p.status)}</span><span class="visually-hidden">${statusWord(p.status)}</span>
         <span class="t">${escapeHtml(e.title)}</span>
-        <span class="d">${escapeHtml(e.language === 'sql' ? 'SQL' : 'py')} · ${escapeHtml(e.difficulty[0])}</span></li>`;
+        <span class="d">${escapeHtml(e.language === 'sql' ? 'SQL' : 'py')} · ${escapeHtml(e.difficulty[0])}</span></button></li>`;
     }).join('');
   }
 
@@ -140,7 +144,7 @@
       </div>
       <div class="md">${renderMd(ex.statement)}</div>
       <div class="meta">
-        <span>Status: ${statusIcon(p.status)} ${p.status === 'ok' ? 'solved' : p.status === 'fail' ? 'failed' : 'to do'}</span>
+        <span>Status: ${statusIcon(p.status)} ${statusWord(p.status)}</span>
         <span>Attempts: ${p.attempts}</span>
         <span>Time: <span id="meta-time">${fmtTime(p.time)}</span></span>
         ${p.hintsUsed ? `<span>Hints: ${p.hintsUsed}</span>` : ''}
@@ -172,12 +176,12 @@
       $('#sol-yes').onclick = () => { prog(ex.id).solutionSeen = true; saveProgress(); state.pendingConfirm = 'shown'; renderStatement(); };
       $('#sol-no').onclick = () => { state.pendingConfirm = null; renderSolutionBox(); };
     } else if (state.pendingConfirm === 'shown') {
-      box.innerHTML = `<h4>Solution</h4><pre><code>${escapeHtml(ex.solution)}</code></pre>
-        <button class="btn small" id="sol-copy">Copy into the editor</button> <button class="btn small" id="sol-hide">Hide</button>`;
+      box.innerHTML = `<h4>Solution</h4><pre tabindex="0"><code>${escapeHtml(ex.solution)}</code></pre>
+        <button class="btn small" id="sol-copy">Copy into the editor</button> <button class="btn small" id="sol-hide" aria-expanded="true" aria-controls="solution-box">Hide</button>`;
       $('#sol-copy').onclick = () => { state.editor.setValue(ex.solution); saveCode(); };
       $('#sol-hide').onclick = () => { state.pendingConfirm = null; renderSolutionBox(); };
     } else {
-      box.innerHTML = `<button class="btn small" id="sol-show">Show the solution</button>`;
+      box.innerHTML = `<button class="btn small" id="sol-show" aria-expanded="false" aria-controls="solution-box">Show the solution</button>`;
       $('#sol-show').onclick = () => { state.pendingConfirm = 'solution'; renderSolutionBox(); };
     }
   }
@@ -213,22 +217,32 @@
     const collapsed = force === undefined ? (empty || state.outputCollapsed) : force;
     pane.classList.toggle('collapsed', collapsed);
     $('#output-caret').textContent = collapsed ? '▸' : '▾';
+    $('#output-head').setAttribute('aria-expanded', String(!collapsed));
     if (state.editor) setTimeout(() => state.editor.refresh(), 0);
   }
   function initSplitter() {
     const pane = $('#output-pane'), sp = $('#splitter'), parent = $('.editor-pane');
-    if (state.settings.outputHeight) pane.style.setProperty('--out-h', state.settings.outputHeight + 'px');
+    const setHeight = h => { pane.style.setProperty('--out-h', h + 'px'); state.settings.outputHeight = Math.round(h); sp.setAttribute('aria-valuenow', String(Math.round(h))); };
+    if (state.settings.outputHeight) setHeight(state.settings.outputHeight);
     sp.addEventListener('mousedown', ev => {
       ev.preventDefault(); sp.classList.add('dragging'); state.outputCollapsed = false; layoutOutput(false);
       const onMove = e => {
         const rect = parent.getBoundingClientRect();
         const h = Math.max(60, Math.min(rect.bottom - e.clientY - 4, rect.height - 150));
-        pane.style.setProperty('--out-h', h + 'px'); state.settings.outputHeight = Math.round(h);
+        setHeight(h);
       };
       const onUp = () => { sp.classList.remove('dragging'); document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); saveJSON(LS.settings, state.settings); state.editor.refresh(); };
       document.addEventListener('mousemove', onMove); document.addEventListener('mouseup', onUp);
     });
     $('#output-head').addEventListener('click', () => { state.outputCollapsed = !pane.classList.contains('collapsed'); layoutOutput(state.outputCollapsed); });
+    // Keyboard alternative to the drag: the arrow keys resize the output pane by 20 px.
+    sp.addEventListener('keydown', e => {
+      const step = { ArrowUp: 20, ArrowDown: -20 }[e.key];
+      if (!step) return;
+      e.preventDefault(); state.outputCollapsed = false; layoutOutput(false);
+      const h = Math.max(60, Math.min(pane.getBoundingClientRect().height + step, parent.getBoundingClientRect().height - 150));
+      setHeight(h); saveJSON(LS.settings, state.settings); state.editor.refresh();
+    });
   }
 
   async function onRun() {
@@ -264,7 +278,7 @@
         $('#results').innerHTML = `<div class="verdict ${r.ok ? 'ok' : 'fail'}">${r.ok ? 'OK' : 'FAIL'} · ${nOk}/${n} test(s) passed</div>` +
           r.tests.map(t => `<details class="result ${t.ok ? 'ok' : 'fail'}" ${t.ok ? '' : 'open'}>
             <summary><span class="mark">${t.ok ? '✓' : '✗'}</span>${escapeHtml(t.name)}</summary>
-            ${t.ok ? '' : `<pre>${escapeHtml(t.message || '')}${t.stdout ? '\n\n--- standard output during this test ---\n' + escapeHtml(t.stdout) : ''}</pre>`}
+            ${t.ok ? '' : `<pre tabindex="0">${escapeHtml(t.message || '')}${t.stdout ? '\n\n--- standard output during this test ---\n' + escapeHtml(t.stdout) : ''}</pre>`}
           </details>`).join('');
       }
       saveProgress(); renderList(); renderStatement(); layoutOutput();
@@ -328,8 +342,8 @@
       Object.entries(themes).sort().map(([t, v]) => `<tr><td>${escapeHtml(t)}</td><td>${v.ok} / ${v.n}</td><td><div class="bar"><span style="width:${v.n ? 100 * v.ok / v.n : 0}%"></span></div></td><td>${fmtTime(v.time)}</td><td>${v.solution}</td></tr>`).join('');
 
     const sorted = [...P].sort((a, b) => (a.e.theme.localeCompare(b.e.theme)) || (DIFF_RANK[a.e.difficulty] - DIFF_RANK[b.e.difficulty]));
-    $('#recap-exercises').innerHTML = `<tr><th></th><th>Exercise</th><th>Theme</th><th>Difficulty</th><th>Language</th><th>Attempts</th><th>Time</th><th>Hints</th><th>Solution</th></tr>` +
-      sorted.map(({ e, p }) => `<tr class="clickable" data-id="${escapeHtml(e.id)}"><td>${statusIcon(p.status)}</td><td>${escapeHtml(e.title)}</td><td>${escapeHtml(e.theme)}</td><td class="${escapeHtml(e.difficulty)}">${escapeHtml(e.difficulty)}</td><td>${e.language}</td><td>${p.attempts}</td><td>${fmtTime(p.time)}</td><td>${p.hintsUsed || ''}</td><td>${p.solutionSeen ? 'viewed' : ''}</td></tr>`).join('');
+    $('#recap-exercises').innerHTML = `<tr><th><span class="visually-hidden">Status</span></th><th>Exercise</th><th>Theme</th><th>Difficulty</th><th>Language</th><th>Attempts</th><th>Time</th><th>Hints</th><th>Solution</th></tr>` +
+      sorted.map(({ e, p }) => `<tr class="clickable" data-id="${escapeHtml(e.id)}"><td>${statusIcon(p.status)}<span class="visually-hidden">${statusWord(p.status)}</span></td><td>${escapeHtml(e.title)}</td><td>${escapeHtml(e.theme)}</td><td class="${escapeHtml(e.difficulty)}">${escapeHtml(e.difficulty)}</td><td>${e.language}</td><td>${p.attempts}</td><td>${fmtTime(p.time)}</td><td>${p.hintsUsed || ''}</td><td>${p.solutionSeen ? 'viewed' : ''}</td></tr>`).join('');
     $$('#recap-exercises tr.clickable').forEach(tr => tr.onclick = () => {
       const id = tr.dataset.id;
       if (!state.order.includes(id)) { $('#f-theme').value = ''; $('#f-difficulty').value = ''; $('#f-language').value = ''; restoreOrCreateOrder(true); }
@@ -338,7 +352,7 @@
   }
   function switchView(v) {
     state.view = v;
-    $$('.tab').forEach(t => t.classList.toggle('active', t.dataset.view === v));
+    selectTab(v);
     $('#view-exercises').classList.toggle('hidden', v !== 'exercises');
     $('#view-recap').classList.toggle('hidden', v !== 'recap');
     $('#view-qcm').classList.toggle('hidden', v !== 'qcm');
