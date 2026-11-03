@@ -77,6 +77,12 @@ def profile() -> str:
 
 
 @pytest.fixture(scope="session")
+def pyodide_timeout() -> int:
+    """Milliseconds to wait for `Python ready`: the CDN fetch is slow on a cold cache."""
+    return PYODIDE_TIMEOUT
+
+
+@pytest.fixture(scope="session")
 def app_url() -> str:
     """The page with the test profile: a separate storage namespace, nothing of the user's own progress."""
     return f"/?profile={PROFILE}"
