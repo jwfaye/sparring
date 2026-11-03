@@ -8,6 +8,7 @@ Criteria (see tools/check_bank.py): schema, known theme, id and title not alread
 >= 2 tests, the solution passes, the starter code fails, no hint in the statement.
 Output: accepted/rejected report with reasons; exit code 1 if at least one draft is rejected.
 """
+
 import argparse
 import importlib.util
 import json
@@ -72,7 +73,7 @@ def main() -> int:
     for ex, _ in accepted:
         print(f"OK  {ex['id']:<26} [{ex['language']}/{ex['difficulty']}/{ex['theme']}] {ex['title']}")
     for ex, errors in rejected:
-        print(f"KO  {ex.get('id','?'):<26} {ex.get('title','')}")
+        print(f"KO  {ex.get('id', '?'):<26} {ex.get('title', '')}")
         for e in errors:
             print("   - " + e)
     print(f"\n{len(accepted)} accepted, {len(rejected)} rejected")
@@ -84,7 +85,9 @@ def main() -> int:
         os.makedirs(os.path.dirname(out_path), exist_ok=True)
         with open(out_path, "w", encoding="utf-8") as fh:
             json.dump(list(merged.values()), fh, ensure_ascii=False, indent=2)
-        print(f"-> {len(accepted)} exercise(s) written to {os.path.relpath(out_path, ROOT)} ({len(merged)} total in this file)")
+        print(
+            f"-> {len(accepted)} exercise(s) written to {os.path.relpath(out_path, ROOT)} ({len(merged)} total in this file)"
+        )
     return 1 if rejected else 0
 
 

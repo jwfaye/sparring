@@ -9,6 +9,7 @@ reads a temporary settings file (`SPARRING_CONFIG`) with `grader.backend = offli
 own `config.json` is never read and no quota is spent whatever it contains; as defense in depth the server also gets
 no ANTHROPIC_* or CLAUDE_* variable. The interview test asserts the offline status before submitting.
 """
+
 import json
 import os
 import shutil
@@ -55,8 +56,9 @@ def base_url(tmp_path_factory):
     shutil.rmtree(PROFILE_DATA, ignore_errors=True)
     port = free_port()
     settings = tmp_path_factory.mktemp("settings") / "config.json"
-    settings.write_text(json.dumps({"server": {"host": "127.0.0.1", "port": port}, "grader": {"backend": "offline"}}),
-                        encoding="utf-8")
+    settings.write_text(
+        json.dumps({"server": {"host": "127.0.0.1", "port": port}, "grader": {"backend": "offline"}}), encoding="utf-8"
+    )
     env = {k: v for k, v in os.environ.items() if not k.startswith(("ANTHROPIC_", "CLAUDE_"))}
     env["SPARRING_CONFIG"] = str(settings)
     env["SPARRING_LOG_LEVEL"] = "WARNING"
@@ -109,8 +111,10 @@ class PageLog:
         page.on("console", lambda msg: self.console_errors.append(msg.text) if msg.type == "error" else None)
         page.on("pageerror", lambda err: self.console_errors.append(str(err)))
         page.on("requestfailed", lambda req: self.failed_requests.append(f"{req.url}: {req.failure}"))
-        page.on("response", lambda resp: self.failed_requests.append(f"{resp.url}: HTTP {resp.status}")
-                if resp.status >= 400 else None)
+        page.on(
+            "response",
+            lambda resp: self.failed_requests.append(f"{resp.url}: HTTP {resp.status}") if resp.status >= 400 else None,
+        )
 
 
 @pytest.fixture(scope="session")

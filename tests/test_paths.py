@@ -1,4 +1,5 @@
 """Tests of backend/paths.py: shipped directories in a clone or in the installed package, the data directory."""
+
 import os
 import pathlib
 

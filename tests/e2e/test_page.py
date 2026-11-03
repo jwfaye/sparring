@@ -1,4 +1,5 @@
 """The page boots cleanly and the theme toggle works."""
+
 import pytest
 
 playwright = pytest.importorskip("playwright.sync_api")

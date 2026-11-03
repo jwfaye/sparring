@@ -1,4 +1,5 @@
 """Tests of server.py: bank merging and the HTTP API on a live server bound to an ephemeral port."""
+
 import http.server
 import json
 import threading
@@ -11,11 +12,24 @@ import pytest
 import server
 
 THEORY_QUESTION = {
-    "id": "ds-test-01", "section": "Validation", "source": "test", "question": "What is overfitting?",
-    "reference": "Fits noise.", "key_points": ["noise", "gap", "regularisation"], "common_mistakes": ["underfitting"],
+    "id": "ds-test-01",
+    "section": "Validation",
+    "source": "test",
+    "question": "What is overfitting?",
+    "reference": "Fits noise.",
+    "key_points": ["noise", "gap", "regularisation"],
+    "common_mistakes": ["underfitting"],
 }
-GRADE = {"score": 8, "covered": ["noise"], "missing": [], "wrong": [], "feedback": "ok", "improved_answer": "...",
-         "model": "fake", "usage": {"input": 1, "output": 1}}
+GRADE = {
+    "score": 8,
+    "covered": ["noise"],
+    "missing": [],
+    "wrong": [],
+    "feedback": "ok",
+    "improved_answer": "...",
+    "model": "fake",
+    "usage": {"input": 1, "output": 1},
+}
 
 
 def write_json(path, data):
@@ -78,7 +92,9 @@ def live(bank_dir, store_dir, grader_module, monkeypatch):
 
     def call(path, body=None):
         data = json.dumps(body).encode("utf-8") if body is not None else None
-        req = urllib.request.Request(base + path, data=data, headers={"Content-Type": "application/json"} if data else {})
+        req = urllib.request.Request(
+            base + path, data=data, headers={"Content-Type": "application/json"} if data else {}
+        )
         try:
             with urllib.request.urlopen(req, timeout=5) as resp:
                 return resp.status, json.loads(resp.read().decode("utf-8")), resp.headers
@@ -113,7 +129,9 @@ class TestHttpApi:
         assert status == 200 and body["available"] is False and body["backend"] == "offline"
 
     def test_offline_answer_flow(self, live):
-        status, body, _ = live.call("/api/theory/answer", {"qid": "ds-test-01", "answer": "noise", "duration": 30, "profile": "test"})
+        status, body, _ = live.call(
+            "/api/theory/answer", {"qid": "ds-test-01", "answer": "noise", "duration": 30, "profile": "test"}
+        )
         assert status == 200 and body["offline"] is True
         rec = body["record"]
         assert rec["qid"] == "ds-test-01" and rec["mode"] == "offline" and rec["grade"] is None
@@ -127,7 +145,11 @@ class TestHttpApi:
         assert live.call("/api/theory/history?profile=test")[1]["items"] == []
 
     def test_online_answer_flow(self, live, grader_module, monkeypatch):
-        monkeypatch.setattr(grader_module, "status", lambda refresh=False: {"available": True, "backend": "fake", "model": "fake", "reason": ""})
+        monkeypatch.setattr(
+            grader_module,
+            "status",
+            lambda refresh=False: {"available": True, "backend": "fake", "model": "fake", "reason": ""},
+        )
         monkeypatch.setattr(grader_module, "grade", lambda q, a: dict(GRADE, answer_seen=a))
         status, body, _ = live.call("/api/theory/answer", {"qid": "ds-test-01", "answer": "noise everywhere"})
         assert status == 200 and body["offline"] is False
@@ -136,17 +158,29 @@ class TestHttpApi:
         assert body["record"]["grade"]["answer_seen"] == "noise everywhere"
 
     def test_online_answer_without_grid_stays_offline(self, live, grader_module, monkeypatch):
-        monkeypatch.setattr(grader_module, "status", lambda refresh=False: {"available": True, "backend": "fake", "model": "fake", "reason": ""})
+        monkeypatch.setattr(
+            grader_module,
+            "status",
+            lambda refresh=False: {"available": True, "backend": "fake", "model": "fake", "reason": ""},
+        )
         status, body, _ = live.call("/api/theory/answer", {"qid": "ds-test-02", "answer": "x"})
         assert status == 200 and body["offline"] is True
 
     def test_forced_offline_mode_skips_grading(self, live, grader_module, monkeypatch):
-        monkeypatch.setattr(grader_module, "status", lambda refresh=False: {"available": True, "backend": "fake", "model": "fake", "reason": ""})
+        monkeypatch.setattr(
+            grader_module,
+            "status",
+            lambda refresh=False: {"available": True, "backend": "fake", "model": "fake", "reason": ""},
+        )
         status, body, _ = live.call("/api/theory/answer", {"qid": "ds-test-01", "answer": "x", "mode": "offline"})
         assert status == 200 and body["offline"] is True
 
     def test_grader_failure_keeps_the_answer(self, live, grader_module, monkeypatch):
-        monkeypatch.setattr(grader_module, "status", lambda refresh=False: {"available": True, "backend": "fake", "model": "fake", "reason": ""})
+        monkeypatch.setattr(
+            grader_module,
+            "status",
+            lambda refresh=False: {"available": True, "backend": "fake", "model": "fake", "reason": ""},
+        )
 
         def failing(q, a):
             raise grader_module.GraderError("model down")
@@ -159,7 +193,11 @@ class TestHttpApi:
 
     def test_regrade_pending_answer(self, live, grader_module, monkeypatch):
         rec = live.call("/api/theory/answer", {"qid": "ds-test-01", "answer": "x"})[1]["record"]
-        monkeypatch.setattr(grader_module, "status", lambda refresh=False: {"available": True, "backend": "fake", "model": "fake", "reason": ""})
+        monkeypatch.setattr(
+            grader_module,
+            "status",
+            lambda refresh=False: {"available": True, "backend": "fake", "model": "fake", "reason": ""},
+        )
         monkeypatch.setattr(grader_module, "grade", lambda q, a: dict(GRADE))
         status, body, _ = live.call("/api/theory/grade", {"id": rec["id"]})
         assert status == 200 and body["record"]["grade"]["score"] == 8
@@ -168,8 +206,9 @@ class TestHttpApi:
         assert live.call("/api/theory/answer", {"qid": "nope", "answer": "x"})[0] == 404
         assert live.call("/api/theory/grade", {"id": "nope"})[0] == 404
         assert live.call("/api/nothing", {})[0] == 404
-        req = urllib.request.Request(live.base + "/api/theory/answer", data=b"not json",
-                                     headers={"Content-Type": "application/json"})
+        req = urllib.request.Request(
+            live.base + "/api/theory/answer", data=b"not json", headers={"Content-Type": "application/json"}
+        )
         with pytest.raises(urllib.error.HTTPError) as info:
             urllib.request.urlopen(req, timeout=5)
         assert info.value.code == 400

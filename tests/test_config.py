@@ -1,4 +1,5 @@
 """Validation of config.json (every invalid value keeps its default and is reported) and the settings file lookup."""
+
 import json
 import os
 
@@ -23,8 +24,13 @@ def test_defaults_when_file_is_missing(tmp_path):
 def test_valid_file_overrides_defaults(tmp_path):
     user = {
         "server": {"host": "0.0.0.0", "port": 9000},
-        "grader": {"backend": "api", "model": "claude-sonnet-5-5", "effort": "high",
-                   "claude_bin": "/usr/local/bin/claude", "timeout_seconds": 60},
+        "grader": {
+            "backend": "api",
+            "model": "claude-sonnet-5-5",
+            "effort": "high",
+            "claude_bin": "/usr/local/bin/claude",
+            "timeout_seconds": 60,
+        },
     }
     cfg, errors = load_from(tmp_path, user)
     assert errors == []
@@ -114,7 +120,9 @@ def test_invalid_backend_keeps_default(tmp_path, value):
     assert "'grader.backend' must be one of auto | api | claude-code | offline" in errors[0]
 
 
-@pytest.mark.parametrize("value, expected", [("API", "api"), (" Claude-Code ", "claude-code"), ("Offline", "offline"), ("AUTO", "auto")])
+@pytest.mark.parametrize(
+    "value, expected", [("API", "api"), (" Claude-Code ", "claude-code"), ("Offline", "offline"), ("AUTO", "auto")]
+)
 def test_backend_is_case_insensitive_and_normalised(tmp_path, value, expected):
     cfg, errors = load_from(tmp_path, {"grader": {"backend": value}})
     assert errors == []
@@ -160,7 +168,11 @@ def test_invalid_timeout_keeps_default(tmp_path, value):
 
 
 def test_every_error_is_collected_and_valid_values_still_apply(tmp_path):
-    user = {"server": {"host": "", "port": 9000}, "grader": {"backend": "nope", "effort": "low", "extra": 1}, "other": {}}
+    user = {
+        "server": {"host": "", "port": 9000},
+        "grader": {"backend": "nope", "effort": "low", "extra": 1},
+        "other": {},
+    }
     cfg, errors = load_from(tmp_path, user)
     assert cfg["server"] == {"host": "127.0.0.1", "port": 9000}
     assert cfg["grader"]["backend"] == "auto"

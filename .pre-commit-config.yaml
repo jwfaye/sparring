@@ -1,6 +1,7 @@
 # Local checks, mirroring the CI jobs. Install once with `pre-commit install`
-# (pre-commit comes with the dev extra). The format check is not enabled
-# because the tree is not formatted with ruff yet; only the linter runs.
+# (pre-commit comes with the dev extra). The Python tree is formatted with
+# ruff: the linter and the format check both run, with the settings of
+# [tool.ruff] in pyproject.toml.
 # Hook repositories are pinned to commits, with the tag in a comment; bump
 # them with `pre-commit autoupdate --freeze`.
 # tools/sources/ holds imported source documents and is kept verbatim.
@@ -19,6 +20,7 @@ repos:
     rev: a27a2e47c7751b639d2b5badf0ef6ff11fee893f # v0.15.4
     hooks:
       - id: ruff-check
+      - id: ruff-format
 
   - repo: local
     hooks:

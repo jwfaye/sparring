@@ -2,8 +2,8 @@
 
 ## Setup
 
-Follow the [Development](README.md#development) section of the README: it lists the install, lint, type check, unit
-test, JavaScript lint and browser test commands. Run them from the project root before opening a pull request.
+Follow the [Development](README.md#development) section of the README: it lists the install, lint, format, type check,
+unit test, JavaScript lint and browser test commands. Run them from the project root before opening a pull request.
 
 ## Branches and commits
 

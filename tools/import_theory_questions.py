@@ -11,6 +11,7 @@ preserved on re-import when the source gives none.
 
 Usage: python -m tools.import_theory_questions
 """
+
 import json
 import os
 import re
@@ -27,14 +28,25 @@ GRID_FIELDS = ("reference", "key_points", "common_mistakes", "uncertain", "note"
 
 def slug(s: str, n: int = 3) -> str:
     s = unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode()
-    words = [w for w in re.sub(r"[^a-z0-9]+", " ", s.lower()).split() if w not in {"the", "a", "an", "of", "and", "in", "for", "to", "is", "do", "we", "how", "what", "it"}]
+    words = [
+        w
+        for w in re.sub(r"[^a-z0-9]+", " ", s.lower()).split()
+        if w not in {"the", "a", "an", "of", "and", "in", "for", "to", "is", "do", "we", "how", "what", "it"}
+    ]
     return "-".join(words[:n]) or "q"
 
 
 def parse_field_guide(text: str) -> list[Question]:
     items: list[Question] = []
     section: str | None = None
-    skip_sections = {"Format", "Interview Questions", "Specialized Topics", "How to Prepare", "Sources", "ML Fundamentals"}
+    skip_sections = {
+        "Format",
+        "Interview Questions",
+        "Specialized Topics",
+        "How to Prepare",
+        "Sources",
+        "ML Fundamentals",
+    }
     for line in text.splitlines():
         m = re.match(r"^##+\s+(.*)", line)
         if m:
@@ -100,16 +112,26 @@ def merge(path: str, items: list[Question], prefix: str, source: str) -> list[Qu
 def main() -> None:
     os.makedirs(OUT, exist_ok=True)
     with open(os.path.join(SRC, "field_guide_01-theory.md"), encoding="utf-8") as fh:
-        fg = merge(os.path.join(OUT, "questions_field_guide.json"), parse_field_guide(fh.read()), "fg",
-                   "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md")
+        fg = merge(
+            os.path.join(OUT, "questions_field_guide.json"),
+            parse_field_guide(fh.read()),
+            "fg",
+            "alexeygrigorev/ai-engineering-field-guide — interview/questions/01-theory.md",
+        )
     with open(os.path.join(SRC, "ds_interviews_theory.md"), encoding="utf-8") as fh:
-        ds = merge(os.path.join(OUT, "questions_ds_interviews.json"), parse_ds(fh.read()), "ds",
-                   "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)")
+        ds = merge(
+            os.path.join(OUT, "questions_ds_interviews.json"),
+            parse_ds(fh.read()),
+            "ds",
+            "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
+        )
     for name, items in (("field guide", fg), ("data-science-interviews", ds)):
         secs: dict[str, int] = {}
         for q in items:
             secs[q["section"]] = secs.get(q["section"], 0) + 1
-        print(f"{name}: {len(items)} questions, {len(secs)} sections, {sum(1 for q in items if 'reference' in q)} with a grid")
+        print(
+            f"{name}: {len(items)} questions, {len(secs)} sections, {sum(1 for q in items if 'reference' in q)} with a grid"
+        )
         for s, n in secs.items():
             print(f"   {n:3d}  {s}")
 

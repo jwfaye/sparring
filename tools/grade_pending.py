@@ -3,6 +3,7 @@
 
 Usage: .venv/bin/python -m tools.grade_pending [--profile NAME]
 """
+
 import argparse
 import sys
 

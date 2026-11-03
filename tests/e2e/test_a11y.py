@@ -5,6 +5,7 @@ axe is injected from `node_modules/axe-core/axe.min.js` (`npm ci` installs it), 
 CDNs; the other modules keep the normal context. Moderate and minor findings do not fail the suite: they are
 reported as a pytest warning so they stay visible in the run summary.
 """
+
 import os
 import re
 import warnings
@@ -47,8 +48,7 @@ def run_axe(page, tab, theme):
     expect(page.locator(f"#view-{tab}")).to_be_visible()
     result = page.evaluate("axe.run(document, { resultTypes: ['violations'] })")
     return [
-        f"{v['impact']} {v['id']}: {', '.join(node['target'][0] for node in v['nodes'])}"
-        for v in result["violations"]
+        f"{v['impact']} {v['id']}: {', '.join(node['target'][0] for node in v['nodes'])}" for v in result["violations"]
     ]
 
 

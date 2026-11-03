@@ -1,4 +1,5 @@
 """Tests of backend/store.py on a temporary data directory, of the legacy JSON import and of SPARRING_DATA_DIR."""
+
 import importlib
 import json
 import logging
@@ -13,10 +14,25 @@ import pytest
 from backend import paths, store
 
 LEGACY = [
-    {"id": "20261101-100000-aaaaaa", "qid": "q1", "at": 1761991200000, "duration": 30, "answer": "old graded",
-     "mode": "offline", "grade": {"score": 8, "feedback": "fine"}, "graded_at": 1761991300000},
-    {"id": "20261101-110000-bbbbbb", "qid": "q2", "at": 1761994800000, "duration": None, "answer": "old pending",
-     "mode": "offline", "grade": None},
+    {
+        "id": "20261101-100000-aaaaaa",
+        "qid": "q1",
+        "at": 1761991200000,
+        "duration": 30,
+        "answer": "old graded",
+        "mode": "offline",
+        "grade": {"score": 8, "feedback": "fine"},
+        "graded_at": 1761991300000,
+    },
+    {
+        "id": "20261101-110000-bbbbbb",
+        "qid": "q2",
+        "at": 1761994800000,
+        "duration": None,
+        "answer": "old pending",
+        "mode": "offline",
+        "grade": None,
+    },
 ]
 
 
@@ -156,8 +172,9 @@ def test_migration_is_idempotent(store_dir):
     write_legacy(store_dir)
     store.list_answers()
     new = store.add_answer("q3", "new")
-    write_legacy(store_dir, LEGACY + [{"id": "20261101-120000-cccccc", "qid": "q4", "at": 1761998400000,
-                                       "answer": "restored"}])
+    write_legacy(
+        store_dir, LEGACY + [{"id": "20261101-120000-cccccc", "qid": "q4", "at": 1761998400000, "answer": "restored"}]
+    )
     answers = store.list_answers()
     assert [a["id"] for a in answers] == [LEGACY[0]["id"], LEGACY[1]["id"], "20261101-120000-cccccc", new["id"]]
     assert answers[2]["mode"] == "offline" and answers[2]["duration"] is None and answers[2]["grade"] is None

@@ -9,6 +9,7 @@ For each exercise:
 Usage: python -m tools.check_bank [file_or_directory ...]   (default: bank/exercises)
 Exit code: 0 when everything is valid, 1 otherwise.
 """
+
 import glob
 import importlib.util
 import json
@@ -31,8 +32,18 @@ REQUIRED = ["id", "title", "theme", "difficulty", "language", "statement", "setu
 DIFFICULTIES = {"easy", "medium", "hard"}
 LANGUAGES = {"python", "sql"}
 THEMES = {
-    "groupby", "merge", "pivot", "dates", "nan", "cleaning", "python",
-    "sql-joins", "sql-groupby", "sql-window", "sql-cte", "sql-subqueries",
+    "groupby",
+    "merge",
+    "pivot",
+    "dates",
+    "nan",
+    "cleaning",
+    "python",
+    "sql-joins",
+    "sql-groupby",
+    "sql-window",
+    "sql-cte",
+    "sql-subqueries",
 }
 LEAK_WORDS = re.compile(r"\b(hint|hints|tip|tips|trick|tricks|trap|traps|pitfall|pitfalls)\b", re.IGNORECASE)
 
@@ -56,8 +67,7 @@ def load_items(path: str) -> list[Exercise]:
 
 
 def run_tests(ex: Exercise, code: str) -> dict[str, Any]:
-    payload = {"mode": "check", "language": ex["language"], "setup": ex["setup"],
-               "code": code, "tests": ex["tests"]}
+    payload = {"mode": "check", "language": ex["language"], "setup": ex["setup"], "code": code, "tests": ex["tests"]}
     result: dict[str, Any] = json.loads(harness.run_json(json.dumps(payload)))
     return result
 
@@ -95,7 +105,7 @@ def check_exercise(ex: Exercise) -> list[str]:
         errors.append("harness: " + sol["error"])
     for t in sol.get("tests", []):
         if not t["ok"]:
-            errors.append(f"the solution fails test \"{t['name']}\":\n" + indent(t["message"]))
+            errors.append(f'the solution fails test "{t["name"]}":\n' + indent(t["message"]))
 
     starter = run_tests(ex, ex["starter"])
     if starter.get("ok"):
@@ -126,7 +136,7 @@ def main(argv: list[str]) -> int:
             if exid in seen:
                 errors.append(f"duplicate id (already in {seen[exid]})")
             seen[exid] = rel
-            label = f"{exid:<28} [{ex.get('language','?')}/{ex.get('difficulty','?')}/{ex.get('theme','?')}] {ex.get('title','')}"
+            label = f"{exid:<28} [{ex.get('language', '?')}/{ex.get('difficulty', '?')}/{ex.get('theme', '?')}] {ex.get('title', '')}"
             if errors:
                 n_bad += 1
                 print(f"KO  {label}")

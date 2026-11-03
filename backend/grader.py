@@ -10,6 +10,7 @@ Settings live in config.json, section "grader": backend = auto (default: api whe
 claude-code when the CLI is logged in, otherwise offline) | api | claude-code | offline; model, effort, claude_bin,
 timeout_seconds.
 """
+
 import importlib.util
 import json
 import os
@@ -72,11 +73,19 @@ class GraderError(Exception):
 
 def _api_status() -> Status:
     if importlib.util.find_spec("anthropic") is None:
-        return {"available": False, "backend": "api", "model": MODEL,
-                "reason": "Anthropic SDK missing (python -m pip install anthropic, or run the server with .venv/bin/python)."}
+        return {
+            "available": False,
+            "backend": "api",
+            "model": MODEL,
+            "reason": "Anthropic SDK missing (python -m pip install anthropic, or run the server with .venv/bin/python).",
+        }
     if not (os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_AUTH_TOKEN")):
-        return {"available": False, "backend": "api", "model": MODEL,
-                "reason": "No API key in the environment (ANTHROPIC_API_KEY)."}
+        return {
+            "available": False,
+            "backend": "api",
+            "model": MODEL,
+            "reason": "No API key in the environment (ANTHROPIC_API_KEY).",
+        }
     return {"available": True, "backend": "api", "model": MODEL, "reason": ""}
 
 
@@ -88,17 +97,26 @@ def _claude_env() -> dict[str, str]:
 def _claude_code_status() -> Status:
     label = f"{MODEL} via Claude Code (subscription)"
     if not shutil.which(CLAUDE_BIN):
-        return {"available": False, "backend": "claude-code", "model": label,
-                "reason": f"Claude Code CLI not found ({CLAUDE_BIN}): install it or set its path in config.json (grader.claude_bin)."}
+        return {
+            "available": False,
+            "backend": "claude-code",
+            "model": label,
+            "reason": f"Claude Code CLI not found ({CLAUDE_BIN}): install it or set its path in config.json (grader.claude_bin).",
+        }
     try:
-        proc = subprocess.run([CLAUDE_BIN, "auth", "status"], capture_output=True, text=True,
-                              env=_claude_env(), timeout=30)
+        proc = subprocess.run(
+            [CLAUDE_BIN, "auth", "status"], capture_output=True, text=True, env=_claude_env(), timeout=30
+        )
         info = json.loads(proc.stdout) if proc.stdout.strip().startswith("{") else {}
     except (OSError, subprocess.TimeoutExpired, ValueError):
         info = {}
     if not info.get("loggedIn"):
-        return {"available": False, "backend": "claude-code", "model": label,
-                "reason": "Claude Code is not logged in: run `claude`, then /login, and restart the server."}
+        return {
+            "available": False,
+            "backend": "claude-code",
+            "model": label,
+            "reason": "Claude Code is not logged in: run `claude`, then /login, and restart the server.",
+        }
     return {"available": True, "backend": "claude-code", "model": label, "reason": ""}
 
 
@@ -121,7 +139,12 @@ def status(refresh: bool = False) -> Status:
         elif BACKEND == "claude-code":
             st = _claude_code_status()
         elif BACKEND == "offline":
-            st = {"available": False, "backend": "offline", "model": MODEL, "reason": "config.json: backend = offline, deferred grading."}
+            st = {
+                "available": False,
+                "backend": "offline",
+                "model": MODEL,
+                "reason": "config.json: backend = offline, deferred grading.",
+            }
         else:
             st = _api_status()
             if not st["available"]:
@@ -214,19 +237,34 @@ def _grade_claude_code(prompt: str) -> Grade:
     """Grade through `claude -p`: no session persistence, no tool exposed, neither CLAUDE.md nor project settings,
     and the system prompt replaced by SYSTEM (much shorter than Claude Code's own)."""
     cmd = [
-        CLAUDE_BIN, "-p",
+        CLAUDE_BIN,
+        "-p",
         "--no-session-persistence",
-        "--tools", "",
-        "--setting-sources", "",
-        "--system-prompt", SYSTEM,
-        "--model", MODEL,
-        "--effort", EFFORT,
-        "--output-format", "json",
-        "--json-schema", json.dumps(SCHEMA, ensure_ascii=False),
+        "--tools",
+        "",
+        "--setting-sources",
+        "",
+        "--system-prompt",
+        SYSTEM,
+        "--model",
+        MODEL,
+        "--effort",
+        EFFORT,
+        "--output-format",
+        "json",
+        "--json-schema",
+        json.dumps(SCHEMA, ensure_ascii=False),
     ]
     try:
-        proc = subprocess.run(cmd, input=prompt, capture_output=True, text=True, env=_claude_env(),
-                              cwd=tempfile.gettempdir(), timeout=CLAUDE_TIMEOUT)
+        proc = subprocess.run(
+            cmd,
+            input=prompt,
+            capture_output=True,
+            text=True,
+            env=_claude_env(),
+            cwd=tempfile.gettempdir(),
+            timeout=CLAUDE_TIMEOUT,
+        )
     except FileNotFoundError as e:
         raise GraderError(f"Claude Code CLI not found ({CLAUDE_BIN}).") from e
     except subprocess.TimeoutExpired as e:
@@ -235,7 +273,7 @@ def _grade_claude_code(prompt: str) -> Grade:
     out = proc.stdout.strip()
     res: dict[str, Any]
     try:
-        res = json.loads(out[out.index("{"):]) if "{" in out else {}
+        res = json.loads(out[out.index("{") :]) if "{" in out else {}
     except ValueError:
         res = {}
     if proc.returncode != 0 and not res:
@@ -255,8 +293,13 @@ def _grade_claude_code(prompt: str) -> Grade:
             raise GraderError("Unreadable Claude Code response (invalid JSON).") from e
     usage = res.get("usage") or {}
     used_model = next(iter(res.get("modelUsage") or {}), MODEL)
-    return _finish(data, f"{used_model} (Claude Code)", {
-        "input": int(usage.get("input_tokens", 0)) + int(usage.get("cache_creation_input_tokens", 0))
-                 + int(usage.get("cache_read_input_tokens", 0)),
-        "output": int(usage.get("output_tokens", 0)),
-    })
+    return _finish(
+        data,
+        f"{used_model} (Claude Code)",
+        {
+            "input": int(usage.get("input_tokens", 0))
+            + int(usage.get("cache_creation_input_tokens", 0))
+            + int(usage.get("cache_read_input_tokens", 0)),
+            "output": int(usage.get("output_tokens", 0)),
+        },
+    )

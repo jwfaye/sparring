@@ -4,6 +4,7 @@
 Usage: python -m tools.add_qcm DRAFT [--out bank/qcm/NAME.json] [--dry-run]
 DRAFT: a .json file (list) or a .py module defining QUESTIONS (list of dicts).
 """
+
 import argparse
 import importlib.util
 import json
@@ -75,7 +76,9 @@ def main() -> int:
         os.makedirs(os.path.dirname(out_path), exist_ok=True)
         with open(out_path, "w", encoding="utf-8") as fh:
             json.dump(list(merged.values()), fh, ensure_ascii=False, indent=2)
-        print(f"-> {len(accepted)} question(s) written to {os.path.relpath(out_path, ROOT)} ({len(merged)} total in this file)")
+        print(
+            f"-> {len(accepted)} question(s) written to {os.path.relpath(out_path, ROOT)} ({len(merged)} total in this file)"
+        )
     return 1 if rejected else 0
 
 

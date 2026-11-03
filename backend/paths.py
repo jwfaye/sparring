@@ -4,12 +4,13 @@ Shipped files (the web page `app/` and the banks `bank/`):
 - in a clone, the directories next to `server.py` (`ROOT`), exactly as before packaging;
 - once installed with pip or pipx, the copies shipped inside the `sparring_data` package.
 
-Data directory (interview answers, `theory[/<profile>]/answers.json`):
+Data directory (interview answers, `theory[/<profile>]/answers.sqlite3`):
 - `SPARRING_DATA_DIR` when set and non-empty;
 - else `<root>/data` in a clone, so nothing changes for a checkout;
 - else the per-user data directory: `$XDG_DATA_HOME/sparring` or `~/.local/share/sparring` on Linux,
   `~/Library/Application Support/sparring` on macOS, `%LOCALAPPDATA%\\sparring` on Windows.
 """
+
 import importlib.resources
 import os
 import pathlib

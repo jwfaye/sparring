@@ -5,6 +5,7 @@ Usage: python -m tools.theory_pending [--profile NAME] [--json FILE]
 Without --json: human-readable output. With --json: writes [{answer_id, question, reference, key_points, common_mistakes, answer}]
 to be graded and then imported with tools/import_grades.py.
 """
+
 import argparse
 import json
 from typing import Any
@@ -22,9 +23,18 @@ def main() -> None:
     out: list[dict[str, Any]] = []
     for a in store.pending(args.profile):
         q = questions.get(a["qid"], {})
-        out.append({"answer_id": a["id"], "at": a["at"], "qid": a["qid"], "question": q.get("question"),
-                    "reference": q.get("reference"), "key_points": q.get("key_points"), "common_mistakes": q.get("common_mistakes"),
-                    "answer": a["answer"]})
+        out.append(
+            {
+                "answer_id": a["id"],
+                "at": a["at"],
+                "qid": a["qid"],
+                "question": q.get("question"),
+                "reference": q.get("reference"),
+                "key_points": q.get("key_points"),
+                "common_mistakes": q.get("common_mistakes"),
+                "answer": a["answer"],
+            }
+        )
     if args.json:
         with open(args.json, "w", encoding="utf-8") as fh:
             json.dump(out, fh, ensure_ascii=False, indent=2)
@@ -32,7 +42,9 @@ def main() -> None:
         return
     print(f"{len(out)} answer(s) awaiting grading\n")
     for o in out:
-        print(f"=== {o['answer_id']}  [{o['qid']}]\nQ: {o['question']}\n--- Candidate answer:\n{o['answer']}\n--- Key points:")
+        print(
+            f"=== {o['answer_id']}  [{o['qid']}]\nQ: {o['question']}\n--- Candidate answer:\n{o['answer']}\n--- Key points:"
+        )
         for p in o["key_points"] or []:
             print(f"  - {p}")
         print()

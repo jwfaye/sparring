@@ -234,8 +234,9 @@ The API key never appears in the code, the page or the repository: the SDK reads
 
 ```bash
 .venv-check/bin/python -m pip install -e ".[check,dev]"   # once: pandas/numpy as in Pyodide, pytest, ruff, mypy, pre-commit
-.venv-check/bin/pre-commit install                        # once: git hook running ruff, mypy, eslint and the file checks before each commit
+.venv-check/bin/pre-commit install                        # once: git hook running ruff (lint and format), mypy, eslint and the file checks before each commit
 ruff check .                                              # lint
+ruff format .                                             # format (CI runs `ruff format --check .`)
 .venv-check/bin/python -m mypy .                          # type check
 .venv-check/bin/python -m pytest -q                       # unit tests + the three bank checkers (browser tests excluded)
 .venv-check/bin/python -m pytest -q --cov --cov-report=term-missing   # same, with branch coverage of backend, server.py and tools; fails under 65%

@@ -1,4 +1,5 @@
 """Exercise tab: the bank's own solutions pass their tests in the browser (Pyodide for Python, sqlite3 for SQL)."""
+
 import re
 
 import pytest
