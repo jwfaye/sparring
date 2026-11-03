@@ -1,7 +1,7 @@
 ---
 id: SP-RELEASE
 title: Release process
-version: 0.1
+version: 0.2
 status: approved
 author: agent
 created: 2026-11-03
@@ -37,7 +37,8 @@ is code-only in the sense of the template (`resources: []`), its artifacts being
 
 ## Goals
 - G1: `CHANGELOG.md` lists every user-visible change merged so far, one line per change with the pull request number
-  in parentheses, grouped under Added / Changed / Fixed / Security, with comparison links at the bottom.
+  in parentheses (the short hash `faf5bbd` for the initial commit, which predates the first pull request), grouped
+  under Added / Changed / Fixed / Security, with comparison links at the bottom.
 - G2: pushing a tag `vX.Y.Z` builds the sdist and the wheel from the tagged tree, checks that the wheel installs and
   that `server` and `backend` import from it, and publishes a GitHub release named after the tag with the
   `## [X.Y.Z]` changelog section as notes and the dist files attached.
@@ -74,7 +75,8 @@ Outputs:
 - a workflow artifact `dist` carrying the sdist and the wheel between the build and release jobs.
 
 Errors:
-- version mismatch: the `version` job exits 1 with `tag vX.Y.Z does not match project.version A.B.C`.
+- version mismatch: the `version` job exits 1 with `tag vX.Y.Z does not match project.version A.B.C in
+  pyproject.toml`.
 - missing section: the `release` job exits 1 with `CHANGELOG.md has no section '## [X.Y.Z]'` before any release is
   created.
 - wheel not importable: the `build` job fails on `python -c "import server, backend"` run outside the source tree.
@@ -82,8 +84,9 @@ Errors:
 ## Behavior
 ### Nominal
 1. Job `version`: check out the tag, compare `${GITHUB_REF_NAME#v}` with `project.version`; stop on mismatch.
-2. Job `build` (needs `version`): `pip install build`, `python -m build`, `pip install dist/*.whl`, then from a
-   directory outside the checkout `python -c "import server, backend"`; upload `dist/` as the artifact `dist`.
+2. Job `build` (needs `version`): `pip install build==1.6.1` (pinned like the actions), `python -m build`,
+   `pip install dist/*.whl`, then from a directory outside the checkout `python -c "import server, backend"`;
+   upload `dist/` as the artifact `dist`.
 3. Job `release` (needs `build`, `contents: write`): check out the tag, extract the changelog section with awk
    (print the lines after the matching `## [` heading up to the next `## ` heading or the first `[...]: ` link
    reference), fail if the result is blank, download `dist`, create the release with the notes as body and
@@ -121,8 +124,8 @@ No pytest selector applies to this component: it owns process files only and run
 Each criterion names the manual check that verifies it.
 
 - [ ] AC1: `CHANGELOG.md` has a `## [Unreleased]` section, a dated `## [0.1.0] - 2026-11-03` section grouped under
-  Added / Changed / Fixed / Security with the pull request number in parentheses on every line, and the
-  `[Unreleased]` and `[0.1.0]` link references at the end. Check: read the file.
+  Added / Changed / Fixed / Security with, on every line, the pull request number in parentheses or `(faf5bbd)` for
+  the initial commit, and the `[Unreleased]` and `[0.1.0]` link references at the end. Check: read the file.
 - [ ] AC2: the notes extraction, run locally with the awk program of the `release` job and `version=0.1.0` against
   `CHANGELOG.md`, prints the 0.1.0 section without its heading and without the link references; run with
   `version=9.9.9` it prints nothing and the blank-output test exits 1.
