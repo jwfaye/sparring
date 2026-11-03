@@ -246,6 +246,15 @@ Web Worker), never on the server; the bank checkers in `tools/` do execute bank 
 them only on banks you trust. The API key lives in the environment only, and `data/` is never committed. Details,
 network calls made by the page and how to report an issue: [SECURITY.md](SECURITY.md).
 
+## Contributing
+
+Conventions, the spec-first workflow and the review loop are in [CONTRIBUTING.md](CONTRIBUTING.md); every
+user-visible change is listed in [CHANGELOG.md](CHANGELOG.md). To release: bump `project.version` in
+`pyproject.toml` and move the `[Unreleased]` entries of the changelog to a dated `## [X.Y.Z] - YYYY-MM-DD` section;
+tag the merged commit `vX.Y.Z` and push the tag; `.github/workflows/release.yml` checks that the tag matches the
+version, builds the sdist and the wheel, and publishes the GitHub release with that changelog section as notes and
+the dist files attached.
+
 ## License
 
 Copyright (c) 2026 Joseph Faye.
