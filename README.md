@@ -233,6 +233,7 @@ The API key never appears in the code, the page or the repository: the SDK reads
 ruff check .                                              # lint
 .venv-check/bin/python -m mypy .                          # type check
 .venv-check/bin/python -m pytest -q                       # unit tests + the three bank checkers (browser tests excluded)
+.venv-check/bin/python -m pytest -q --cov --cov-report=term-missing   # same, with branch coverage of backend, server.py and tools; fails under 65%
 npm ci && npm run lint                                    # ESLint on app/js (eslint.config.js)
 .venv-check/bin/python -m pip install -e ".[e2e]" && .venv-check/bin/python -m playwright install chromium   # once: Playwright + Chromium
 .venv-check/bin/python -m pytest -q -m e2e tests/e2e                                                           # browser tests (headless, opt-in)
@@ -249,8 +250,9 @@ it: `python -m pip wheel . --no-deps -w /tmp/wheel && unzip -l /tmp/wheel/sparri
 is opt-in (`-m e2e` overrides the `addopts` of `pyproject.toml`) and its modules skip when the `e2e` extra is not
 installed. The same steps run in GitHub Actions on every push to `main`
 and every pull request (`.github/workflows/ci.yml`): the Python steps on a matrix of Python 3.12 and 3.13 (jobs
-`unit (3.12)` and `unit (3.13)`, summarized by the required check `test`), the lint in `js`, the browser tests in
-`e2e`. Dependabot (`.github/dependabot.yml`) opens weekly update pull requests for pip, npm and the actions.
+`unit (3.12)` and `unit (3.13)`, summarized by the required check `test`; the 3.12 leg measures coverage, fails under
+the `fail_under` floor of `pyproject.toml` and uploads `coverage.xml` as an artifact), the lint in `js`, the browser
+tests in `e2e`. Dependabot (`.github/dependabot.yml`) opens weekly update pull requests for pip, npm and the actions.
 
 ## Code review with repoach
 

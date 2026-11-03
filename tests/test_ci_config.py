@@ -1,11 +1,13 @@
-"""The CI workflow, the Dependabot configuration and the pre-commit configuration (SP-CI)."""
+"""The CI workflow, the Dependabot configuration, the pre-commit configuration and the coverage floor (SP-CI)."""
 import os
 import re
+import tomllib
 
 import yaml
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 WORKFLOW = os.path.join(ROOT, ".github", "workflows", "ci.yml")
+PYPROJECT = os.path.join(ROOT, "pyproject.toml")
 DEPENDABOT = os.path.join(ROOT, ".github", "dependabot.yml")
 PRE_COMMIT = os.path.join(ROOT, ".pre-commit-config.yaml")
 PINNED_ACTION = re.compile(r"^\s*-?\s*uses: [\w.-]+/[\w.-]+@[0-9a-f]{40} # v\d+\.\d+\.\d+$")
@@ -45,6 +47,18 @@ class TestWorkflow:
         assert test["needs"] == "unit"
         assert test["if"] == "always()"
         assert "needs.unit.result" in test["steps"][-1]["run"]
+
+    def test_only_the_3_12_leg_measures_coverage_and_uploads_the_report(self):
+        unit = load(WORKFLOW)["jobs"]["unit"]
+        options = {leg["python-version"]: leg["pytest-options"] for leg in unit["strategy"]["matrix"]["include"]}
+        assert options["3.12"].split() == ["--cov", "--cov-report=term-missing", "--cov-report=xml"]
+        assert options["3.13"] == ""
+        (pytest_step,) = [step for step in unit["steps"] if str(step.get("run", "")).startswith("python -m pytest")]
+        assert pytest_step["run"] == "python -m pytest -q ${{ matrix.pytest-options }}"
+        (upload,) = [step for step in unit["steps"] if str(step.get("uses", "")).startswith("actions/upload-artifact@")]
+        assert upload["if"] == "matrix.python-version == '3.12'"
+        assert upload["with"]["path"] == "coverage.xml"
+        assert upload["with"]["if-no-files-found"] == "error"
 
     def test_checkout_never_persists_credentials(self):
         for name, job in load(WORKFLOW)["jobs"].items():
@@ -106,3 +120,18 @@ class TestPreCommit:
         assert local["mypy"]["entry"] == ".venv-check/bin/python -m mypy ."
         assert local["eslint"]["entry"] == "npm run lint"
         assert all(hook["language"] == "system" for hook in local.values())
+
+
+class TestCoverage:
+    def test_the_floor_is_configured_and_plain_pytest_does_not_measure(self):
+        with open(PYPROJECT, "rb") as fh:
+            pyproject = tomllib.load(fh)
+        run = pyproject["tool"]["coverage"]["run"]
+        assert run["source"] == ["backend", "server", "tools"]
+        assert run["branch"] is True
+        assert "tools/sources/*" in run["omit"]
+        report = pyproject["tool"]["coverage"]["report"]
+        assert report["show_missing"] is True
+        assert isinstance(report["fail_under"], int) and 0 < report["fail_under"] <= 100
+        assert "--cov" not in pyproject["tool"]["pytest"]["ini_options"]["addopts"]
+        assert any(dep.startswith("pytest-cov~=") for dep in pyproject["project"]["optional-dependencies"]["dev"])

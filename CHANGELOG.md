@@ -7,6 +7,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+- Measured test coverage: `pytest -q --cov --cov-report=term-missing` reports branch coverage of `backend/`,
+  `server.py` and `tools/`, CI fails the Python 3.12 leg under the `fail_under` floor of `pyproject.toml` and
+  uploads `coverage.xml` as a run artifact (#22).
+
 ## [0.1.0] - 2026-11-03
 
 ### Added
