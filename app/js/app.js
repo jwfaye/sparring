@@ -1,16 +1,15 @@
-/* Training app, step 1: exercise engine (Python via Pyodide, SQL via sqlite3). */
+/* Training app, step 1: exercise engine (Python via Pyodide in a worker, SQL via sqlite3). */
 (() => {
   'use strict';
 
   const { $, $$, NS, loadJSON, saveJSON, escapeHtml, fmtTime, shuffle, renderMd, twoClick } = window.TT;
   const LS = { progress: NS + 'progress', settings: NS + 'settings', exam: NS + 'exam', order: NS + 'order', lastId: NS + 'lastId' };
-  const PYODIDE_URL = 'https://cdn.jsdelivr.net/pyodide/v0.27.7/full/';
   const DIFF_RANK = { easy: 0, medium: 1, hard: 2 };
 
   const state = {
     bank: [], byId: {}, order: [], idx: -1, current: null,
     progress: {}, settings: { examMinutes: 45 }, exam: null,
-    pyodide: null, pyReady: false, busy: false, editor: null, view: 'exercises', outputCollapsed: false,
+    pyReady: false, busy: false, editor: null, view: 'exercises', outputCollapsed: false,
     pendingConfirm: null,
   };
   const nextPaint = () => new Promise(r => setTimeout(r, 30));
@@ -183,28 +182,20 @@
     }
   }
 
-  // ------------------------------------------------------------ Python / execution
-  function setStatus(text, cls) { const el = $('#py-status'); el.textContent = text; el.className = 'status ' + (cls || 'loading'); }
+  // ------------------------------------------------------------ Python / execution (SP-PY-RUNTIME: js/py-client.js)
+  function setStatus(text, cls) {
+    const el = $('#py-status'); el.textContent = text; el.className = 'status ' + (cls || 'loading'); el.title = text;
+    state.pyReady = cls === 'ok';
+  }
   async function initPython() {
-    try {
-      setStatus('Loading Python (Pyodide)… about 20 s the first time');
-      state.pyodide = await loadPyodide({ indexURL: PYODIDE_URL });
-      setStatus('Loading pandas, numpy, sqlite3…');
-      await state.pyodide.loadPackage(['numpy', 'pandas', 'sqlite3']);
-      const harness = await (await fetch('py/harness.py', { cache: 'no-store' })).text();
-      state.pyodide.runPython(harness);
-      state.pyReady = true;
-      setStatus('Python ready', 'ok');
-    } catch (e) {
-      console.error(e);
-      setStatus('Python unavailable: ' + e.message, 'err'); $('#py-status').title = String(e.message);
-    }
+    try { await window.TTPY.init(setStatus); } catch (e) { console.error(e); }
   }
+  // Resolves with the harness result; an interrupted run resolves with {interrupted, error} (see py-client.js).
   function runPy(payload) {
-    state.pyodide.globals.set('_payload', JSON.stringify(payload));
-    const out = state.pyodide.runPython('run_json(_payload)');
-    return JSON.parse(out);
+    $('#btn-stop').disabled = false;
+    return window.TTPY.run(payload).finally(() => { $('#btn-stop').disabled = true; });
   }
+  function onStop() { window.TTPY.stop('stop'); }
   function ready() {
     if (!state.current) return false;
     if (!state.pyReady) { setOutput('Python is still loading…', true); return false; }
@@ -247,7 +238,7 @@
     $('#output-title').textContent = 'Output'; $('#results').innerHTML = ''; state.outputCollapsed = false;
     setOutput('Running…'); await nextPaint();
     try {
-      const r = runPy({ mode: 'run', language: ex.language, setup: ex.setup, code: getCode(), run_call: ex.run_call || null });
+      const r = await runPy({ mode: 'run', language: ex.language, setup: ex.setup, code: getCode(), run_call: ex.run_call || null });
       let text = r.output || '';
       if (r.error) text += (text && !text.endsWith('\n') ? '\n' : '') + (text ? '\n' : '') + r.error;
       if (!text) text = '(no output: use print(...) to display something)';
@@ -263,7 +254,7 @@
     $('#output-title').textContent = 'Check'; state.outputCollapsed = false; $('#results').innerHTML = '<div class="muted">Running tests…</div>'; setOutput('');
     await nextPaint();
     try {
-      const r = runPy({ mode: 'check', language: ex.language, setup: ex.setup, code: getCode(), tests: ex.tests });
+      const r = await runPy({ mode: 'check', language: ex.language, setup: ex.setup, code: getCode(), tests: ex.tests });
       const p = prog(ex.id);
       p.attempts += 1; p.lastCheck = Date.now();
       if (r.error) { setOutput(r.error, true); $('#results').innerHTML = ''; p.status = 'fail'; }
@@ -380,6 +371,7 @@
 
     $('#btn-run').onclick = onRun;
     $('#btn-check').onclick = onCheck;
+    $('#btn-stop').onclick = onStop;
     $('#btn-prev').onclick = () => state.idx > 0 && showExercise(state.idx - 1);
     $('#btn-next').onclick = () => state.idx < state.order.length - 1 && showExercise(state.idx + 1);
     twoClick($('#btn-reset'), 'Reset', () => { if (state.current) { state.editor.setValue(state.current.starter); saveCode(); state.editor.focus(); } });
