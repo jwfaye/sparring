@@ -13,3 +13,5 @@ repoach.toml.local
 .repoach.env
 node_modules/
 *.egg-info/
+build/
+dist/

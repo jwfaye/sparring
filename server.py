@@ -1,7 +1,13 @@
 #!/usr/bin/env python3
 """Local server of the training app.
 
-Usage: python server.py [port]   (default: config.json, section "server")
+Usage: sparring [port] [--host HOST] [--port PORT] [--version]   (installed with pip or pipx)
+       python server.py [port] [--host HOST] [--port PORT]      (from a clone)
+The host and the port default to the settings file, section "server" (see backend/config.py for the lookup order).
+
+Shipped files and user data (see backend/paths.py): app/ and bank/ are read next to this file in a clone, else from
+the installed sparring_data package; answers go to data/ in a clone, else to the per-user data directory
+($XDG_DATA_HOME/sparring or ~/.local/share/sparring), SPARRING_DATA_DIR overriding both.
 
 - Serves the static files of app/ (with the cross-origin isolation headers Pyodide's interrupt buffer needs)
 - GET /api/exercises  -> merged exercise bank (every bank/exercises/*.json)
@@ -15,24 +21,24 @@ Usage: python server.py [port]   (default: config.json, section "server")
 The API has no authentication: it is meant for a loopback address only. Requests whose Host is not local, or that
 carry a foreign Origin, or POSTs that are not application/json, are rejected (see SECURITY.md).
 """
+import argparse
 import glob
 import http.server
+import importlib.metadata
 import ipaddress
 import json
 import logging
 import os
 import re
-import sys
 import urllib.parse
 from typing import Any
 
-from backend import config, grader, store
+from backend import config, grader, paths, store
 
 log = logging.getLogger("sparring")
 
-ROOT = os.path.dirname(os.path.abspath(__file__))
-APP_DIR = os.path.join(ROOT, "app")
-BANK_DIR = os.path.join(ROOT, "bank")
+APP_DIR = paths.resource_dir("app")
+BANK_DIR = paths.resource_dir("bank")
 
 MAX_BODY = 1_000_000
 ID_RE = re.compile(r"^[A-Za-z0-9_.-]{1,80}$")
@@ -70,7 +76,7 @@ def load_bank(kind: str) -> dict[str, Any]:
     files: list[str] = []
     errors: list[str] = []
     for path in sorted(glob.glob(os.path.join(BANK_DIR, kind, "*.json"))):
-        name = os.path.relpath(path, ROOT)
+        name = os.path.relpath(path, os.path.dirname(BANK_DIR))
         try:
             with open(path, encoding="utf-8") as fh:
                 data = json.load(fh)
@@ -240,16 +246,70 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         log.debug("%s " + fmt, self.address_string(), *args)
 
 
-def main() -> None:
+def version() -> str:
+    """The installed version of the sparring distribution, or "unknown" from a bare clone."""
+    try:
+        return importlib.metadata.version("sparring")
+    except importlib.metadata.PackageNotFoundError:
+        return "unknown"
+
+
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    """Command line: an optional positional port (kept for compatibility), --host, --port, --version.
+
+    Args:
+        argv: the arguments to parse; None means sys.argv[1:].
+
+    Returns:
+        A namespace with `host` (str or None) and `port` (int or None): None means the settings file decides.
+
+    Raises:
+        SystemExit: code 2 on a port outside 1-65535 or a positional port that disagrees with --port, code 0 after
+            --help or --version, as argparse does.
+    """
+    parser = argparse.ArgumentParser(description="Sparring: local training server for technical tests and interviews.",
+                                     epilog="The host and the port default to the settings file, section 'server'.")
+    parser.add_argument("port_arg", metavar="port", nargs="?", type=int, help="port to listen on (same as --port)")
+    parser.add_argument("--host", help="address to bind (keep a loopback address: the API has no authentication)")
+    parser.add_argument("--port", type=int, help="port to listen on")
+    parser.add_argument("--version", action="version", version=f"%(prog)s {version()}")
+    args = parser.parse_args(argv)
+    if args.port_arg is not None and args.port is not None and args.port_arg != args.port:
+        parser.error("the positional port and --port disagree: give the port once")
+    if args.port is None:
+        args.port = args.port_arg
+    if args.port is not None and not 1 <= args.port <= 65535:
+        parser.error(f"port must be an integer from 1 to 65535 (got {args.port})")
+    return args
+
+
+def settings_from_cwd() -> bool:
+    """True when the settings file was picked up from the current directory rather than named or per-user."""
+    return not os.environ.get(config.ENV_VAR) and config.PATH != config.user_config_path()
+
+
+def main(argv: list[str] | None = None) -> None:
+    """Entry point of the `sparring` command and of `python server.py`.
+
+    Args:
+        argv: the arguments to parse; None means sys.argv[1:].
+    """
     global bind_host
+    args = parse_args(argv)
     logging.basicConfig(level=os.environ.get("SPARRING_LOG_LEVEL", "INFO").upper(),
                         format="%(asctime)s %(levelname)s %(message)s", datefmt="%H:%M:%S")
     srv = config.section("server")
-    port = int(sys.argv[1]) if len(sys.argv) > 1 else int(srv["port"])
-    bind_host = str(srv["host"])
+    port = int(srv["port"]) if args.port is None else args.port
+    bind_host = args.host or str(srv["host"])
     server = http.server.ThreadingHTTPServer((bind_host, port), Handler)
+    log.info("Settings: %s%s", config.PATH, "" if os.path.isfile(config.PATH) else " (not found, using defaults)")
+    log.info("Data directory: %s", store.DATA_DIR)
     for err in config.ERRORS:
         log.warning(err)
+    claude_bin = config.section("grader")["claude_bin"]
+    if settings_from_cwd() and claude_bin != config.DEFAULTS["grader"]["claude_bin"]:
+        log.warning("The settings file of the current directory sets grader.claude_bin = %r, a program the grader "
+                    "runs: start sparring from a directory you trust, or name the file with SPARRING_CONFIG", claude_bin)
     if not is_loopback(bind_host):
         log.warning("Server bound to %s: the API has no authentication, anyone on the network can read and delete "
                     "your answers and spend your grading quota", bind_host)

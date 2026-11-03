@@ -1,8 +1,13 @@
-"""Application settings: config.json at the project root, merged over the defaults below.
+"""Application settings: one JSON file merged over the defaults below.
 
-SPARRING_CONFIG, when set and non-empty, names another settings file instead (the browser tests use it to run a server
-on a free port with the grader offline). Only the API key (ANTHROPIC_API_KEY), SPARRING_CONFIG and SPARRING_LOG_LEVEL
-live in the environment; every option lives in the file, never in the repository.
+The settings file is the first of:
+1. the file named by SPARRING_CONFIG, when the variable is set and non-empty (the browser tests use it to run a server
+   on a free port with the grader offline);
+2. config.json in the current directory, when it exists (a clone run from its root, as before);
+3. $XDG_CONFIG_HOME/sparring/config.json, or ~/.config/sparring/config.json, which is where an installed
+   `sparring` command looks; a missing file means the defaults.
+Only the API key (ANTHROPIC_API_KEY), SPARRING_CONFIG, SPARRING_DATA_DIR and SPARRING_LOG_LEVEL live in the
+environment; every option lives in the file, never in the repository.
 
 Every value is validated. An invalid value keeps its default and adds a message to ERRORS, so the server still
 starts and logs the problem; unknown sections and keys are reported the same way.
@@ -22,8 +27,8 @@ import json
 import os
 from typing import Any, Callable
 
-ROOT: str = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DEFAULT_PATH: str = os.path.join(ROOT, "config.json")
+FILE_NAME = "config.json"
+APP_NAME = "sparring"
 ENV_VAR = "SPARRING_CONFIG"
 
 Section = dict[str, Any]
@@ -87,9 +92,25 @@ VALIDATORS: dict[str, dict[str, Validator]] = {
 }
 
 
+def user_config_path() -> str:
+    """The per-user settings file: $XDG_CONFIG_HOME/sparring/config.json, else ~/.config/sparring/config.json."""
+    base = os.environ.get("XDG_CONFIG_HOME") or os.path.join(os.path.expanduser("~"), ".config")
+    return os.path.join(base, APP_NAME, FILE_NAME)
+
+
 def settings_path() -> str:
-    """The settings file: SPARRING_CONFIG when set and non-empty, else config.json at the project root."""
-    return os.environ.get(ENV_VAR) or DEFAULT_PATH
+    """The settings file: SPARRING_CONFIG when set and non-empty, else ./config.json when present, else the user's.
+
+    `./config.json` is resolved against the current working directory on every call, so the answer depends on where
+    the server is started from; the server logs it at startup.
+    """
+    override = os.environ.get(ENV_VAR)
+    if override:
+        return override
+    local = os.path.abspath(FILE_NAME)
+    if os.path.isfile(local):
+        return local
+    return user_config_path()
 
 
 def _load(path: str) -> tuple[Config, list[str]]:

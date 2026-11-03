@@ -1,4 +1,4 @@
-"""Validation of config.json: every invalid value keeps its default and is reported in the error list."""
+"""Validation of config.json (every invalid value keeps its default and is reported) and the settings file lookup."""
 import json
 import os
 
@@ -192,15 +192,69 @@ def test_env_override_missing_file_keeps_defaults(tmp_path, monkeypatch):
     assert errors == []
 
 
-def test_unset_env_uses_the_default_path(monkeypatch):
+@pytest.fixture
+def lookup(tmp_path, monkeypatch):
+    """A controlled lookup: no SPARRING_CONFIG, an empty current directory and an empty XDG_CONFIG_HOME."""
+    cwd = tmp_path / "cwd"
+    xdg = tmp_path / "xdg"
+    cwd.mkdir()
+    xdg.mkdir()
     monkeypatch.delenv(config.ENV_VAR, raising=False)
-    assert config.settings_path() == os.path.join(config.ROOT, "config.json")
-    assert config.settings_path() == config.DEFAULT_PATH
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(xdg))
+    monkeypatch.chdir(cwd)
+    return cwd, xdg
 
 
-def test_empty_env_uses_the_default_path(monkeypatch):
+def test_unset_env_uses_the_current_directory_file(lookup):
+    cwd, _ = lookup
+    (cwd / "config.json").write_text("{}", encoding="utf-8")
+    assert config.settings_path() == str(cwd / "config.json")
+
+
+def test_empty_env_uses_the_current_directory_file(lookup, monkeypatch):
+    cwd, _ = lookup
+    (cwd / "config.json").write_text("{}", encoding="utf-8")
     monkeypatch.setenv(config.ENV_VAR, "")
-    assert config.settings_path() == config.DEFAULT_PATH
+    assert config.settings_path() == str(cwd / "config.json")
+
+
+def test_env_wins_over_the_current_directory_file(lookup, monkeypatch):
+    cwd, _ = lookup
+    (cwd / "config.json").write_text("{}", encoding="utf-8")
+    monkeypatch.setenv(config.ENV_VAR, str(cwd / "other.json"))
+    assert config.settings_path() == str(cwd / "other.json")
+
+
+def test_no_local_file_falls_back_to_the_user_config(lookup):
+    _, xdg = lookup
+    assert config.settings_path() == str(xdg / "sparring" / "config.json")
+    assert config.settings_path() == config.user_config_path()
+
+
+def test_user_config_is_loaded_when_present(lookup):
+    _, xdg = lookup
+    (xdg / "sparring").mkdir()
+    (xdg / "sparring" / "config.json").write_text(json.dumps({"server": {"port": 9100}}), encoding="utf-8")
+    cfg, errors = config._load(config.settings_path())
+    assert errors == []
+    assert cfg["server"]["port"] == 9100
+
+
+def test_missing_user_config_keeps_defaults(lookup):
+    cfg, errors = config._load(config.settings_path())
+    assert cfg == config.DEFAULTS
+    assert errors == []
+
+
+def test_user_config_path_without_xdg_is_under_home(monkeypatch, tmp_path):
+    monkeypatch.delenv("XDG_CONFIG_HOME", raising=False)
+    monkeypatch.setenv("HOME", str(tmp_path))
+    assert config.user_config_path() == os.path.join(str(tmp_path), ".config", "sparring", "config.json")
+
+
+def test_shipped_config_is_the_one_loaded_from_the_repository_root():
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    assert config.PATH == os.path.join(root, "config.json")
 
 
 def test_shipped_config_is_valid():
