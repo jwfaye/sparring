@@ -43,7 +43,8 @@ free port). It tests the app from outside: it imports nothing from it, hence `de
 
 ## Non-Goals
 - NG1: changing the behavior of the page beyond what the lint rules require.
-- NG2: testing online grading (the server under test has no API key and no Claude Code CLI on its PATH).
+- NG2: testing online grading (the server under test has no API key and no Claude Code CLI on its PATH; the
+  interview test asserts the offline status before it submits).
 - NG3: visual regression or cross-browser coverage: Chromium only.
 
 ## Assumptions
@@ -69,7 +70,8 @@ Errors:
 ## Behavior
 ### Nominal
 1. `base_url` (session) removes `data/theory/e2e/`, starts `server.py` on a free port with cwd at the root,
-   `SPARRING_LOG_LEVEL=WARNING`, no `ANTHROPIC_*` variable and an empty `PATH`, waits for `/api/health`.
+   `SPARRING_LOG_LEVEL=WARNING`, no `ANTHROPIC_*` or `CLAUDE_*` variable and an empty `PATH`, waits for
+   `/api/health`.
 2. `ready_page` (session) opens `/?profile=e2e` once, records console errors and failed requests, waits for
    `#py-status` to read `Python ready`; the boot and exercise tests share it so Pyodide loads once per session.
 3. The quiz, interview and theme tests use a fresh page each.

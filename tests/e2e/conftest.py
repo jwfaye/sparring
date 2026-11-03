@@ -5,8 +5,9 @@ Every module here carries the `e2e` marker and skips when the `e2e` extra is not
 
 The page is opened with `?profile=e2e`: progress lives in a separate localStorage namespace and interview answers
 in `data/theory/e2e/`, which is removed when the session ends, so the user's own data is never touched. The server
-gets no API key and an empty PATH, so the grader never finds a Claude Code CLI: answers are saved in offline mode and
-no quota is spent.
+gets no ANTHROPIC_* or CLAUDE_* variable and an empty PATH, so the grader finds neither a key nor a Claude Code CLI:
+answers are saved in offline mode and no quota is spent. The interview test asserts that status before submitting,
+so a machine whose config.json points at an absolute `grader.claude_bin` fails the test instead of grading online.
 """
 import os
 import shutil
@@ -52,7 +53,7 @@ def base_url(tmp_path_factory):
     """Start server.py on a free port (overrides the pytest-base-url fixture used by the `page` context)."""
     shutil.rmtree(PROFILE_DATA, ignore_errors=True)
     port = free_port()
-    env = {k: v for k, v in os.environ.items() if k not in ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN")}
+    env = {k: v for k, v in os.environ.items() if not k.startswith(("ANTHROPIC_", "CLAUDE_"))}
     env["SPARRING_LOG_LEVEL"] = "WARNING"
     env["PATH"] = str(tmp_path_factory.mktemp("empty-path"))
     proc = subprocess.Popen([sys.executable, "server.py", str(port)], cwd=ROOT, env=env)
