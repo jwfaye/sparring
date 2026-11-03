@@ -27,8 +27,9 @@ user relies on (page boot, exercise check, quiz, interview answer, theme). It ex
 is caught by CI instead of by the next person opening the app.
 
 ## Context
-The page is four classic scripts (`theme-init.js`, `common.js`, `app.js`, `qcm.js`, `theory.js`) that share state
-through `window` and two CDN bundles (CodeMirror, Pyodide). The Python test suite (`tests/`) covers the server and
+The page is a set of classic scripts (`theme-init.js`, `common.js`, `py-client.js`, `app.js`, `qcm.js`,
+`theory.js`) that share state through `window`, a Web Worker (`py-worker.js`, SP-PY-RUNTIME) and two CDN bundles
+(CodeMirror, Pyodide). The Python test suite (`tests/`) covers the server and
 the harness but never opens a browser. This component adds `package.json` + `eslint.config.js` (ESLint 9 flat
 config, run with `npm run lint`) and `tests/e2e/` (pytest + Playwright, headless Chromium, a real `server.py` on a
 free port). It tests the app from outside: it imports nothing from it, hence `depends_on: []`. Code-only:
@@ -55,7 +56,8 @@ free port). It tests the app from outside: it imports nothing from it, hence `de
 
 ## Interface
 Inputs:
-- `npm run lint`: lints `app/js/**/*.js` as classic scripts with browser globals plus `CodeMirror` and `loadPyodide`.
+- `npm run lint`: lints `app/js/**/*.js` as classic scripts with browser globals plus `CodeMirror` and `loadPyodide`;
+  `py-worker.js` gets the worker globals instead.
 - `python -m pytest -q -m e2e tests/e2e`: runs the browser suite; needs the `e2e` extra and a Chromium build
   (`python -m playwright install chromium`).
 

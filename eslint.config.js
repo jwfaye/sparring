@@ -1,9 +1,10 @@
 /* ESLint flat config for the web page. The scripts in app/js are classic scripts loaded in the order set by
-   app/index.html: theme-init.js, then the CodeMirror and Pyodide CDN bundles, then common.js (defines window.TT),
-   app.js, qcm.js and theory.js. They share globals through window (TT, TTQCM, TTTHEORY, tt), so the only names
-   declared here are the ones the CDN bundles put in scope. Rule set: recommended, plus eqeqeq, no-var and
-   prefer-const; no-empty keeps its recommended level but allows an empty catch, the pattern used for storage access
-   that is expected to fail in private windows. */
+   app/index.html: theme-init.js, then the CodeMirror CDN bundles, then common.js (defines window.TT), py-client.js,
+   app.js, qcm.js and theory.js. They share globals through window (TT, TTPY, TTQCM, TTTHEORY, tt), so the only
+   names declared here are the ones the CDN bundles put in scope. py-worker.js runs in a Web Worker: it gets the
+   worker globals (importScripts, self) and loadPyodide, which it imports itself. Rule set: recommended, plus
+   eqeqeq, no-var and prefer-const; no-empty keeps its recommended level but allows an empty catch, the pattern
+   used for storage access that is expected to fail in private windows. */
 const js = require('@eslint/js');
 const globals = require('globals');
 
@@ -25,6 +26,15 @@ module.exports = [
       'no-var': 'error',
       'prefer-const': 'error',
       'no-empty': ['error', { allowEmptyCatch: true }],
+    },
+  },
+  {
+    files: ['app/js/py-worker.js'],
+    languageOptions: {
+      globals: {
+        ...globals.worker,
+        loadPyodide: 'readonly',
+      },
     },
   },
 ];
