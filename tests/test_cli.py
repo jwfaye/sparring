@@ -6,6 +6,8 @@ import pytest
 
 import server
 
+LOCAL_CLAUDE_BIN_WARNING = "The settings file of the current directory sets grader.claude_bin"
+
 
 def test_no_argument_leaves_host_and_port_to_the_settings():
     args = server.parse_args([])
@@ -126,7 +128,7 @@ def test_main_warns_when_the_local_settings_file_changes_claude_bin(fake_server,
     with caplog.at_level(logging.WARNING, logger="sparring"):
         server.main([])
     warnings = [record.getMessage() for record in caplog.records if record.levelno == logging.WARNING]
-    assert any("grader.claude_bin = '/somewhere/claude'" in message for message in warnings)
+    assert any(message.startswith(LOCAL_CLAUDE_BIN_WARNING) and "'/somewhere/claude'" in message for message in warnings)
 
 
 def test_main_does_not_warn_for_a_named_or_per_user_settings_file(fake_server, monkeypatch, tmp_path, caplog):
@@ -139,4 +141,4 @@ def test_main_does_not_warn_for_a_named_or_per_user_settings_file(fake_server, m
     monkeypatch.setattr(server.config, "PATH", server.config.user_config_path())
     with caplog.at_level(logging.WARNING, logger="sparring"):
         server.main([])
-    assert not any("grader.claude_bin" in record.getMessage() for record in caplog.records)
+    assert not any(record.getMessage().startswith(LOCAL_CLAUDE_BIN_WARNING) for record in caplog.records)
