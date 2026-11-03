@@ -283,7 +283,7 @@ def main(argv: list[str] | None = None) -> None:
     bind_host = args.host or str(srv["host"])
     server = http.server.ThreadingHTTPServer((bind_host, port), Handler)
     log.info("Settings: %s%s", config.PATH, "" if os.path.isfile(config.PATH) else " (not found, using defaults)")
-    log.info("Data directory: %s", paths.data_dir())
+    log.info("Data directory: %s", os.path.dirname(store.DATA))
     for err in config.ERRORS:
         log.warning(err)
     if not is_loopback(bind_host):

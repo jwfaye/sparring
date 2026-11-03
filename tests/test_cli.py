@@ -102,7 +102,7 @@ def test_main_falls_back_to_the_settings(fake_server):
 def test_main_logs_settings_and_data_directory(fake_server, monkeypatch, tmp_path, caplog):
     absent = tmp_path / "absent.json"
     monkeypatch.setattr(server.config, "PATH", str(absent))
-    monkeypatch.setenv(server.paths.DATA_ENV_VAR, str(tmp_path / "data"))
+    monkeypatch.setattr(server.store, "DATA", str(tmp_path / "data" / "theory"))
     with caplog.at_level(logging.INFO, logger="sparring"):
         server.main([])
     messages = [record.getMessage() for record in caplog.records]
