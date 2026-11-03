@@ -7,10 +7,10 @@
     "difficulty": "easy",
     "reference": "Learning a function that maps inputs X to a target y from labeled examples (x, y). Regression (numeric target) is distinguished from classification (discrete target). The model is fitted by minimizing a loss on the training data, then evaluated on never-seen data to measure generalization. Examples: linear regression, logistic regression, trees, forests, boosting, neural networks, k-NN.",
     "key_points": [
-      "Labelled data (x, y); learn f: X -> y",
+      "Labeled data (x, y); learn f: X -> y",
       "Regression vs classification depending on the nature of the target",
       "Loss minimization on training data, evaluation on unseen data (generalization)",
-      "Examples of models"
+      "Example models: linear or logistic regression, trees and ensembles, k-NN, neural networks"
     ],
     "common_mistakes": [
       "Confusing it with unsupervised learning (no labels)",
@@ -46,7 +46,7 @@
       "Form: linear combination of the variables + noise",
       "Least-squares estimation",
       "Use: ~linear relationship, interpretability, baseline, little data",
-      "Assumptions to check"
+      "Assumptions: independent, homoscedastic errors and no strong collinearity"
     ],
     "common_mistakes": [
       "Saying it only works with one variable",
@@ -224,7 +224,7 @@
     "difficulty": "easy",
     "reference": "MSE = mean of the squared differences between prediction and actual value; RMSE = its square root, expressed in the unit of the target and therefore more interpretable. Both strongly penalize large errors (square), which makes them sensitive to outliers; MSE is the natural loss of least squares (linked to maximum likelihood under Gaussian noise). RMSE >= MAE always; a large gap between the two signals extreme errors.",
     "key_points": [
-      "Definitions and formulas",
+      "MSE = mean of the squared errors; RMSE = its square root",
       "RMSE in the unit of the target",
       "Sensitivity to large errors / outliers",
       "Link with least squares; comparison with MAE"
@@ -497,7 +497,7 @@
     "key_points": [
       "Actual x predicted cross-table",
       "TP, TN, FP, FN correctly defined",
-      "Derived metrics",
+      "Derived metrics: precision TP/(TP+FP), recall TP/(TP+FN)",
       "Multi-class K x K version"
     ],
     "common_mistakes": [
@@ -853,7 +853,7 @@
     "question": "How L1 regularization looks like in a linear model?",
     "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
     "difficulty": "medium",
-    "reference": "Minimize sum (yi - yhat_i)^2 + lambda sum |wj|. The absolute-value penalty is not differentiable at zero, which produces sparse solutions: beyond some lambda, some coefficients become exactly zero (built-in feature selection). No closed form; solved by coordinate descent or proximal algorithms (LARS). Among correlated variables, Lasso tends to keep only one.",
+    "reference": "Minimize sum (yi - yhat_i)^2 + lambda sum |wj|. The absolute-value penalty is not differentiable at zero, which produces sparse solutions: beyond some lambda, some coefficients become exactly zero (built-in feature selection). No closed form; solved by coordinate descent, proximal gradient methods or the LARS path algorithm. Among correlated variables, Lasso tends to keep only one.",
     "key_points": [
       "Objective: loss + lambda sum |w|",
       "Non-differentiable at 0 -> exactly zero coefficients, sparsity",
@@ -1123,7 +1123,7 @@
     "question": "How do we handle categorical variables in decision trees?",
     "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
     "difficulty": "medium",
-    "reference": "Some implementations handle categories natively (LightGBM, CatBoost, R rpart, recent scikit-learn with max_categories) by searching the best partition of the categories. Otherwise encode: label/ordinal encoding is acceptable for trees (they can isolate categories with successive splits, the artificial order matters little); one-hot works but dilutes the variable into rare columns and biases importances; target encoding with precautions. Beware of high cardinality (overfitting on rare categories): group them.",
+    "reference": "Some implementations handle categories natively (LightGBM, CatBoost, R rpart, scikit-learn's histogram gradient boosting with categorical_features) by searching the best partition of the categories. Otherwise encode: label/ordinal encoding is acceptable for trees (they can isolate categories with successive splits, the artificial order matters little); one-hot works but dilutes the variable into rare columns and biases importances; target encoding with precautions. Beware of high cardinality (overfitting on rare categories): group them.",
     "key_points": [
       "Native support in some libraries",
       "Label/ordinal encoding acceptable for trees",
@@ -1177,7 +1177,7 @@
     "question": "What is random forest?",
     "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
     "difficulty": "easy",
-    "reference": "Ensemble of many decision trees, each trained on a bootstrap sample of the data and with a random subset of variables at each split; the final prediction is the majority vote (classification) or the mean (regression). Averaging weakly correlated trees strongly reduces the variance of individual trees, which gives a robust model, little sensitive to hyperparameters, parallelisable, with a free error estimate (out-of-bag) and variable importances. Less interpretable than a tree, sometimes outperformed by boosting.",
+    "reference": "Ensemble of many decision trees, each trained on a bootstrap sample of the data and with a random subset of variables at each split; the final prediction is the majority vote (classification) or the mean (regression). Averaging weakly correlated trees strongly reduces the variance of individual trees, which gives a robust model, little sensitive to hyperparameters, parallelizable, with a free error estimate (out-of-bag) and variable importances. Less interpretable than a tree, sometimes outperformed by boosting.",
     "key_points": [
       "Ensemble of trees: bagging + feature subsampling",
       "Aggregation by vote / mean",
@@ -1271,7 +1271,7 @@
     "key_points": [
       "Yes: independent trees",
       "Multi-core (n_jobs) and distributed (tree partition, merge)",
-      "Prediction also parallelisable",
+      "Prediction also parallelizable",
       "Contrast with boosting; memory constraint"
     ],
     "common_mistakes": [
@@ -1288,7 +1288,7 @@
     "reference": "Cost: memory (each full tree stores thousands of nodes), training time and above all prediction latency (all trees must be traversed), which hurts real-time or embedded use. Near-zero interpretability. On noisy data, very deep trees memorize the noise; the forest smooths it partly but not fully, and probabilities can be poorly calibrated. Diminishing returns: beyond the plateau, you pay without gaining. Remedies: limit depth or leaves, reduce the number of trees, compress the model.",
     "key_points": [
       "Memory and inference latency",
-      "Interpretability",
+      "Near-zero interpretability",
       "Noise memorized by deep trees, calibration",
       "Diminishing returns; remedies"
     ],
@@ -1434,7 +1434,7 @@
       "learning_rate and n_estimators (coupled, early stopping)",
       "Tree complexity: max_depth / num_leaves, min_samples_leaf",
       "Row/column subsampling, L1/L2 penalties",
-      "Loss function"
+      "Loss function suited to the task"
     ],
     "common_mistakes": [
       "Forgetting the learning rate",
@@ -1577,7 +1577,7 @@
     "key_points": [
       "Saturation -> vanishing gradient (derivative <= 0.25)",
       "Output not centered at 0",
-      "Computational cost",
+      "Exponential computation more costly than ReLU",
       "Use at the output only; ReLU/tanh alternatives"
     ],
     "common_mistakes": [
@@ -1645,7 +1645,7 @@
     "question": "What regularization techniques for neural nets do you know?",
     "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
     "difficulty": "medium",
-    "reference": "Weight penalties: L2 / weight decay, more rarely L1. Dropout (random deactivation of neurons during training). Early stopping on the validation loss. Data augmentation (transformations, noise, mixup). Normalization (batch norm, layer norm) which has a regularizing effect and stabilizes. Capacity reduction (smaller architecture), weight sharing (convolutions), pre-training and transfer learning, label smoothing, ensembles. As always, more data remains the best regulariser.",
+    "reference": "Weight penalties: L2 / weight decay, more rarely L1. Dropout (random deactivation of neurons during training). Early stopping on the validation loss. Data augmentation (transformations, noise, mixup). Normalization (batch norm, layer norm) which has a regularizing effect and stabilizes. Capacity reduction (smaller architecture), weight sharing (convolutions), pre-training and transfer learning, label smoothing, ensembles. As always, more data remains the best regularizer.",
     "key_points": [
       "Weight decay / L2, L1",
       "Dropout, early stopping",
@@ -1681,12 +1681,12 @@
     "question": "What is backpropagation? How does it work? Why do we need it?",
     "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
     "difficulty": "medium",
-    "reference": "Algorithm that efficiently computes the gradient of the loss with respect to all the network's parameters by applying the chain rule from the output to the input. Forward pass: compute the activations and the loss, storing intermediate values; backward pass: propagate the derivatives layer by layer, each layer multiplying the received gradient by its local derivative. Its cost is of the same order as the forward pass, versus a prohibitive cost with finite differences. The gradients feed the optimiser (SGD, Adam). Frameworks implement it through automatic differentiation.",
+    "reference": "Algorithm that efficiently computes the gradient of the loss with respect to all the network's parameters by applying the chain rule from the output to the input. Forward pass: compute the activations and the loss, storing intermediate values; backward pass: propagate the derivatives layer by layer, each layer multiplying the received gradient by its local derivative. Its cost is of the same order as the forward pass, versus a prohibitive cost with finite differences. The gradients feed the optimizer (SGD, Adam). Frameworks implement it through automatic differentiation.",
     "key_points": [
       "Gradient computation by the chain rule, from output to input",
       "Forward pass (storing activations) then backward pass",
       "Efficiency: cost comparable to the forward pass",
-      "Feeds the optimiser; autodiff in frameworks"
+      "Feeds the optimizer; autodiff in frameworks"
     ],
     "common_mistakes": [
       "Confusing backpropagation with gradient descent",
@@ -1735,7 +1735,7 @@
     "question": "What’s the learning rate?",
     "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
     "difficulty": "easy",
-    "reference": "The hyperparameter eta that multiplies the gradient in the parameter update: it sets the step size at each iteration. Too large, training oscillates or diverges; too small, it is slow and can get stuck. It is usually the most important hyperparameter; it is chosen by search (log scale, range test) and varied during training (warm-up, decay). Adaptive optimisers adjust an effective step per parameter but still have a base rate.",
+    "reference": "The hyperparameter eta that multiplies the gradient in the parameter update: it sets the step size at each iteration. Too large, training oscillates or diverges; too small, it is slow and can get stuck. It is usually the most important hyperparameter; it is chosen by search (log scale, range test) and varied during training (warm-up, decay). Adaptive optimizers adjust an effective step per parameter but still have a base rate.",
     "key_points": [
       "Step size in the update theta <- theta - eta grad L",
       "Too large: divergence; too small: slowness",
@@ -1771,9 +1771,9 @@
     "question": "How to set the learning rate?",
     "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
     "difficulty": "medium",
-    "reference": "Start from the optimiser's usual values (about 1e-3 for Adam, 1e-2 to 1e-1 for SGD with momentum), sweep on a log scale over a few epochs and look at the loss curve; or run a learning-rate range test and take a value slightly below the point where the loss starts rising again. Adjust with the batch size (larger batch -> larger rate), use a warm-up then a decay (cosine, steps, reduce on plateau). Validate on the validation loss, not only the training loss.",
+    "reference": "Start from the optimizer's usual values (about 1e-3 for Adam, 1e-2 to 1e-1 for SGD with momentum), sweep on a log scale over a few epochs and look at the loss curve; or run a learning-rate range test and take a value slightly below the point where the loss starts rising again. Adjust with the batch size (larger batch -> larger rate), use a warm-up then a decay (cosine, steps, reduce on plateau). Validate on the validation loss, not only the training loss.",
     "key_points": [
-      "Typical starting values per optimiser",
+      "Typical starting values per optimizer",
       "Log sweep / range test, reading the loss",
       "Link with batch size",
       "Warm-up and scheduling, validation"
@@ -1794,7 +1794,7 @@
       "First and second moments per parameter, bias correction",
       "Adaptive step per parameter vs global step for SGD",
       "Adam: fast convergence, robust; SGD: sometimes better generalization",
-      "AdamW"
+      "AdamW: decoupled weight decay, the current default"
     ],
     "common_mistakes": [
       "Saying Adam has no learning rate",
@@ -1861,15 +1861,15 @@
     "question": "What is model checkpointing?",
     "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
     "difficulty": "medium",
-    "reference": "Periodically saving the complete training state (weights, optimiser state, scheduler, epoch, random generator) to disk. Allows resuming after a crash or interruption (long trainings, preemptible instances), keeping the best model according to validation (linked to early stopping), comparing epochs and serving or fine-tuning an intermediate model. Good practice: frequency adapted to the cost, file rotation, versioning and metadata.",
+    "reference": "Periodically saving the complete training state (weights, optimizer state, scheduler, epoch, random generator) to disk. Allows resuming after a crash or interruption (long trainings, preemptible instances), keeping the best model according to validation (linked to early stopping), comparing epochs and serving or fine-tuning an intermediate model. Good practice: frequency adapted to the cost, file rotation, versioning and metadata.",
     "key_points": [
-      "Saving the complete state (weights, optimiser, scheduler, epoch)",
+      "Saving the complete state (weights, optimizer, scheduler, epoch)",
       "Resume after crash, preemptible instances",
       "Keeping the best model",
       "Good practice: frequency, rotation, metadata"
     ],
     "common_mistakes": [
-      "Saving only the weights (not the optimiser)",
+      "Saving only the weights (not the optimizer)",
       "Confusing it with gradient checkpointing (memory saving)"
     ]
   },
@@ -1975,7 +1975,7 @@
       "Sliding window, maximum kept, resolution halved",
       "Preserves the presence of the pattern",
       "Average, global pooling, strided convolutions",
-      "Usual sizes"
+      "Usual window 2x2 with stride 2; larger windows lose too much information"
     ],
     "common_mistakes": [
       "Confusing max and average",
@@ -1988,7 +1988,7 @@
     "question": "Are CNNs resistant to rotations? What happens to the predictions of a CNN if an image is rotated?",
     "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
     "difficulty": "expert",
-    "reference": "Not by construction: convolutions are equivariant to translations, not to rotations; a network trained on upright images can change its prediction on a rotated image (the classic duck/rabbit example). Robustness is learned through data augmentation with rotations (and flips, scales), through rotation-equivariant architectures (group-equivariant CNNs), or by normalizing the orientation upstream. Robustness therefore depends on the training data.",
+    "reference": "Not by construction: convolutions are equivariant to translations, not to rotations; a network trained on upright images can change its prediction on a rotated image. Robustness is learned through data augmentation with rotations (and flips, scales), through rotation-equivariant architectures (group-equivariant CNNs), or by normalizing the orientation upstream. Robustness therefore depends on the training data.",
     "key_points": [
       "Translation equivariance only",
       "Unstable predictions under rotation without suitable training",
@@ -2026,8 +2026,8 @@
     "difficulty": "easy",
     "reference": "Geometric: rotation, horizontal/vertical flip, random crop, translation, scaling, shear, elastic deformation. Photometric: brightness, contrast, saturation, hue, grayscale, blur, Gaussian noise, JPEG. Occlusion: cutout, random erasing. Mixing: mixup, CutMix. Learned policies: AutoAugment, RandAugment. Beyond images: noise and time shift for audio, synonyms, back-translation or masking for text, jitter and windows for time series.",
     "key_points": [
-      "Geometric",
-      "Photometric",
+      "Geometric: rotation, flip, crop, scaling, shear",
+      "Photometric: brightness, contrast, hue, blur, noise",
       "Occlusion and mixing (cutout, mixup, CutMix)",
       "Learned policies; augmentations beyond images"
     ],
@@ -2365,7 +2365,7 @@
     "question": "How can we use CNN for text classification?",
     "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
     "difficulty": "expert",
-    "reference": "The sentence is represented as a matrix (length x embedding dimension) and 1D convolutions are applied with filters 2 to 5 words wide, which detect local patterns equivalent to learned n-grams, wherever they appear; a global max pooling over time keeps the strongest presence of each pattern; the outputs of the different widths are concatenated then passed to a dense layer with softmax (Kim's architecture, 2014). Fast, parallelisable, effective for polarity and topics; captures long dependencies less well than LSTM/Transformer.",
+    "reference": "The sentence is represented as a matrix (length x embedding dimension) and 1D convolutions are applied with filters 2 to 5 words wide, which detect local patterns equivalent to learned n-grams, wherever they appear; a global max pooling over time keeps the strongest presence of each pattern; the outputs of the different widths are concatenated then passed to a dense layer with softmax (Kim's architecture, 2014). Fast, parallelizable, effective for polarity and topics; captures long dependencies less well than LSTM/Transformer.",
     "key_points": [
       "Embedding matrix, 1D convolutions of various widths",
       "Filters = learned n-grams, position-invariant",
@@ -2386,7 +2386,7 @@
     "reference": "Learning structure in data without labels: grouping similar observations (clustering: K-means, DBSCAN, hierarchical), reducing dimension (PCA, t-SNE, UMAP, autoencoders), estimating densities, detecting anomalies, learning representations (self-supervision). There is no ground truth: evaluation relies on internal criteria (silhouette), stability, visualization and business usefulness. Often an exploration or pre-processing step before supervised learning.",
     "key_points": [
       "No labels: structure, groups, dimensions, density, anomalies",
-      "Examples of algorithms",
+      "Example algorithms: K-means, DBSCAN, PCA, autoencoders",
       "Evaluation without ground truth: internal criteria, stability, usefulness",
       "Exploratory / pre-processing role"
     ],
@@ -2514,7 +2514,7 @@
       "Exponential volume, sparse data",
       "Distance concentration",
       "Effects: degraded k-NN/clustering, overfitting, cost",
-      "Remedies"
+      "Remedies: feature selection, dimensionality reduction, regularization"
     ],
     "common_mistakes": [
       "Reducing it to computation time",
@@ -2545,7 +2545,7 @@
     "question": "What’s singular value decomposition? How is it typically used for machine learning?",
     "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
     "difficulty": "medium",
-    "reference": "Any matrix X (n x p) factorises as X = U S V^T with U and V orthogonal and S diagonal with decreasing singular values. Truncating to the first k components gives the best rank-k approximation (Eckart-Young). Uses: PCA (SVD of the centered matrix: V gives the components, s^2/(n-1) the variances), LSA for text, compression and denoising, recommender systems (factorization of the users x items matrix, approximated by ALS/SGD on the known entries), stable least-squares solving, pseudo-inverse. Choose k by explained variance or scree plot.",
+    "reference": "Any matrix X (n x p) factorizes as X = U S V^T with U and V orthogonal and S diagonal with decreasing singular values. Truncating to the first k components gives the best rank-k approximation (Eckart-Young). Uses: PCA (SVD of the centered matrix: V gives the components, s^2/(n-1) the variances), LSA for text, compression and denoising, recommender systems (factorization of the users x items matrix, approximated by ALS/SGD on the known entries), stable least-squares solving, pseudo-inverse. Choose k by explained variance or scree plot.",
     "key_points": [
       "Factorization U S V^T, singular values",
       "Truncation = best rank-k approximation",
@@ -2743,12 +2743,12 @@
     "question": "How do you do an online evaluation of a new ranking algorithm?",
     "source": "alexeygrigorev/data-science-interviews — theory.md (CC BY 4.0)",
     "difficulty": "medium",
-    "reference": "A/B test: randomly split users between the old and the new ranking and compare metrics (CTR, conversion rate, reformulations, abandonment, time to first click, revenue), with sample size and statistical test defined in advance, while monitoring guardrails (latency, revenue). Interleaving: merge the two lists in the same page and attribute clicks to each algorithm; much more sensitive, hence faster, but only measures relative preference. Progressive rollout and analysis per segment.",
+    "reference": "A/B test: randomly split users between the old and the new ranking and compare metrics (CTR, conversion rate, reformulations, abandonment, time to first click, revenue), with sample size and statistical test defined in advance, while monitoring guardrails (latency, revenue). Interleaving: merge the two lists in the same page and attribute clicks to each algorithm; much more sensitive, hence faster, but only measures relative preference. Progressive rollout and analysis per segment; the online result confirms, or not, the offline gain (nDCG) before the full rollout.",
     "key_points": [
       "A/B with business metrics and guardrails, statistical power",
       "Interleaving: high sensitivity, relative preference",
       "Progressive rollout, segments",
-      "Link with offline evaluation"
+      "Online result confirms the offline gain before the full rollout"
     ],
     "common_mistakes": [
       "Concluding after a few days without a statistical test",
@@ -2766,7 +2766,7 @@
       "Suggest relevant items per user",
       "Collaborative, content, hybrid, two-tower",
       "Candidates + ranking",
-      "Goals and evaluation"
+      "Business goals (engagement, sales, discovery) and offline/online evaluation"
     ],
     "common_mistakes": [
       "Citing only one family",
@@ -2840,7 +2840,7 @@
       "Consequences: generic recommendations, new items invisible"
     ],
     "common_mistakes": [
-      "Citing only one of the two cases",
+      "Citing only the new-user case or only the new-item case",
       "Confusing it with the service's slow start-up"
     ]
   },
@@ -2873,7 +2873,7 @@
       "Observations ordered in time, regular step",
       "Temporal dependence / autocorrelation",
       "Components: trend, seasonality, cycle, noise",
-      "Associated tasks"
+      "Tasks: forecasting, anomaly detection, decomposition, classification"
     ],
     "common_mistakes": [
       "Ignoring the dependence between observations",
