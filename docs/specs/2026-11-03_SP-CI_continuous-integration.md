@@ -1,7 +1,7 @@
 ---
 id: SP-CI
 title: Continuous integration and repository hygiene
-version: 0.4
+version: 0.5
 status: approved
 author: agent
 created: 2026-11-03
