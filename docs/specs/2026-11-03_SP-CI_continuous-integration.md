@@ -1,7 +1,7 @@
 ---
 id: SP-CI
 title: Continuous integration and repository hygiene
-version: 0.2
+version: 0.3
 status: approved
 author: agent
 created: 2026-11-03
@@ -45,7 +45,9 @@ the properties below. `repoach.toml` waits on the check named `test`
 - G3: every `uses:` of the workflow and every hook repository of the pre-commit configuration is pinned to a full
   commit SHA, with the version tag in a trailing comment, so a moved tag cannot change what runs.
 - G4: a superseded pull request run is cancelled, and no job runs without a time limit.
-- G5: Dependabot proposes weekly updates for pip, npm and the actions, with minor and patch bumps grouped.
+- G5: Dependabot proposes weekly updates for pip, npm and the actions, with minor and patch bumps grouped, never
+  touches the pandas and numpy pins of the `check` extra, and moves the packages that must change together
+  (`eslint` with `@eslint/js`, the GitHub Actions) in one pull request whatever the bump.
 - G6: `pre-commit install` gives a contributor the linter, the type checker, ESLint and the file checks before each
   commit, with the project's own interpreter and `node_modules`.
 
@@ -58,7 +60,8 @@ the properties below. `repoach.toml` waits on the check named `test`
 
 ## Assumptions
 - A1: `ubuntu-latest` provides the pinned action versions' runtime and a Chromium-capable environment.
-- A2: the `check` extra pins pandas and numpy to the Pyodide versions (`pandas==2.2.3`, `numpy==2.0.2`); numpy
+- A2: the `check` extra pins pandas and numpy to the Pyodide 0.27.7 versions (`pandas==2.2.3`, `numpy==2.0.2`),
+  the ones the exercises run on in the browser (SP-PY-RUNTIME), and `.venv-check` mirrors them; numpy
   2.0.2 publishes no wheel for Python 3.13, so the 3.13 leg installs `pandas==2.2.3` with `numpy~=2.1.0`, the
   closest release that does.
 - A3: the pre-commit tool is installed by the `dev` extra; contributors run it from `.venv-check`.
@@ -98,6 +101,13 @@ Errors:
 - Only one leg fails -> the other leg still finishes (`fail-fast: false`) and `test` fails.
 - A pull request receives a second push while CI runs -> the first run is cancelled.
 - A Dependabot update of an action -> the SHA and its trailing version comment are both updated by Dependabot.
+- A new pandas or numpy release -> no Dependabot pull request: the `pip` entry ignores every version of both
+  (`ignore` with `dependency-name` only), because the pins follow Pyodide, not PyPI.
+- A new ESLint major -> `eslint` and `@eslint/js` arrive in the single `javascript` group pull request
+  (`patterns: ["eslint*", "@eslint/*"]`, `update-types: [minor, patch, major]`); the other npm packages keep
+  their minor-and-patch group, which excludes those patterns.
+- A new major of one action -> every action update arrives in the single `actions` group pull request
+  (`patterns: ["*"]`, `update-types: [minor, patch, major]`).
 
 ### Failure scenarios
 - A pinned action SHA is unreachable -> the job fails at checkout, which is the intended behavior for a moved or
@@ -134,10 +144,17 @@ parse the three files and check their shape; what they cannot see is named as ob
   (`tests/test_ci_config.py::TestWorkflow::test_checkout_never_persists_credentials`).
 - [ ] AC3: the workflow is named `CI`, has a `concurrency` block and every job a `timeout-minutes` key
   (`tests/test_ci_config.py::TestWorkflow::test_workflow_is_named_ci_with_a_concurrency_group_and_a_timeout_on_every_job`).
-- [ ] AC4: `.github/dependabot.yml` lists the ecosystems `pip`, `npm` and `github-actions` with a weekly schedule, a
-  minor-and-patch group each and the commit prefix `build(deps)`
-  (`tests/test_ci_config.py::TestDependabot::test_three_ecosystems_weekly_with_grouped_minor_and_patch_updates`);
-  GitHub's Dependabot tab shows the three.
+- [ ] AC4: `.github/dependabot.yml` lists the ecosystems `pip`, `npm` and `github-actions` with a weekly schedule
+  and the commit prefix `build(deps)`
+  (`tests/test_ci_config.py::TestDependabot::test_three_ecosystems_weekly_with_the_build_deps_prefix`); GitHub's
+  Dependabot tab shows the three.
+- [ ] AC7: the `pip` entry groups minor and patch bumps and ignores every version of `pandas` and `numpy`
+  (`tests/test_ci_config.py::TestDependabot::test_pip_groups_minor_and_patch_and_ignores_every_version_of_the_pyodide_pins`);
+  the `npm` entry has a `javascript` group with the patterns `eslint*` and `@eslint/*` for minor, patch and major,
+  and a minor-and-patch group excluding them
+  (`tests/test_ci_config.py::TestDependabot::test_npm_moves_eslint_and_its_config_together_including_majors`);
+  the `github-actions` entry has one `actions` group for minor, patch and major
+  (`tests/test_ci_config.py::TestDependabot::test_actions_arrive_in_one_group_including_majors`).
 - [ ] AC5: the pre-commit configuration pins its hook repositories to commits and declares the file checks,
   `ruff-check`, mypy and eslint
   (`tests/test_ci_config.py::TestPreCommit::test_hook_repositories_are_pinned_to_commits_and_the_hooks_mirror_ci`);
