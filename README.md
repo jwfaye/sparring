@@ -7,10 +7,27 @@ theory-interview mode where a model grades your free-text answers against a key-
 
 ## Run
 
+As a command, from any directory (Python 3.12 or later, no other dependency):
+
+```bash
+pipx install git+https://github.com/jwfaye/sparring   # or: pip install git+https://github.com/jwfaye/sparring
+sparring                                              # then open http://127.0.0.1:8765/
+sparring 9000                                         # another port, also: --port 9000, --host 127.0.0.1
+sparring --version                                    # version from the package metadata; --help lists the options
+```
+
+From a clone, exactly as before (`pip install .` from the clone gives the same `sparring` command):
+
 ```bash
 python3 server.py            # then open http://127.0.0.1:8765/
 python3 server.py 9000       # another port (otherwise: config.json)
 ```
+
+Where things live: the installed command keeps your interview answers in `$XDG_DATA_HOME/sparring`
+(`~/.local/share/sparring`; `~/Library/Application Support/sparring` on macOS, `%LOCALAPPDATA%\sparring` on Windows)
+and reads its settings from `~/.config/sparring/config.json`; a clone run from its root keeps using `data/` and
+`config.json` there. `SPARRING_DATA_DIR` overrides the data directory, `SPARRING_CONFIG` the settings file, and the
+server logs both at startup. Details in Configuration.
 
 No dependency is needed for the server itself. Optional extras, pinned in `pyproject.toml` and locked in `uv.lock`:
 
@@ -31,7 +48,13 @@ To try the app without touching your progress: `http://127.0.0.1:8765/?profile=t
 
 ## Configuration
 
-Everything lives in `config.json` at the project root (defaults in `backend/config.py`):
+Everything lives in one `config.json` (defaults in `backend/config.py`), the first found of:
+
+1. the file named by `SPARRING_CONFIG`, when the variable is set;
+2. `config.json` in the current directory (a clone run from its root);
+3. `$XDG_CONFIG_HOME/sparring/config.json`, that is `~/.config/sparring/config.json` (the installed command; create
+   it to change a default, a missing file means the defaults).
+
 
 ```json
 {
@@ -53,15 +76,17 @@ Everything lives in `config.json` at the project root (defaults in `backend/conf
 - `grader.effort`: `low` | `medium` | `high`
 - `grader.claude_bin`: path to the Claude Code CLI, non-empty string
 - `grader.timeout_seconds`: positive integer
-- `SPARRING_CONFIG`: environment variable, path of the settings file instead of `config.json` at the project root
+- `SPARRING_CONFIG`: environment variable, path of the settings file, ahead of `./config.json` and the per-user file
   (the browser tests use it to start a server on a free port with the grader offline)
+- `SPARRING_DATA_DIR`: environment variable, directory of your answers (`<dir>/theory[/<profile>]/answers.json`)
+  instead of `data/` in a clone or `$XDG_DATA_HOME/sparring` (`~/.local/share/sparring`) for the installed command
 - `SPARRING_LOG_LEVEL`: environment variable, server log level (default `INFO`)
 
 Every value is validated at startup: an invalid value keeps its default and is logged as a warning, as are
 unknown sections and keys, so a typo never prevents the server from starting.
 
-Apart from those two variables, the only thing that stays in the environment is the API key, never in a file of the
-repository:
+Apart from those three variables, the only thing that stays in the environment is the API key, never in a file of
+the repository:
 `export ANTHROPIC_API_KEY=sk-ant-...` (with `.venv/bin/python -m pip install -e ".[api]"`, then
 `.venv/bin/python server.py`). Without a key and without Claude Code, exercises and quizzes are fully functional and
 the interview mode falls back to offline grading.
@@ -69,15 +94,17 @@ the interview mode falls back to offline grading.
 ## Layout
 
 ```
-server.py                  static server + /api/* (merges bank/*/*.json)
+server.py                  static server + /api/* (merges bank/*/*.json); the `sparring` command is its main()
+pyproject.toml             package metadata: the sparring command, app/ and bank/ shipped as sparring_data
 config.json                settings (server, grader)
 app/                       web page: index.html, css/, js/common.js, js/app.js, js/py-client.js, js/py-worker.js, js/qcm.js, js/theory.js, py/harness.py
-backend/                   config.py, store.py (interview answers), grader.py (Claude Code or Anthropic API)
+backend/                   config.py, paths.py (shipped files and data directory), store.py (interview answers), grader.py (Claude Code or Anthropic API)
 bank/exercises/*.json      exercise bank (one file = one list of exercises)
 bank/qcm/*.json            quiz bank
 bank/theory/*.json         interview questions + grading grids
-data/theory/               your answers and grades (local, never committed)
-tools/                     scripts, run from the root: python -m tools.<name>
+sparring_data/             empty package: the wheel maps app/ and bank/ under it, a clone never reads it
+data/theory/               your answers and grades in a clone (local, never committed); installed: ~/.local/share/sparring/theory/
+tools/                     scripts, run from the root of a clone: python -m tools.<name>
 .venv-check/               venv with pandas 2.2.3 / numpy 2.0.2 = the versions shipped by Pyodide 0.27.7
 ```
 
@@ -211,7 +238,10 @@ npm ci && npm run lint                                    # ESLint on app/js (es
 
 Tests live in `tests/` and run from the project root with `python -m pytest`, which puts the root on `sys.path`.
 They cover the execution harness, the answer store, the grader (with a fake SDK and a fake `claude` CLI, nothing
-real is called), the HTTP API on a live server, and a smoke test that the shipped banks pass their checkers.
+real is called), the HTTP API on a live server, the command line and the path resolution of an installed copy, and
+a smoke test that the shipped banks pass their checkers. To check the package itself, build the wheel and look at
+it: `python -m pip wheel . --no-deps -w /tmp/wheel && unzip -l /tmp/wheel/sparring-*.whl` (it must list
+`sparring_data/app/` and `sparring_data/bank/`, nothing from `data/` or `tests/`).
 `tests/e2e/` drives the page in headless Chromium (Playwright) against a `server.py` started on a free port with the
 `e2e` profile: page boot, an exercise check, a quiz answer, an offline interview answer, the theme toggle. The suite
 is opt-in (`-m e2e` overrides the `addopts` of `pyproject.toml`) and its modules skip when the `e2e` extra is not

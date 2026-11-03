@@ -1,9 +1,12 @@
-"""Tests of backend/store.py on a temporary data directory."""
+"""Tests of backend/store.py on a temporary data directory, and of the SPARRING_DATA_DIR override."""
+import importlib
 import json
 import os
 import re
 
-from backend import store
+import pytest
+
+from backend import paths, store
 
 
 def test_add_answer_persists_a_record(store_dir):
@@ -60,3 +63,28 @@ def test_profile_names_cannot_escape_the_data_directory(store_dir):
 def test_missing_file_means_no_answers(store_dir):
     assert store.list_answers() == []
     assert store.pending(profile="nobody") == []
+
+
+@pytest.fixture
+def data_dir_override(tmp_path, monkeypatch):
+    """backend.store reloaded with SPARRING_DATA_DIR pointing at a temporary directory, then restored."""
+    target = tmp_path / "elsewhere"
+    monkeypatch.setenv(paths.DATA_ENV_VAR, str(target))
+    importlib.reload(store)
+    yield target
+    monkeypatch.delenv(paths.DATA_ENV_VAR)
+    importlib.reload(store)
+
+
+def test_data_dir_override_moves_the_answers(data_dir_override):
+    assert store.DATA == os.path.join(str(data_dir_override), "theory")
+    rec = store.add_answer("q1", "elsewhere", profile="p")
+    with open(data_dir_override / "theory" / "p" / "answers.json", encoding="utf-8") as fh:
+        assert json.load(fh) == [rec]
+
+
+def test_default_data_dir_is_under_the_clone(monkeypatch):
+    monkeypatch.delenv(paths.DATA_ENV_VAR, raising=False)
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    assert paths.is_clone()
+    assert paths.data_dir() == os.path.join(root, "data")

@@ -11,6 +11,13 @@ license = "AGPL-3.0-or-later"
 requires-python = ">=3.12"
 dependencies = []
 
+[project.urls]
+Homepage = "https://github.com/jwfaye/sparring"
+Source = "https://github.com/jwfaye/sparring"
+
+[project.scripts]
+sparring = "server:main"
+
 [project.optional-dependencies]
 api = ["anthropic~=2.3"]
 check = ["pandas==2.2.3", "numpy==2.0.2"]
@@ -18,8 +25,19 @@ dev = ["pytest~=9.2", "ruff~=0.15.4", "mypy~=2.4", "pre-commit~=4.7", "pyyaml~=6
 e2e = ["playwright~=1.64.1", "pytest-playwright~=0.10.0"]
 
 [tool.setuptools]
-packages = ["backend", "tools"]
+packages = ["backend", "tools", "sparring_data", "sparring_data.app", "sparring_data.bank"]
 py-modules = ["server"]
+
+[tool.setuptools.package-dir]
+"sparring_data.app" = "app"
+"sparring_data.bank" = "bank"
+
+[tool.setuptools.package-data]
+"sparring_data.app" = ["**/*"]
+"sparring_data.bank" = ["*/*.json"]
+
+[tool.setuptools.exclude-package-data]
+"sparring_data.app" = ["**/__pycache__/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

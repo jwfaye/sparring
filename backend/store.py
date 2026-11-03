@@ -1,4 +1,8 @@
-"""Local storage of interview answers and their grades (data/theory[/<profile>]/answers.json)."""
+"""Local storage of interview answers and their grades (<data dir>/theory[/<profile>]/answers.json).
+
+The data directory comes from backend/paths.py: SPARRING_DATA_DIR when set, else data/ at the root of a clone, else
+the per-user data directory ($XDG_DATA_HOME/sparring or ~/.local/share/sparring) of an installed `sparring`.
+"""
 import json
 import os
 import re
@@ -7,10 +11,11 @@ import time
 import uuid
 from typing import Any
 
+from backend import paths
+
 Answer = dict[str, Any]
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DATA = os.path.join(ROOT, "data", "theory")
+DATA = os.path.join(paths.data_dir(), "theory")
 _lock = threading.Lock()
 
 
