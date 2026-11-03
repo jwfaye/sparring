@@ -44,9 +44,9 @@
     if (!st.loaded) return;
     const rows = st.themes.map(t => {
       const qs = st.bank.filter(q => q.theme === t);
-      let asked = 0, wrong = 0, failing = 0, seen = 0;
-      qs.forEach(q => { const h = st.history[q.id]; if (h) { asked += h.asked; wrong += h.wrong; seen++; if (h.lastWrong) failing++; } });
-      return { t, n: qs.length, asked, wrong, failing, seen };
+      let asked = 0, wrong = 0, toReview = 0, seen = 0;
+      qs.forEach(q => { const h = st.history[q.id]; if (h) { asked += h.asked; wrong += h.wrong; seen++; if (h.lastWrong) toReview++; } });
+      return { t, n: qs.length, asked, wrong, failing: toReview, seen };
     });
     const tot = rows.reduce((a, r) => ({ asked: a.asked + r.asked, wrong: a.wrong + r.wrong, failing: a.failing + r.failing, seen: a.seen + r.seen }), { asked: 0, wrong: 0, failing: 0, seen: 0 });
     $('#qcm-stats-cards').innerHTML = [
@@ -81,9 +81,7 @@
     if (n !== 'all') ids = ids.slice(0, Number(n));
     return startSession(ids);
   }
-  function reviewErrors() {
-    if (startSession(shuffle(st.bank.filter(q => st.history[q.id]?.lastWrong).map(q => q.id)))) window.TTAPP.switchView('qcm');
-  }
+  const reviewErrors = () => startSession(shuffle(st.bank.filter(q => st.history[q.id]?.lastWrong).map(q => q.id)));
 
   function renderQuestion() {
     const s = st.session, q = st.byId[s.ids[s.idx]], perm = s.perms[q.id];
@@ -154,15 +152,16 @@
   });
 
   // ------------------------------------------------------------ init
-  $('#qcm-review').onclick = reviewErrors;
   $('#qcm-next').onclick = next;
   $('#qcm-quit').onclick = backToSetup;
   $('#qcm-back').onclick = backToSetup;
   $('#qcm-all').onclick = () => { const boxes = $$('#qcm-themes input'); const all = boxes.every(b => b.checked); boxes.forEach(b => b.checked = !all); };
   twoClick($('#qcm-reset-history'), 'Clear quiz history', () => { st.history = {}; st.sessions = []; save(); renderSetup(); renderHistory(); });
-  // start: a session from the setup panel (false when the selection is empty); openHistory: the history page; leave: drop the session.
+  // start: a session from the setup panel, review: the questions missed last time (both false when the selection is
+  // empty, app.js then stays on the setup screen); openHistory: the history page; leave: drop the session.
   window.TTQCM = {
     start: newSession,
+    review: reviewErrors,
     openHistory: () => { renderHistory(); show('home'); },
     leave: () => { st.session = null; },
     state: st,

@@ -190,9 +190,11 @@
   }
 
   // ------------------------------------------------------------ init
-  $('#th-next2').onclick = () => { stopTimer(); if (!pickQuestion()) leave(); };
+  // Next or Skip: another question of the same selection; back to the setup screen when it has none left to give.
+  const nextQuestion = () => { stopTimer(); if (!pickQuestion()) { leave(); window.TTAPP.switchView('setup'); } };
+  $('#th-next2').onclick = nextQuestion;
   $('#th-submit').onclick = submit;
-  $('#th-skip').onclick = () => { stopTimer(); if (!pickQuestion()) leave(); };
+  $('#th-skip').onclick = nextQuestion;
   // Back: to the history page when the answer was reopened from it, else to the setup screen.
   $('#th-back').onclick = () => { const fromHistory = st.fromHistory; leave(); if (fromHistory) openHistory(); else window.TTAPP.switchView('setup'); };
   $('#th-regrade').onclick = regrade;

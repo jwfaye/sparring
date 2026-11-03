@@ -100,8 +100,7 @@ def test_history_and_summary_open_from_the_setup_screen(ready_page, setup_screen
 
 def test_start_with_an_empty_selection_keeps_the_setup_screen(ready_page, setup_screen):
     page = ready_page
-    setup_screen(page)
-    page.click('.tab[data-mode="qcm"]')
+    setup_screen(page, "qcm")
     expect(page.locator("#qcm-themes input").first).to_be_checked()
     page.click("#qcm-all")
     expect(page.locator("#qcm-themes input:checked")).to_have_count(0)
@@ -114,3 +113,29 @@ def test_start_with_an_empty_selection_keeps_the_setup_screen(ready_page, setup_
     page.uncheck("#exam-enabled")
     page.click("#qcm-all")
     expect(page.locator("#qcm-themes input:not(:checked)")).to_have_count(0)
+
+
+def test_exam_minutes_are_clamped_to_the_allowed_range(ready_page, setup_screen):
+    page = ready_page
+    setup_screen(page)
+    for typed, kept in (("3", "5"), ("999", "240"), ("", "45"), ("30", "30")):
+        page.fill("#exam-minutes", typed)
+        page.locator("#exam-minutes").dispatch_event("change")
+        expect(page.locator("#exam-minutes")).to_have_value(kept)
+
+
+def test_summary_row_opens_the_exercise_and_widens_the_filters(ready_page, setup_screen, start):
+    page = ready_page
+    setup_screen(page, "exercises")
+    page.select_option("#f-language", "sql")
+    start(page, "exercises")
+    setup_screen(page)
+    page.click("#btn-recap")
+    row = page.locator("#recap-exercises tr.clickable").filter(has=page.locator("td", has_text="python")).first
+    wanted = row.get_attribute("data-id")
+    row.click()
+    expect(page.locator("#view-exercises")).to_be_visible()
+    assert page.evaluate("window.tt.current.id") == wanted
+    expect(page.locator("#ex-list li.active")).to_have_count(1)
+    setup_screen(page)
+    expect(page.locator("#f-language")).to_have_value("")

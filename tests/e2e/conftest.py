@@ -95,29 +95,33 @@ def app_url() -> str:
     return f"/?profile={PROFILE}"
 
 
-def open_setup(page) -> None:
-    """Back to the setup screen from wherever the page is (the Setup button of the training screens)."""
+def open_setup(page, mode: str | None = None) -> None:
+    """Back to the setup screen from wherever the page is (the Setup button of the training screens).
+
+    With `mode`, also select that mode's tab so its panel and controls are visible.
+    """
     from playwright.sync_api import expect
 
     if page.locator("#btn-setup").is_visible():
         page.click("#btn-setup")
     expect(page.locator("#view-setup")).to_be_visible()
+    if mode:
+        page.click(f'.tab[data-mode="{mode}"]')
+        expect(page.locator(f"#setup-{mode}")).to_be_visible()
 
 
 def start_mode(page, mode: str) -> None:
     """Pick a mode on the setup screen, press Start and wait for its training screen."""
     from playwright.sync_api import expect
 
-    open_setup(page)
-    page.click(f'.tab[data-mode="{mode}"]')
-    expect(page.locator(f"#setup-{mode}")).to_be_visible()
+    open_setup(page, mode)
     page.click("#btn-start")
     expect(page.locator(f"#view-{mode}")).to_be_visible()
 
 
 @pytest.fixture(scope="session")
 def setup_screen():
-    """Callable: `setup_screen(page)` shows the setup screen."""
+    """Callable: `setup_screen(page, mode=None)` shows the setup screen, on the given mode's panel when asked."""
     return open_setup
 
 

@@ -19,7 +19,7 @@ def exercises(ready_page):
 
 def start_with_language(page, setup_screen, start, language):
     """Pick the language filter on the setup screen, start the exercises and open the first one of the list."""
-    setup_screen(page)
+    setup_screen(page, "exercises")
     page.select_option("#f-language", language)
     start(page, "exercises")
     page.click('#ex-list li[data-i="0"]')

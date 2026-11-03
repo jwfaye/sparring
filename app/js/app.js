@@ -7,11 +7,12 @@
   const MODES = ['exercises', 'qcm', 'theory'];
   const VIEWS = ['setup', ...MODES, 'recap'];
   const LABELS = { exercises: 'Exercises', qcm: 'Quiz', theory: 'Interview', recap: 'Summary' };
+  const EXAM_MINUTES = { def: 45, min: 5, max: 240 };
   const DIFF_RANK = { easy: 0, medium: 1, hard: 2 };
 
   const state = {
     bank: [], byId: {}, order: [], idx: -1, current: null,
-    progress: {}, settings: { examMinutes: 45 }, setup: { mode: 'exercises', filters: {}, examEnabled: false }, exam: null,
+    progress: {}, settings: { examMinutes: EXAM_MINUTES.def }, setup: { mode: 'exercises', filters: {}, examEnabled: false }, exam: null,
     pyReady: false, busy: false, editor: null, view: 'setup', outputCollapsed: false,
     pendingConfirm: null,
   };
@@ -327,9 +328,14 @@
     $('#exam-running').textContent = left >= 0 ? `Exam in progress, ${fmtTime(left)} left` : 'Exam over';
     banner.classList.toggle('hidden', left >= 0);
   }
-  function startExam() {
-    const minutes = Math.max(1, Number($('#exam-minutes').value || 45));
+  function examMinutes() {
+    const minutes = Math.min(EXAM_MINUTES.max, Math.max(EXAM_MINUTES.min, Math.round(Number($('#exam-minutes').value) || EXAM_MINUTES.def)));
+    $('#exam-minutes').value = minutes;
     state.settings.examMinutes = minutes; saveJSON(LS.settings, state.settings);
+    return minutes;
+  }
+  function startExam() {
+    const minutes = examMinutes();
     state.exam = { startedAt: Date.now(), endsAt: Date.now() + minutes * 60000, minutes };
     saveJSON(LS.exam, state.exam); renderExam();
   }
@@ -377,23 +383,22 @@
     selectTab(m);
     MODES.forEach(x => $('#setup-' + x).classList.toggle('hidden', x !== m));
   }
-  // Start: the chosen mode with the parameters of its panel, then the exam countdown when asked. A mode whose
-  // selection is empty leaves a message on its panel and nothing starts.
-  function start() {
-    const m = state.setup.mode;
-    let started = false;
-    if (m === 'exercises') {
-      restoreOrCreateOrder();
-      const lastId = loadJSON(LS.lastId, null, sessionStorage);
-      started = state.order.length > 0;
-      if (started) showExercise(Math.max(0, state.order.indexOf(lastId)));
-      else $('#setup-ex-msg').textContent = 'No exercise matches these filters: widen them.';
-    } else if (m === 'qcm') started = !!window.TTQCM?.start();
-    else if (m === 'theory') started = !!window.TTTHEORY?.start();
-    if (!started) return;
+  // Launch a mode: its starter returns false (with a message on its panel) when the selection is empty, and then
+  // nothing starts; otherwise the exam countdown starts when asked and the training screen is shown.
+  function launch(mode, starter) {
+    if (!starter()) return;
     if ($('#exam-enabled').checked && !state.exam) startExam();
-    switchView(m);
+    switchView(mode);
   }
+  function startExercises() {
+    restoreOrCreateOrder();
+    if (!state.order.length) { $('#setup-ex-msg').textContent = 'No exercise matches these filters: widen them.'; return false; }
+    const lastId = loadJSON(LS.lastId, null, sessionStorage);
+    showExercise(Math.max(0, state.order.indexOf(lastId)));
+    return true;
+  }
+  const STARTERS = { exercises: startExercises, qcm: () => !!window.TTQCM?.start(), theory: () => !!window.TTTHEORY?.start() };
+  const start = () => launch(state.setup.mode, STARTERS[state.setup.mode]);
   function openSetup() {
     if (state.view === 'qcm') window.TTQCM?.leave();
     if (state.view === 'theory') window.TTTHEORY?.leave();
@@ -431,9 +436,10 @@
     initSplitter();
     $('#exam-toggle').onclick = stopExam;
     $('#exam-enabled').onchange = () => { state.setup.examEnabled = $('#exam-enabled').checked; saveSetup(); };
-    $('#exam-minutes').onchange = () => { state.settings.examMinutes = Number($('#exam-minutes').value); saveJSON(LS.settings, state.settings); };
+    $('#exam-minutes').onchange = examMinutes;
     $$('.tab').forEach(t => t.onclick = () => selectMode(t.dataset.mode));
     $('#btn-start').onclick = start;
+    $('#qcm-review').onclick = () => launch('qcm', () => !!window.TTQCM?.review());
     $('#btn-setup').onclick = openSetup;
     $('#btn-recap').onclick = () => switchView('recap');
     $('#btn-qcm-history').onclick = () => { window.TTQCM?.openHistory(); switchView('qcm'); };

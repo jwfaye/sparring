@@ -55,8 +55,9 @@ function names unchanged), `README.md` and `docs/img/` (SP-BRAND: sections and s
 - G1: the page opens on the setup screen; the last used setup (mode, exercise filters, exam checkbox and duration,
   quiz and interview preferences) is remembered per profile in `localStorage` under the `TT.NS` namespace, so a
   returning user presses Start.
-- G2: Start begins the chosen mode with the parameters of its panel, and starts the exam countdown when the
-  checkbox is ticked and none runs; a selection with no exercise or question keeps the setup screen with a message.
+- G2: Start (and Review my mistakes) begins the chosen mode with the parameters of its panel, then starts the exam
+  countdown when the checkbox is ticked and none runs, with the duration clamped to 5-240 minutes; a selection with
+  no exercise or question keeps the setup screen with a message and starts nothing.
 - G3: the training screens hold no configuration control: no select, checkbox, chip or option panel in the top
   bar or in the visible view; the exam clock appears only while a countdown runs.
 - G4: the Setup button of the top bar returns to the setup screen from any training screen; the Summary and the two
@@ -146,9 +147,12 @@ flowchart TD
 - [ ] AC3: the exam clock is visible only while a countdown runs, and the setup screen shows the running state with
   a Stop button (`tests/e2e/test_setup.py::test_exam_countdown_shows_the_clock_only_when_set`); Start on an empty
   selection keeps the setup screen with a message and starts no countdown
-  (`tests/e2e/test_setup.py::test_start_with_an_empty_selection_keeps_the_setup_screen`).
+  (`tests/e2e/test_setup.py::test_start_with_an_empty_selection_keeps_the_setup_screen`); the duration is clamped to
+  5-240 minutes (`tests/e2e/test_setup.py::test_exam_minutes_are_clamped_to_the_allowed_range`).
 - [ ] AC4: the Summary, the quiz history and the interview history open from the setup screen
-  (`tests/e2e/test_setup.py::test_history_and_summary_open_from_the_setup_screen`).
+  (`tests/e2e/test_setup.py::test_history_and_summary_open_from_the_setup_screen`), and a Summary row opens its
+  exercise, widening the filters when needed
+  (`tests/e2e/test_setup.py::test_summary_row_opens_the_exercise_and_widens_the_filters`).
 - [ ] AC5: the mode tabs follow the WAI-ARIA pattern on the setup screen, with arrow keys
   (`tests/e2e/test_a11y.py::test_tabs_follow_the_aria_tab_pattern`), and axe finds no serious or critical
   violation on the nine screens in both themes (`tests/e2e/test_a11y.py::test_no_serious_or_critical_violation`).
