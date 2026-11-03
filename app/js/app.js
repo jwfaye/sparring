@@ -420,7 +420,7 @@
   async function main() {
     window.tt = state;
     state.progress = loadJSON(LS.progress, {});
-    state.settings = { examMinutes: 45, ...loadJSON(LS.settings, {}) };
+    state.settings = { examMinutes: EXAM_MINUTES.def, ...loadJSON(LS.settings, {}) };
     state.setup = { ...state.setup, ...loadJSON(LS.setup, {}) };
     state.exam = loadJSON(LS.exam, null);
     $('#exam-minutes').value = state.settings.examMinutes;
