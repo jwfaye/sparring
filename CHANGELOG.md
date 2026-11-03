@@ -15,7 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Changed
 - Interview answers are kept in a SQLite database per profile (`data/theory[/<profile>]/answers.sqlite3`) instead
   of a JSON file rewritten on every request; an existing `answers.json` is imported on first use and renamed
-  `answers.json.migrated` (#PR).
+  `answers.json.migrated` (#24).
 
 ## [0.1.0] - 2026-11-03
 
