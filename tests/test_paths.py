@@ -27,6 +27,26 @@ def test_installed_layout_uses_the_data_package(monkeypatch, tmp_path):
     assert paths.resource_dir("bank") == str(site / "sparring_data" / "bank")
 
 
+def test_packaged_dir_missing_subdirectory_falls_through_to_error(monkeypatch, tmp_path):
+    site = tmp_path / "site-packages"
+    (site / "sparring_data").mkdir(parents=True)
+    monkeypatch.setattr(paths, "ROOT", str(site))
+    monkeypatch.setattr(paths.importlib.resources, "files", lambda name: pathlib.Path(site / name))
+    assert paths._packaged_dir("app") is None
+    with pytest.raises(FileNotFoundError, match="app/ not found"):
+        paths.resource_dir("app")
+
+
+def test_packaged_dir_ignores_a_resource_that_is_not_a_directory_on_disk(monkeypatch, tmp_path):
+    class Zipped:
+        def joinpath(self, name):
+            return object()
+
+    monkeypatch.setattr(paths, "ROOT", str(tmp_path))
+    monkeypatch.setattr(paths.importlib.resources, "files", lambda name: Zipped())
+    assert paths._packaged_dir("app") is None
+
+
 def test_missing_everywhere_is_an_error(monkeypatch, tmp_path):
     monkeypatch.setattr(paths, "ROOT", str(tmp_path))
 

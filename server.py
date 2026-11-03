@@ -273,6 +273,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
 
 def main(argv: list[str] | None = None) -> None:
+    """Entry point of the `sparring` command and of `python server.py`: argv defaults to sys.argv[1:]."""
     global bind_host
     args = parse_args(argv)
     logging.basicConfig(level=os.environ.get("SPARRING_LOG_LEVEL", "INFO").upper(),

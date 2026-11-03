@@ -141,6 +141,9 @@ flowchart TD
   `tests/test_cli.py::test_positional_and_option_must_not_disagree`,
   `tests/test_cli.py::test_main_uses_the_arguments_over_the_settings`,
   `tests/test_cli.py::test_main_falls_back_to_the_settings`).
+- [ ] AC1b: the server logs the settings file, with a caveat when it is missing, and the data directory at startup
+  (`tests/test_cli.py::test_main_logs_settings_and_data_directory`,
+  `tests/test_cli.py::test_main_logs_an_existing_settings_file_without_a_caveat`).
 - [ ] AC2: `--version` prints the package metadata version and `unknown` without metadata; `--help` lists every
   option (`tests/test_cli.py::test_version_prints_the_package_version`,
   `tests/test_cli.py::test_version_comes_from_the_package_metadata`,
@@ -148,6 +151,8 @@ flowchart TD
 - [ ] AC3: in a clone the shipped directories are those next to `server.py`; installed, those of `sparring_data`;
   missing everywhere is an error (`tests/test_paths.py::test_clone_uses_the_directories_next_to_server_py`,
   `tests/test_paths.py::test_installed_layout_uses_the_data_package`,
+  `tests/test_paths.py::test_packaged_dir_missing_subdirectory_falls_through_to_error`,
+  `tests/test_paths.py::test_packaged_dir_ignores_a_resource_that_is_not_a_directory_on_disk`,
   `tests/test_paths.py::test_missing_everywhere_is_an_error`).
 - [ ] AC4: the data directory is `SPARRING_DATA_DIR`, else `<root>/data` in a clone, else the per-user directory,
   and the store writes there (`tests/test_paths.py::test_data_dir_env_override_wins`,

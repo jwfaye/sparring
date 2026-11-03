@@ -1,5 +1,6 @@
 """Command line of server.py (the `sparring` entry point): positional port, --host, --port, --version."""
 import importlib.metadata
+import logging
 
 import pytest
 
@@ -69,7 +70,9 @@ def test_help_lists_every_option(capsys):
     assert "--host" in out and "--port" in out and "--version" in out and "port" in out
 
 
-def test_main_uses_the_arguments_over_the_settings(monkeypatch):
+@pytest.fixture
+def fake_server(monkeypatch):
+    """A ThreadingHTTPServer stand-in that records the bind address and stops at once; bind_host is restored."""
     seen = {}
 
     class FakeServer:
@@ -81,23 +84,36 @@ def test_main_uses_the_arguments_over_the_settings(monkeypatch):
 
     monkeypatch.setattr(server.http.server, "ThreadingHTTPServer", FakeServer)
     monkeypatch.setattr(server, "bind_host", server.bind_host)
+    return seen
+
+
+def test_main_uses_the_arguments_over_the_settings(fake_server):
     server.main(["--host", "127.0.0.2", "--port", "9123"])
-    assert seen["address"] == ("127.0.0.2", 9123)
+    assert fake_server["address"] == ("127.0.0.2", 9123)
     assert server.bind_host == "127.0.0.2"
 
 
-def test_main_falls_back_to_the_settings(monkeypatch):
-    seen = {}
-
-    class FakeServer:
-        def __init__(self, address, handler):
-            seen["address"] = address
-
-        def serve_forever(self):
-            raise KeyboardInterrupt
-
-    monkeypatch.setattr(server.http.server, "ThreadingHTTPServer", FakeServer)
-    monkeypatch.setattr(server, "bind_host", server.bind_host)
+def test_main_falls_back_to_the_settings(fake_server):
     server.main([])
     srv = server.config.section("server")
-    assert seen["address"] == (srv["host"], srv["port"])
+    assert fake_server["address"] == (srv["host"], srv["port"])
+
+
+def test_main_logs_settings_and_data_directory(fake_server, monkeypatch, tmp_path, caplog):
+    absent = tmp_path / "absent.json"
+    monkeypatch.setattr(server.config, "PATH", str(absent))
+    monkeypatch.setenv(server.paths.DATA_ENV_VAR, str(tmp_path / "data"))
+    with caplog.at_level(logging.INFO, logger="sparring"):
+        server.main([])
+    messages = [record.getMessage() for record in caplog.records]
+    assert f"Settings: {absent} (not found, using defaults)" in messages
+    assert f"Data directory: {tmp_path / 'data'}" in messages
+
+
+def test_main_logs_an_existing_settings_file_without_a_caveat(fake_server, monkeypatch, tmp_path, caplog):
+    present = tmp_path / "config.json"
+    present.write_text("{}", encoding="utf-8")
+    monkeypatch.setattr(server.config, "PATH", str(present))
+    with caplog.at_level(logging.INFO, logger="sparring"):
+        server.main([])
+    assert f"Settings: {present}" in [record.getMessage() for record in caplog.records]
