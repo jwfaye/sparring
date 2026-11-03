@@ -144,7 +144,9 @@ flowchart TD
   exam clock is hidden, and the Setup button returns to the setup screen
   (`tests/e2e/test_setup.py::test_training_screens_show_no_configuration_controls`).
 - [ ] AC3: the exam clock is visible only while a countdown runs, and the setup screen shows the running state with
-  a Stop button (`tests/e2e/test_setup.py::test_exam_countdown_shows_the_clock_only_when_set`).
+  a Stop button (`tests/e2e/test_setup.py::test_exam_countdown_shows_the_clock_only_when_set`); Start on an empty
+  selection keeps the setup screen with a message and starts no countdown
+  (`tests/e2e/test_setup.py::test_start_with_an_empty_selection_keeps_the_setup_screen`).
 - [ ] AC4: the Summary, the quiz history and the interview history open from the setup screen
   (`tests/e2e/test_setup.py::test_history_and_summary_open_from_the_setup_screen`).
 - [ ] AC5: the mode tabs follow the WAI-ARIA pattern on the setup screen, with arrow keys
@@ -152,7 +154,9 @@ flowchart TD
   violation on the nine screens in both themes (`tests/e2e/test_a11y.py::test_no_serious_or_critical_violation`).
 - [ ] AC6: the existing flows pass through the setup screen: an exercise check
   (`tests/e2e/test_exercises.py::test_python_solution_passes_every_test`), a keyboard quiz answer
-  (`tests/e2e/test_quiz.py::test_answer_with_the_keyboard_shows_the_explanation`), an offline interview answer
+  (`tests/e2e/test_quiz.py::test_answer_with_the_keyboard_shows_the_explanation`), a quiz run to its result screen
+  (`tests/e2e/test_quiz.py::test_finishing_a_session_shows_the_result_and_back_returns_to_setup`), an offline
+  interview answer
   found on the history page (`tests/e2e/test_interview.py::test_offline_answer_is_saved_in_the_history`), the
   editor escape (`tests/e2e/test_a11y.py::test_escape_then_tab_leaves_the_code_editor`).
 

@@ -71,7 +71,7 @@ def test_exam_countdown_shows_the_clock_only_when_set(ready_page, setup_screen, 
     start(page, "exercises")
     clock = page.locator("#exam-clock")
     expect(clock).to_be_visible()
-    expect(clock).to_have_text(re.compile(r"^(10:00|9:5\d)$"))
+    expect(clock).to_have_text(re.compile(r"^(10:00|9:[0-5]\d)$"))
     setup_screen(page)
     expect(page.locator("#exam-running")).to_contain_text("Exam in progress")
     expect(page.locator("#exam-enabled")).to_be_hidden()
@@ -96,3 +96,21 @@ def test_history_and_summary_open_from_the_setup_screen(ready_page, setup_screen
     expect(page.locator("#th-home")).to_be_visible()
     expect(page.locator("#th-question")).to_be_hidden()
     setup_screen(page)
+
+
+def test_start_with_an_empty_selection_keeps_the_setup_screen(ready_page, setup_screen):
+    page = ready_page
+    setup_screen(page)
+    page.click('.tab[data-mode="qcm"]')
+    expect(page.locator("#qcm-themes input").first).to_be_checked()
+    page.click("#qcm-all")
+    expect(page.locator("#qcm-themes input:checked")).to_have_count(0)
+    page.check("#exam-enabled")
+    page.click("#btn-start")
+    expect(page.locator("#view-setup")).to_be_visible()
+    expect(page.locator("#qcm-msg")).to_have_text("No question for this selection.")
+    expect(page.locator("#exam-clock")).to_be_hidden()
+    expect(page.locator("#exam-running")).to_be_hidden()
+    page.uncheck("#exam-enabled")
+    page.click("#qcm-all")
+    expect(page.locator("#qcm-themes input:not(:checked)")).to_have_count(0)

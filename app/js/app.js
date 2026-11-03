@@ -377,17 +377,22 @@
     selectTab(m);
     MODES.forEach(x => $('#setup-' + x).classList.toggle('hidden', x !== m));
   }
-  // Start: the exam countdown when asked, then the chosen mode with the parameters of its panel.
+  // Start: the chosen mode with the parameters of its panel, then the exam countdown when asked. A mode whose
+  // selection is empty leaves a message on its panel and nothing starts.
   function start() {
     const m = state.setup.mode;
-    if ($('#exam-enabled').checked && !state.exam) startExam();
+    let started = false;
     if (m === 'exercises') {
       restoreOrCreateOrder();
       const lastId = loadJSON(LS.lastId, null, sessionStorage);
-      showExercise(state.order.length ? Math.max(0, state.order.indexOf(lastId)) : -1);
-      switchView('exercises');
-    } else if (m === 'qcm') { if (window.TTQCM?.start()) switchView('qcm'); }
-    else if (m === 'theory') { if (window.TTTHEORY?.start()) switchView('theory'); }
+      started = state.order.length > 0;
+      if (started) showExercise(Math.max(0, state.order.indexOf(lastId)));
+      else $('#setup-ex-msg').textContent = 'No exercise matches these filters: widen them.';
+    } else if (m === 'qcm') started = !!window.TTQCM?.start();
+    else if (m === 'theory') started = !!window.TTTHEORY?.start();
+    if (!started) return;
+    if ($('#exam-enabled').checked && !state.exam) startExam();
+    switchView(m);
   }
   function openSetup() {
     if (state.view === 'qcm') window.TTQCM?.leave();
