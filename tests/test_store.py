@@ -6,6 +6,7 @@ import os
 import re
 import sqlite3
 import threading
+import time
 
 import pytest
 
@@ -49,9 +50,13 @@ def test_add_answer_waits_for_a_locked_database(store_dir):
     store.add_answer("q1", "a")
     holder = sqlite3.connect(store_dir / "answers.sqlite3", check_same_thread=False)
     holder.execute("BEGIN IMMEDIATE")
-    threading.Timer(0.3, holder.commit).start()
+    release = threading.Timer(0.3, holder.commit)
+    started = time.monotonic()
+    release.start()
     rec = store.add_answer("q1", "b")
+    release.join()
     holder.close()
+    assert time.monotonic() - started >= 0.3
     assert [a["id"] for a in store.list_answers()][-1] == rec["id"]
 
 
@@ -173,6 +178,15 @@ def test_malformed_legacy_file_is_left_in_place(store_dir):
     store_dir.mkdir(parents=True)
     (store_dir / "answers.json").write_text("not json", encoding="utf-8")
     with pytest.raises(json.JSONDecodeError):
+        store.list_answers()
+    assert (store_dir / "answers.json").exists()
+    assert not (store_dir / "answers.json.migrated").exists()
+
+
+def test_legacy_non_list_file_is_left_in_place(store_dir):
+    store_dir.mkdir(parents=True)
+    (store_dir / "answers.json").write_text(json.dumps({"id": "not a list"}), encoding="utf-8")
+    with pytest.raises(TypeError):
         store.list_answers()
     assert (store_dir / "answers.json").exists()
     assert not (store_dir / "answers.json.migrated").exists()

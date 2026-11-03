@@ -162,6 +162,7 @@ flowchart TD
   `tests/test_store.py::test_migration_is_idempotent`,
   `tests/test_store.py::test_migration_keeps_an_earlier_migrated_file`); a malformed file or a record without an
   id rolls the import back and keeps the file (`tests/test_store.py::test_malformed_legacy_file_is_left_in_place`,
+  `tests/test_store.py::test_legacy_non_list_file_is_left_in_place`,
   `tests/test_store.py::test_legacy_record_without_id_rolls_back_and_keeps_the_file`).
 - [ ] AC5: concurrent `add_answer` calls from threads all land, with distinct ids
   (`tests/test_store.py::test_concurrent_adds_from_threads`), and a writer waits for a database another

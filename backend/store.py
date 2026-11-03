@@ -84,6 +84,8 @@ def _import_legacy(conn: sqlite3.Connection, legacy: str, db: str) -> None:
     """Insert every record of the legacy JSON file in one transaction, skipping known ids, then rename the file."""
     with open(legacy, encoding="utf-8") as fh:
         items: list[Answer] = json.load(fh)
+    if not isinstance(items, list):
+        raise TypeError(f"{legacy}: expected a JSON list of answer records, got {type(items).__name__}")
     with conn:
         conn.executemany(_INSERT.format("OR IGNORE"), [_row(rec) for rec in items])
     target = _migrated_name(legacy)
