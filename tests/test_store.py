@@ -74,6 +74,14 @@ def test_answers_are_ordered_by_time(store_dir):
     assert [a["id"] for a in store.list_answers()] == [early["id"], late["id"]]
 
 
+def test_equal_timestamps_keep_insertion_order(store_dir):
+    first = store.add_answer("q1", "first")
+    store.add_answer("q1", "second")
+    with sqlite3.connect(store_dir / "answers.sqlite3") as conn:
+        conn.execute("UPDATE answers SET at = ?", (first["at"],))
+    assert [a["answer"] for a in store.list_answers()] == ["first", "second"]
+
+
 def test_profiles_are_isolated(store_dir):
     store.add_answer("q1", "main")
     store.add_answer("q2", "test", profile="test")
@@ -152,6 +160,15 @@ def test_malformed_legacy_file_is_left_in_place(store_dir):
         store.list_answers()
     assert (store_dir / "answers.json").exists()
     assert not (store_dir / "answers.json.migrated").exists()
+
+
+def test_legacy_record_without_id_rolls_back_and_keeps_the_file(store_dir):
+    write_legacy(store_dir, LEGACY + [{"qid": "q9", "at": 1, "answer": "no id"}])
+    with pytest.raises(KeyError):
+        store.list_answers()
+    assert (store_dir / "answers.json").exists()
+    assert not (store_dir / "answers.json.migrated").exists()
+    assert rows(store_dir / "answers.sqlite3") == []
 
 
 def test_concurrent_adds_from_threads(store_dir):

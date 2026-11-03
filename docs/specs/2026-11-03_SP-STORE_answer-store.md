@@ -151,14 +151,17 @@ flowchart TD
   `tests/test_store.py::test_set_grade_stamps_the_record`, `tests/test_store.py::test_delete_answer`,
   `tests/test_store.py::test_missing_database_means_no_answers`).
 - [ ] AC2: `list_answers` orders by `at` ascending whatever the insertion order
-  (`tests/test_store.py::test_answers_are_ordered_by_time`).
+  (`tests/test_store.py::test_answers_are_ordered_by_time`,
+  `tests/test_store.py::test_equal_timestamps_keep_insertion_order`).
 - [ ] AC3: the database is one file per profile, in WAL mode, with the `answers` table and the `qid` index
   (`tests/test_store.py::test_profiles_are_isolated`, `tests/test_store.py::test_database_schema_and_journal_mode`).
 - [ ] AC4: a legacy `answers.json` with a graded and an ungraded record is imported on the first access, renamed to
   `.migrated`, logged once, and a second import skips the known ids
   (`tests/test_store.py::test_legacy_json_is_imported_then_renamed`,
   `tests/test_store.py::test_migration_is_idempotent`,
-  `tests/test_store.py::test_migration_keeps_an_earlier_migrated_file`).
+  `tests/test_store.py::test_migration_keeps_an_earlier_migrated_file`); a malformed file or a record without an
+  id rolls the import back and keeps the file (`tests/test_store.py::test_malformed_legacy_file_is_left_in_place`,
+  `tests/test_store.py::test_legacy_record_without_id_rolls_back_and_keeps_the_file`).
 - [ ] AC5: concurrent `add_answer` calls from threads all land, with distinct ids
   (`tests/test_store.py::test_concurrent_adds_from_threads`).
 - [ ] AC6: profile names are stripped to `[a-zA-Z0-9_-]` and cannot leave the data directory
