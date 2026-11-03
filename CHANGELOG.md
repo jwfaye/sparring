@@ -22,7 +22,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 - Theory interview bank reviewed question by question (factual fixes, gradeable key points, American spelling) and
-  `difficulty` set on every question (#PR).
+  `difficulty` set on every question (#23).
 
 ## [0.1.0] - 2026-11-03
 
