@@ -105,5 +105,11 @@ jobs:
         run: python -m pip install -e ".[check,dev,e2e]"
       - name: Install Chromium
         run: python -m playwright install --with-deps chromium
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install axe-core (injected by tests/e2e/test_a11y.py)
+        run: npm ci
       - name: Browser tests (headless Chromium against a local server.py)
         run: python -m pytest -q -m e2e tests/e2e

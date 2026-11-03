@@ -13,36 +13,39 @@
 </head>
 <body>
 <header class="topbar">
-  <div class="brand">Sparring</div>
-  <nav class="tabs">
-    <button class="tab active" data-view="exercises">Exercises</button>
-    <button class="tab" data-view="qcm">Quiz</button>
-    <button class="tab" data-view="theory">Interview</button>
-    <button class="tab" data-view="recap">Summary</button>
+  <h1 class="brand">Sparring</h1>
+  <nav class="tabs" aria-label="Sections">
+    <div class="tablist" role="tablist">
+      <button type="button" class="tab active" role="tab" id="tab-exercises" aria-selected="true" aria-controls="view-exercises" data-view="exercises">Exercises</button>
+      <button type="button" class="tab" role="tab" id="tab-qcm" aria-selected="false" aria-controls="view-qcm" tabindex="-1" data-view="qcm">Quiz</button>
+      <button type="button" class="tab" role="tab" id="tab-theory" aria-selected="false" aria-controls="view-theory" tabindex="-1" data-view="theory">Interview</button>
+      <button type="button" class="tab" role="tab" id="tab-recap" aria-selected="false" aria-controls="view-recap" tabindex="-1" data-view="recap">Summary</button>
+    </div>
   </nav>
-  <div class="exam" id="exam-box">
-    <label class="exam-label" title="Global countdown, exam style">Exam mode</label>
+  <div class="exam" id="exam-box" role="group" aria-label="Exam mode">
+    <label class="exam-label" for="exam-minutes" title="Global countdown, exam style">Exam mode</label>
     <input type="number" id="exam-minutes" min="5" max="240" step="5" value="45" title="Duration in minutes"><span class="muted">min</span>
     <button id="exam-toggle" class="btn small">Start</button>
-    <span id="exam-clock" class="clock" title="Time left">45:00</span>
+    <span id="exam-clock" class="clock" role="timer" aria-label="Time left">45:00</span>
   </div>
-  <div id="py-status" class="status loading">Loading Python…</div>
-  <button id="theme-toggle" class="btn small" title="Light / dark">Dark</button>
+  <div id="py-status" class="status loading" role="status">Loading Python…</div>
+  <button id="theme-toggle" class="btn small" aria-label="Switch to dark theme">Dark</button>
 </header>
 
-<div id="exam-banner" class="banner hidden">Time is up. You can keep going, but note where you were.</div>
+<div id="exam-banner" class="banner hidden" role="alert">Time is up. You can keep going, but note where you were.</div>
 
-<main id="view-exercises" class="view">
-  <aside class="sidebar">
+<main class="views">
+<section id="view-exercises" class="view" role="tabpanel" aria-labelledby="tab-exercises">
+  <aside class="sidebar" aria-label="Exercise list">
     <div class="filters">
-      <select id="f-theme" title="Theme"><option value="">All themes</option></select>
-      <select id="f-difficulty" title="Difficulty">
+      <select id="f-theme" aria-label="Theme"><option value="">All themes</option></select>
+      <select id="f-difficulty" aria-label="Difficulty">
         <option value="">All difficulties</option>
         <option value="easy">Easy</option>
         <option value="medium">Medium</option>
         <option value="hard">Hard</option>
       </select>
-      <select id="f-language" title="Language">
+      <select id="f-language" aria-label="Language">
         <option value="">Python + SQL</option>
         <option value="python">Python</option>
         <option value="sql">SQL</option>
@@ -52,44 +55,44 @@
     <ol id="ex-list" class="ex-list"></ol>
   </aside>
 
-  <section class="statement-pane">
+  <section class="statement-pane" aria-label="Statement">
     <div id="statement" class="statement"></div>
   </section>
 
-  <section class="editor-pane">
+  <section class="editor-pane" aria-label="Editor">
     <div class="toolbar">
       <button id="btn-run" class="btn primary" title="Ctrl+Enter">Run</button>
       <button id="btn-check" class="btn success" title="Ctrl+Shift+Enter">Check</button>
       <button id="btn-stop" class="btn danger" title="Interrupt the running code" disabled>Stop</button>
       <button id="btn-reset" class="btn" title="Back to the starter code">Reset</button>
       <span class="spacer"></span>
-      <span id="ex-timer" class="ex-timer" title="Time spent on this exercise">0:00</span>
+      <span id="ex-timer" class="ex-timer" role="timer" aria-label="Time spent on this exercise">0:00</span>
       <button id="btn-prev" class="btn">Previous</button>
       <button id="btn-next" class="btn">Next</button>
     </div>
     <div class="editor-wrap"><textarea id="editor"></textarea></div>
-    <div class="splitter" id="splitter" title="Drag to resize the output"></div>
+    <div class="splitter" id="splitter" role="separator" aria-orientation="horizontal" aria-label="Output pane height (arrow keys to resize)" aria-valuemin="60" aria-valuenow="240" tabindex="0"></div>
     <div class="output-pane collapsed" id="output-pane">
-      <div class="output-head" id="output-head" title="Click to collapse / expand">
-        <span><span id="output-caret">▸</span> <span id="output-title">Output</span></span>
+      <div class="output-head">
+        <button type="button" id="output-head" class="output-toggle" aria-expanded="false" aria-controls="output results" title="Collapse / expand"><span id="output-caret" aria-hidden="true">▸</span> <span id="output-title">Output</span></button>
         <span class="muted small">Ctrl+Enter: run · Ctrl+Shift+Enter: check</span>
       </div>
-      <pre id="output" class="output"></pre>
-      <div id="results" class="results"></div>
+      <pre id="output" class="output" tabindex="0" aria-live="polite"></pre>
+      <div id="results" class="results" aria-live="polite"></div>
     </div>
   </section>
-</main>
+</section>
 
-<main id="view-qcm" class="view hidden">
+<section id="view-qcm" class="view hidden" role="tabpanel" aria-labelledby="tab-qcm">
   <div class="qcm">
     <section id="qcm-home">
       <div class="qcm-config">
         <h2>Quiz</h2>
         <div class="row">
-          <span class="muted">Themes</span>
+          <span class="muted" id="qcm-themes-label">Themes</span>
           <button id="qcm-all" class="btn small">All / none</button>
         </div>
-        <div id="qcm-themes" class="chips"></div>
+        <div id="qcm-themes" class="chips" role="group" aria-labelledby="qcm-themes-label"></div>
         <div class="row">
           <label>Number of questions
             <select id="qcm-n">
@@ -100,7 +103,7 @@
           <button id="qcm-start" class="btn primary">Start</button>
           <button id="qcm-review" class="btn warn">Review my mistakes</button>
         </div>
-        <div id="qcm-msg" class="muted"></div>
+        <div id="qcm-msg" class="muted" role="status"></div>
       </div>
       <h3>History</h3>
       <div id="qcm-stats-cards" class="cards"></div>
@@ -114,13 +117,13 @@
         <span id="qcm-progress" class="progress"></span>
         <span id="qcm-theme" class="badge"></span>
         <span class="spacer"></span>
-        <span class="muted small">Keys 1-4: answer · Enter: next</span>
+        <span class="muted small" aria-hidden="true">Keys 1-4: answer · Enter: next</span>
         <button id="qcm-quit" class="btn small">Quit</button>
       </div>
-      <div id="qcm-question" class="question md"></div>
-      <pre id="qcm-code" class="qcode cm-s-default hidden"></pre>
-      <div id="qcm-choices" class="choices"></div>
-      <div id="qcm-feedback" class="feedback hidden"></div>
+      <div id="qcm-question" class="question md" tabindex="-1"></div>
+      <pre id="qcm-code" class="qcode cm-s-default hidden" tabindex="0" aria-label="Code"></pre>
+      <div id="qcm-choices" class="choices" role="group" aria-label="Choices (keys 1 to 4)"></div>
+      <div id="qcm-feedback" class="feedback hidden" aria-live="polite"></div>
       <button id="qcm-next" class="btn primary hidden">Next</button>
     </section>
 
@@ -136,16 +139,16 @@
       </div>
     </section>
   </div>
-</main>
+</section>
 
-<main id="view-theory" class="view hidden">
+<section id="view-theory" class="view hidden" role="tabpanel" aria-labelledby="tab-theory">
   <div class="qcm theory">
     <section id="th-home">
       <div class="qcm-config">
         <h2>Theory interview</h2>
-        <div id="th-status" class="status-line"></div>
-        <div class="row"><span class="muted">Sections</span><button id="th-all" class="btn small">All / none</button></div>
-        <div id="th-sections"></div>
+        <div id="th-status" class="status-line" role="status"></div>
+        <div class="row"><span class="muted" id="th-sections-label">Sections</span><button id="th-all" class="btn small">All / none</button></div>
+        <div id="th-sections" role="group" aria-labelledby="th-sections-label"></div>
         <div class="row">
           <label><input type="checkbox" id="th-only-new" checked> Unanswered questions first</label>
           <label>Timer
@@ -153,7 +156,7 @@
           </label>
           <button id="th-next" class="btn primary">Next question</button>
         </div>
-        <div id="th-msg" class="muted"></div>
+        <div id="th-msg" class="muted" role="status"></div>
       </div>
       <div id="th-pending-help" class="notice hidden">Some answers are waiting to be graded. Ask me: <code>grade my pending interview answers</code> (or run <code>python -m tools.grade_pending</code> with an API key).</div>
       <h3>Score history</h3>
@@ -169,26 +172,26 @@
         <span id="th-q-section" class="badge"></span>
         <span id="th-q-source" class="muted small"></span>
         <span class="spacer"></span>
-        <span id="th-clock" class="clock"></span>
+        <span id="th-clock" class="clock" role="timer" aria-label="Time left"></span>
         <button id="th-back" class="btn small">Back</button>
       </div>
       <div id="th-q-fr" class="question"></div>
       <div id="th-q-note"></div>
-      <textarea id="th-answer" class="answer" rows="9" placeholder="Answer as you would out loud: definition, how it works, when to use it, limits, example… (Ctrl+Enter to submit)"></textarea>
+      <textarea id="th-answer" class="answer" rows="9" aria-label="Your answer" placeholder="Answer as you would out loud: definition, how it works, when to use it, limits, example… (Ctrl+Enter to submit)"></textarea>
       <div id="th-actions" class="row">
         <button id="th-submit" class="btn success">Grade my answer</button>
         <button id="th-skip" class="btn">Skip</button>
       </div>
-      <div id="th-result" class="hidden"></div>
+      <div id="th-result" class="hidden" aria-live="polite"></div>
       <div id="th-after" class="row hidden">
         <button id="th-next2" class="btn primary">Next question</button>
         <button id="th-regrade" class="btn warn hidden">Grade now</button>
       </div>
     </section>
   </div>
-</main>
+</section>
 
-<main id="view-recap" class="view hidden">
+<section id="view-recap" class="view hidden" role="tabpanel" aria-labelledby="tab-recap">
   <div class="recap">
     <div class="recap-head">
       <h2>Summary</h2>
@@ -203,6 +206,7 @@
     <h3>By exercise</h3>
     <table id="recap-exercises" class="table"></table>
   </div>
+</section>
 </main>
 
 <footer class="legal">Sparring, copyright (c) 2026 Joseph Faye. Free software under the <a href="https://github.com/jwfaye/sparring/blob/main/LICENSE">GNU AGPL v3</a>: modified or hosted versions must keep this notice and publish their source.</footer>

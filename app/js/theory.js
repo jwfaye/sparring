@@ -59,7 +59,7 @@
       const mean = g.length ? g.reduce((x, a) => x + a.grade.score, 0) / g.length : null;
       return { s, n: qs.length, done, graded: g.length, mean };
     });
-    $('#th-themes').innerHTML = `<tr><th>Section</th><th>Questions</th><th>Answered</th><th>Graded</th><th>Average</th><th></th></tr>` +
+    $('#th-themes').innerHTML = `<tr><th>Section</th><th>Questions</th><th>Answered</th><th>Graded</th><th>Average</th><th><span class="visually-hidden">Progress</span></th></tr>` +
       rows.map(r => `<tr><td>${escapeHtml(r.s)}</td><td>${r.n}</td><td>${r.done}</td><td>${r.graded}</td><td>${r.mean === null ? '–' : r.mean.toFixed(1)}</td>
         <td><div class="bar ${r.mean !== null && r.mean < 5 ? 'rate' : ''}"><span style="width:${r.mean === null ? 0 : r.mean * 10}%"></span></div></td></tr>`).join('');
     const weak = rows.filter(r => r.mean !== null).sort((a, b) => a.mean - b.mean).slice(0, 3);
@@ -138,7 +138,7 @@
     else if (rec) html += `<div class="notice">Answer saved (offline mode). To have it graded with the same grid, ask me: <code>grade my pending interview answers</code>.</div>`;
     html += gridHtml(q);
     box.innerHTML = html;
-    $('#th-toggle-grid')?.addEventListener('click', () => $('#th-grid').classList.toggle('hidden'));
+    $('#th-toggle-grid')?.addEventListener('click', e => { const open = $('#th-grid').classList.toggle('hidden') === false; e.currentTarget.setAttribute('aria-expanded', String(open)); });
   }
   const list = (items, cls) => (items && items.length) ? `<ul class="pts ${cls}">${items.map(x => `<li>${escapeHtml(x)}</li>`).join('')}</ul>` : '';
   function gradeHtml(g) {
@@ -154,7 +154,7 @@
   }
   function gridHtml(q) {
     if (!hasGrid(q)) return '';
-    return `<button class="btn small" id="th-toggle-grid">Reference answer and grid</button>
+    return `<button class="btn small" id="th-toggle-grid" aria-expanded="false" aria-controls="th-grid">Reference answer and grid</button>
       <div id="th-grid" class="grid-box hidden">
         <h4>Reference answer</h4><div class="md">${renderMd(q.reference || '')}</div>
         <h4>Expected key points</h4>${list(q.key_points, 'plain')}

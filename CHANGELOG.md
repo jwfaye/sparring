@@ -11,6 +11,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Measured test coverage: `pytest -q --cov --cov-report=term-missing` reports branch coverage of `backend/`,
   `server.py` and `tools/`, CI fails the Python 3.12 leg under the `fail_under` floor of `pyproject.toml` and
   uploads `coverage.xml` as a run artifact (#22).
+- Accessibility pass on the page: landmarks, ARIA tabs with arrow keys, labels on every control, live status
+  regions, a visible focus ring in both themes, a keyboard path out of the code editor (Escape, then Tab) and WCAG
+  AA contrast; an axe-core audit runs in the browser test suite (#25).
 
 ### Changed
 - Interview answers are kept in a SQLite database per profile (`data/theory[/<profile>]/answers.sqlite3`) instead

@@ -1,7 +1,7 @@
 ---
 id: SP-CI
 title: Continuous integration and repository hygiene
-version: 0.4
+version: 0.5
 status: approved
 author: agent
 created: 2026-11-03
@@ -107,8 +107,9 @@ Errors:
    matrix.python-version == '3.12'`, `if-no-files-found: error`).
 3. `test` depends on `unit`, runs even when a leg failed (`if: always()`), and exits 0 only when
    `needs.unit.result == 'success'`.
-4. `js` runs `npm ci` and `npm run lint` on Node 22; `e2e` installs the `check`, `dev` and `e2e` extras, Chromium,
-   and runs the browser suite on Python 3.12.
+4. `js` runs `npm ci` and `npm run lint` on Node 22; `e2e` installs the `check`, `dev` and `e2e` extras, Chromium
+   and, with `npm ci` on Node 22, the `axe-core` package that `tests/e2e/test_a11y.py` (SP-A11Y) injects, then runs
+   the browser suite on Python 3.12.
 5. Locally, `pre-commit install` registers the hook; each commit runs end-of-file-fixer, trailing-whitespace,
    check-json, check-yaml, check-toml, `ruff check`, `.venv-check/bin/python -m mypy .` (when a Python file is
    staged) and `npm run lint` (when a file under `app/js`, `eslint.config.js` or a package file is staged).
