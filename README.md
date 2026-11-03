@@ -218,10 +218,11 @@ repoach review gate <N>             # evidence-first merge gate, read-only
 Sparring is a local, single-user tool. The server has no authentication and must stay on a loopback address
 (`server.host` = `127.0.0.1`, the default): exposing it on a network exposes your saved answers and lets anyone spend
 your API credits or Claude Code quota. The API refuses requests whose Host is not local, cross-origin requests and
-non-JSON POSTs, and the page is served with a Content-Security-Policy. Exercise code runs in the browser (Pyodide), never on the server; the bank
-checkers in `tools/` do execute bank and draft code on your machine, so run them only on banks you trust. The API key
-lives in the environment only, and `data/` is never committed. Details, network calls made by the page and how to
-report an issue: [SECURITY.md](SECURITY.md).
+non-JSON POSTs, the page is served with a Content-Security-Policy, and the CodeMirror assets loaded from cdnjs are
+integrity-checked. Exercise code runs in the browser (Pyodide), never on the server; the bank checkers in `tools/` do
+execute bank and draft code on your machine, so run them only on banks you trust. The API key lives in the environment
+only, and `data/` is never committed. Details, network calls made by the page and how to report an issue:
+[SECURITY.md](SECURITY.md).
 
 ## License
 
