@@ -1,4 +1,4 @@
-/* Helpers shared by the tabs (exercises, QCM, interview). */
+/* Helpers shared by the modes (exercises, QCM, interview). */
 window.TT = (() => {
   'use strict';
   const $ = (sel, el = document) => el.querySelector(sel);
@@ -22,10 +22,10 @@ window.TT = (() => {
     if (b) { const next = currentTheme() === 'dark' ? 'light' : 'dark'; b.textContent = next === 'dark' ? 'Dark' : 'Light'; b.setAttribute('aria-label', `Switch to ${next} theme`); }
     document.dispatchEvent(new CustomEvent('tt:theme', { detail: currentTheme() }));
   }
-  // ---- tab bar (WAI-ARIA tabs): aria-selected and a roving tabindex follow the active tab; arrows move between tabs.
-  function selectTab(view) {
+  // ---- mode tabs of the setup screen (WAI-ARIA tabs): aria-selected and a roving tabindex follow the active tab; arrows move between tabs.
+  function selectTab(mode) {
     $$('.tab').forEach(t => {
-      const on = t.dataset.view === view;
+      const on = t.dataset.mode === mode;
       t.classList.toggle('active', on);
       t.setAttribute('aria-selected', String(on));
       t.tabIndex = on ? 0 : -1;

@@ -17,44 +17,95 @@
 <body>
 <header class="topbar">
   <h1 class="brand"><svg class="mark" viewBox="0 0 32 32" width="18" height="18" aria-hidden="true" focusable="false"><path fill="currentColor" d="M15 6A11 11 0 0 0 15 28ZM17 4A11 11 0 0 1 17 26Z"/></svg>Sparring</h1>
-  <nav class="tabs" aria-label="Sections">
-    <div class="tablist" role="tablist">
-      <button type="button" class="tab active" role="tab" id="tab-exercises" aria-selected="true" aria-controls="view-exercises" data-view="exercises">Exercises</button>
-      <button type="button" class="tab" role="tab" id="tab-qcm" aria-selected="false" aria-controls="view-qcm" tabindex="-1" data-view="qcm">Quiz</button>
-      <button type="button" class="tab" role="tab" id="tab-theory" aria-selected="false" aria-controls="view-theory" tabindex="-1" data-view="theory">Interview</button>
-      <button type="button" class="tab" role="tab" id="tab-recap" aria-selected="false" aria-controls="view-recap" tabindex="-1" data-view="recap">Summary</button>
-    </div>
-  </nav>
-  <div class="exam" id="exam-box" role="group" aria-label="Exam mode">
-    <label class="exam-label" for="exam-minutes" title="Global countdown, exam style">Exam mode</label>
-    <input type="number" id="exam-minutes" min="5" max="240" step="5" value="45" title="Duration in minutes"><span class="muted">min</span>
-    <button id="exam-toggle" class="btn small">Start</button>
-    <span id="exam-clock" class="clock" role="timer" aria-label="Time left">45:00</span>
-  </div>
+  <span id="mode-label" class="mode muted"></span>
+  <span class="spacer"></span>
+  <span id="exam-clock" class="clock hidden" role="timer" aria-label="Time left"></span>
   <div id="py-status" class="status loading" role="status">Loading Python…</div>
+  <button id="btn-setup" class="btn small hidden">Setup</button>
   <button id="theme-toggle" class="btn small" aria-label="Switch to dark theme">Dark</button>
 </header>
 
 <div id="exam-banner" class="banner hidden" role="alert">Time is up. You can keep going, but note where you were.</div>
 
 <main class="views">
-<section id="view-exercises" class="view" role="tabpanel" aria-labelledby="tab-exercises">
-  <aside class="sidebar" aria-label="Exercise list">
-    <div class="filters">
-      <select id="f-theme" aria-label="Theme"><option value="">All themes</option></select>
-      <select id="f-difficulty" aria-label="Difficulty">
-        <option value="">All difficulties</option>
-        <option value="easy">Easy</option>
-        <option value="medium">Medium</option>
-        <option value="hard">Hard</option>
-      </select>
-      <select id="f-language" aria-label="Language">
-        <option value="">Python + SQL</option>
-        <option value="python">Python</option>
-        <option value="sql">SQL</option>
-      </select>
-      <button id="reshuffle" class="btn small" title="Reshuffle the exercises not done yet">Reshuffle</button>
+<section id="view-setup" class="view setup" aria-label="Session setup">
+  <div class="setup-inner">
+    <h2>Session setup</h2>
+    <div class="tablist" role="tablist" aria-label="Mode">
+      <button type="button" class="tab active" role="tab" id="tab-exercises" aria-selected="true" aria-controls="setup-exercises" data-mode="exercises">Exercises</button>
+      <button type="button" class="tab" role="tab" id="tab-qcm" aria-selected="false" aria-controls="setup-qcm" tabindex="-1" data-mode="qcm">Quiz</button>
+      <button type="button" class="tab" role="tab" id="tab-theory" aria-selected="false" aria-controls="setup-theory" tabindex="-1" data-mode="theory">Interview</button>
     </div>
+
+    <div id="setup-exercises" class="panel" role="tabpanel" aria-labelledby="tab-exercises">
+      <div class="row">
+        <select id="f-theme" aria-label="Theme"><option value="">All themes</option></select>
+        <select id="f-difficulty" aria-label="Difficulty">
+          <option value="">All difficulties</option>
+          <option value="easy">Easy</option>
+          <option value="medium">Medium</option>
+          <option value="hard">Hard</option>
+        </select>
+        <select id="f-language" aria-label="Language">
+          <option value="">Python + SQL</option>
+          <option value="python">Python</option>
+          <option value="sql">SQL</option>
+        </select>
+        <button id="reshuffle" class="btn small" title="Reshuffle the exercises not done yet">Reshuffle</button>
+      </div>
+      <div id="setup-ex-msg" class="muted" role="status"></div>
+    </div>
+
+    <div id="setup-qcm" class="panel hidden" role="tabpanel" aria-labelledby="tab-qcm">
+      <div class="row">
+        <span class="muted" id="qcm-themes-label">Themes</span>
+        <button id="qcm-all" class="btn small">All / none</button>
+      </div>
+      <div id="qcm-themes" class="chips" role="group" aria-labelledby="qcm-themes-label"></div>
+      <div class="row">
+        <label>Number of questions
+          <select id="qcm-n">
+            <option value="10">10</option><option value="20">20</option><option value="40">40</option><option value="all">All</option>
+          </select>
+        </label>
+        <label><input type="checkbox" id="qcm-prioritize" checked> Prioritize my mistakes and unseen questions</label>
+        <button id="qcm-review" class="btn small warn">Review my mistakes</button>
+      </div>
+      <div id="qcm-msg" class="muted" role="status"></div>
+    </div>
+
+    <div id="setup-theory" class="panel hidden" role="tabpanel" aria-labelledby="tab-theory">
+      <div id="th-status" class="status-line" role="status"></div>
+      <div class="row"><span class="muted" id="th-sections-label">Sections</span><button id="th-all" class="btn small">All / none</button></div>
+      <div id="th-sections" role="group" aria-labelledby="th-sections-label"></div>
+      <div class="row">
+        <label><input type="checkbox" id="th-only-new" checked> Unanswered questions first</label>
+        <label>Timer per question
+          <select id="th-timer"><option value="0">none</option><option value="120">2 min</option><option value="180">3 min</option></select>
+        </label>
+      </div>
+      <div id="th-msg" class="muted" role="status"></div>
+    </div>
+
+    <div id="exam-box" class="panel row" role="group" aria-label="Exam countdown">
+      <label id="exam-enabled-label"><input type="checkbox" id="exam-enabled"> Exam countdown</label>
+      <label id="exam-minutes-label">Duration <input type="number" id="exam-minutes" min="5" max="240" step="5" value="45"> min</label>
+      <span id="exam-running" class="hidden">Exam in progress</span>
+      <button id="exam-toggle" class="btn small hidden">Stop the exam</button>
+    </div>
+
+    <div class="row setup-actions">
+      <button id="btn-start" class="btn primary">Start</button>
+      <span class="spacer"></span>
+      <button id="btn-recap" class="btn small">Summary</button>
+      <button id="btn-qcm-history" class="btn small">Quiz history</button>
+      <button id="btn-th-history" class="btn small">Interview history</button>
+    </div>
+  </div>
+</section>
+
+<section id="view-exercises" class="view hidden" aria-label="Exercises">
+  <aside class="sidebar" aria-label="Exercise list">
     <ol id="ex-list" class="ex-list"></ol>
   </aside>
 
@@ -86,29 +137,10 @@
   </section>
 </section>
 
-<section id="view-qcm" class="view hidden" role="tabpanel" aria-labelledby="tab-qcm">
+<section id="view-qcm" class="view hidden" aria-label="Quiz">
   <div class="qcm">
     <section id="qcm-home">
-      <div class="qcm-config">
-        <h2>Quiz</h2>
-        <div class="row">
-          <span class="muted" id="qcm-themes-label">Themes</span>
-          <button id="qcm-all" class="btn small">All / none</button>
-        </div>
-        <div id="qcm-themes" class="chips" role="group" aria-labelledby="qcm-themes-label"></div>
-        <div class="row">
-          <label>Number of questions
-            <select id="qcm-n">
-              <option value="10">10</option><option value="20">20</option><option value="40">40</option><option value="all">All</option>
-            </select>
-          </label>
-          <label><input type="checkbox" id="qcm-prioritize" checked> Prioritize my mistakes and unseen questions</label>
-          <button id="qcm-start" class="btn primary">Start</button>
-          <button id="qcm-review" class="btn warn">Review my mistakes</button>
-        </div>
-        <div id="qcm-msg" class="muted" role="status"></div>
-      </div>
-      <h3>History</h3>
+      <h2>Quiz history</h2>
       <div id="qcm-stats-cards" class="cards"></div>
       <table id="qcm-stats-themes" class="table"></table>
       <div class="row"><h3>Recent sessions</h3><span class="spacer"></span><button id="qcm-reset-history" class="btn small danger">Clear quiz history</button></div>
@@ -138,31 +170,17 @@
       <div id="qcm-failed"></div>
       <div class="row">
         <button id="qcm-replay" class="btn warn">Replay the missed ones</button>
-        <button id="qcm-back" class="btn">Back to the quiz menu</button>
+        <button id="qcm-back" class="btn">Back to setup</button>
       </div>
     </section>
   </div>
 </section>
 
-<section id="view-theory" class="view hidden" role="tabpanel" aria-labelledby="tab-theory">
-  <div class="qcm theory">
+<section id="view-theory" class="view hidden" aria-label="Interview">
+  <div class="qcm theory" role="region" aria-label="Interview page (scrollable)" tabindex="0">
     <section id="th-home">
-      <div class="qcm-config">
-        <h2>Theory interview</h2>
-        <div id="th-status" class="status-line" role="status"></div>
-        <div class="row"><span class="muted" id="th-sections-label">Sections</span><button id="th-all" class="btn small">All / none</button></div>
-        <div id="th-sections" role="group" aria-labelledby="th-sections-label"></div>
-        <div class="row">
-          <label><input type="checkbox" id="th-only-new" checked> Unanswered questions first</label>
-          <label>Timer
-            <select id="th-timer"><option value="0">none</option><option value="120">2 min</option><option value="180">3 min</option></select>
-          </label>
-          <button id="th-next" class="btn primary">Next question</button>
-        </div>
-        <div id="th-msg" class="muted" role="status"></div>
-      </div>
+      <h2>Interview history</h2>
       <div id="th-pending-help" class="notice hidden">Some answers are waiting to be graded. Ask me: <code>grade my pending interview answers</code> (or run <code>python -m tools.grade_pending</code> with an API key).</div>
-      <h3>Score history</h3>
       <div id="th-cards" class="cards"></div>
       <div id="th-weak" class="weak"></div>
       <table id="th-themes" class="table"></table>
@@ -194,7 +212,7 @@
   </div>
 </section>
 
-<section id="view-recap" class="view hidden" role="tabpanel" aria-labelledby="tab-recap">
+<section id="view-recap" class="view hidden" aria-label="Summary">
   <div class="recap">
     <div class="recap-head">
       <h2>Summary</h2>

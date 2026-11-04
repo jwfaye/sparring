@@ -1,4 +1,4 @@
-"""Accessibility: axe-core finds no serious or critical violation on any tab, in both themes (SP-A11Y).
+"""Accessibility: axe-core finds no serious or critical violation on any screen, in both themes (SP-A11Y).
 
 axe is injected from `node_modules/axe-core/axe.min.js` (`npm ci` installs it), in a browser context created with
 `bypass_csp=True` because the page's Content-Security-Policy only allows scripts from its own origin and the pinned
@@ -19,7 +19,18 @@ pytestmark = pytest.mark.e2e
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 AXE = os.path.join(ROOT, "node_modules", "axe-core", "axe.min.js")
-TABS = ("exercises", "qcm", "theory", "recap")
+MODES = ("exercises", "qcm", "theory")
+SCREENS = (
+    "setup-exercises",
+    "setup-qcm",
+    "setup-theory",
+    "exercises",
+    "qcm",
+    "theory",
+    "recap",
+    "qcm-history",
+    "theory-history",
+)
 THEMES = ("light", "dark")
 BLOCKING = ("serious", "critical")
 
@@ -33,7 +44,7 @@ def axe_page(browser, base_url, app_url, pyodide_timeout):
     page = context.new_page()
     page.goto(app_url)
     expect(page.locator("#py-status")).to_have_text("Python ready", timeout=pyodide_timeout)
-    expect(page.locator("#ex-list li[data-i]").first).to_be_visible()
+    expect(page.locator("#view-setup")).to_be_visible()
     expect(page.locator("#qcm-themes label.chip").first).to_be_attached()
     expect(page.locator("#th-sections input").first).to_be_attached()
     page.add_script_tag(path=AXE)
@@ -42,10 +53,28 @@ def axe_page(browser, base_url, app_url, pyodide_timeout):
     context.close()
 
 
-def run_axe(page, tab, theme):
+def show(page, screen, setup_screen, start):
+    """Bring the page to one of SCREENS through the setup screen."""
+    if screen.startswith("setup-"):
+        setup_screen(page)
+        page.click(f'.tab[data-mode="{screen.removeprefix("setup-")}"]')
+        expect(page.locator(f"#{screen}")).to_be_visible()
+    elif screen in MODES:
+        start(page, screen)
+    elif screen == "recap":
+        setup_screen(page)
+        page.click("#btn-recap")
+        expect(page.locator("#view-recap")).to_be_visible()
+    else:
+        mode = screen.removesuffix("-history")
+        setup_screen(page)
+        page.click("#btn-qcm-history" if mode == "qcm" else "#btn-th-history")
+        expect(page.locator("#qcm-home" if mode == "qcm" else "#th-home")).to_be_visible()
+
+
+def run_axe(page, screen, theme, setup_screen, start):
     page.evaluate("t => { document.documentElement.dataset.theme = t; }", theme)
-    page.click(f'.tab[data-view="{tab}"]')
-    expect(page.locator(f"#view-{tab}")).to_be_visible()
+    show(page, screen, setup_screen, start)
     result = page.evaluate("axe.run(document, { resultTypes: ['violations'] })")
     return [
         f"{v['impact']} {v['id']}: {', '.join(node['target'][0] for node in v['nodes'])}" for v in result["violations"]
@@ -53,45 +82,46 @@ def run_axe(page, tab, theme):
 
 
 @pytest.mark.parametrize("theme", THEMES)
-@pytest.mark.parametrize("tab", TABS)
-def test_no_serious_or_critical_violation(axe_page, tab, theme):
-    findings = run_axe(axe_page, tab, theme)
+@pytest.mark.parametrize("screen", SCREENS)
+def test_no_serious_or_critical_violation(axe_page, screen, theme, setup_screen, start):
+    findings = run_axe(axe_page, screen, theme, setup_screen, start)
     blocking = [line for line in findings if line.startswith(BLOCKING)]
     assert blocking == [], "\n".join(findings)
     if findings:
-        warnings.warn(f"axe ({tab}, {theme}), not blocking: " + "; ".join(findings), stacklevel=1)
+        warnings.warn(f"axe ({screen}, {theme}), not blocking: " + "; ".join(findings), stacklevel=1)
 
 
-def test_tabs_follow_the_aria_tab_pattern(axe_page):
+def test_tabs_follow_the_aria_tab_pattern(axe_page, setup_screen):
     page = axe_page
+    setup_screen(page)
     tabs = page.locator('[role="tablist"] [role="tab"]')
-    expect(tabs).to_have_count(len(TABS))
-    for view in TABS:
-        tab = page.locator(f'[role="tab"][data-view="{view}"]')
-        expect(tab).to_have_attribute("aria-controls", f"view-{view}")
-        expect(page.locator(f"#view-{view}")).to_have_attribute("role", "tabpanel")
-        expect(page.locator(f"#view-{view}")).to_have_attribute("aria-labelledby", f"tab-{view}")
-    page.click('.tab[data-view="exercises"]')
-    expect(page.locator('.tab[data-view="exercises"]')).to_have_attribute("aria-selected", "true")
-    expect(page.locator('.tab[data-view="qcm"]')).to_have_attribute("aria-selected", "false")
-    expect(page.locator('.tab[data-view="qcm"]')).to_have_attribute("tabindex", "-1")
-    page.focus('.tab[data-view="exercises"]')
+    expect(tabs).to_have_count(len(MODES))
+    for mode in MODES:
+        tab = page.locator(f'[role="tab"][data-mode="{mode}"]')
+        expect(tab).to_have_attribute("aria-controls", f"setup-{mode}")
+        expect(page.locator(f"#setup-{mode}")).to_have_attribute("role", "tabpanel")
+        expect(page.locator(f"#setup-{mode}")).to_have_attribute("aria-labelledby", f"tab-{mode}")
+    page.click('.tab[data-mode="exercises"]')
+    expect(page.locator('.tab[data-mode="exercises"]')).to_have_attribute("aria-selected", "true")
+    expect(page.locator('.tab[data-mode="qcm"]')).to_have_attribute("aria-selected", "false")
+    expect(page.locator('.tab[data-mode="qcm"]')).to_have_attribute("tabindex", "-1")
+    page.focus('.tab[data-mode="exercises"]')
     page.keyboard.press("ArrowRight")
-    expect(page.locator('.tab[data-view="qcm"]')).to_have_attribute("aria-selected", "true")
-    expect(page.locator("#view-qcm")).to_be_visible()
-    expect(page.locator("#view-exercises")).to_be_hidden()
-    assert page.evaluate("document.activeElement.dataset.view") == "qcm"
+    expect(page.locator('.tab[data-mode="qcm"]')).to_have_attribute("aria-selected", "true")
+    expect(page.locator("#setup-qcm")).to_be_visible()
+    expect(page.locator("#setup-exercises")).to_be_hidden()
+    assert page.evaluate("document.activeElement.dataset.mode") == "qcm"
     page.keyboard.press("End")
-    expect(page.locator("#view-recap")).to_be_visible()
+    expect(page.locator("#setup-theory")).to_be_visible()
     page.keyboard.press("ArrowRight")
-    expect(page.locator("#view-exercises")).to_be_visible()
+    expect(page.locator("#setup-exercises")).to_be_visible()
     page.keyboard.press("ArrowLeft")
-    expect(page.locator("#view-recap")).to_be_visible()
+    expect(page.locator("#setup-theory")).to_be_visible()
     page.keyboard.press("ArrowLeft")
-    expect(page.locator("#view-theory")).to_be_visible()
+    expect(page.locator("#setup-qcm")).to_be_visible()
     page.keyboard.press("Home")
-    expect(page.locator("#view-exercises")).to_be_visible()
-    assert page.evaluate("document.activeElement.dataset.view") == "exercises"
+    expect(page.locator("#setup-exercises")).to_be_visible()
+    assert page.evaluate("document.activeElement.dataset.mode") == "exercises"
 
 
 def test_theme_toggle_label_reflects_the_state(axe_page):
@@ -105,9 +135,9 @@ def test_theme_toggle_label_reflects_the_state(axe_page):
     expect(page.locator("#theme-toggle")).to_have_attribute("aria-label", "Switch to dark theme")
 
 
-def test_escape_then_tab_leaves_the_code_editor(axe_page):
+def test_escape_then_tab_leaves_the_code_editor(axe_page, start):
     page = axe_page
-    page.click('.tab[data-view="exercises"]')
+    start(page, "exercises")
     page.click(".CodeMirror")
     assert page.evaluate("document.activeElement.closest('.CodeMirror') !== null")
     page.keyboard.press("Escape")
@@ -116,9 +146,9 @@ def test_escape_then_tab_leaves_the_code_editor(axe_page):
     assert page.evaluate("document.activeElement.id") == "splitter"
 
 
-def test_splitter_arrow_keys_resize_the_output_pane_within_bounds(axe_page):
+def test_splitter_arrow_keys_resize_the_output_pane_within_bounds(axe_page, start):
     page = axe_page
-    page.click('.tab[data-view="exercises"]')
+    start(page, "exercises")
     page.focus("#splitter")
     height = "document.querySelector('#output-pane').getBoundingClientRect().height"
     page.keyboard.press("ArrowUp")

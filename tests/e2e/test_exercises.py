@@ -1,4 +1,4 @@
-"""Exercise tab: the bank's own solutions pass their tests in the browser (Pyodide for Python, sqlite3 for SQL)."""
+"""Exercises mode: the bank's own solutions pass their tests in the browser (Pyodide for Python, sqlite3 for SQL)."""
 
 import re
 
@@ -17,6 +17,14 @@ def exercises(ready_page):
     return {ex["id"]: ex for ex in data["items"]}
 
 
+def start_with_language(page, setup_screen, start, language):
+    """Pick the language filter on the setup screen, start the exercises and open the first one of the list."""
+    setup_screen(page, "exercises")
+    page.select_option("#f-language", language)
+    start(page, "exercises")
+    page.click('#ex-list li[data-i="0"]')
+
+
 def check_current_exercise(page, exercises):
     ex = exercises[page.evaluate("window.tt.current.id")]
     page.evaluate("code => window.tt.editor.setValue(code)", ex["solution"])
@@ -30,30 +38,27 @@ def check_current_exercise(page, exercises):
     return ex
 
 
-def test_python_solution_passes_every_test(ready_page, exercises):
+def test_python_solution_passes_every_test(ready_page, exercises, setup_screen, start):
     page = ready_page
-    page.select_option("#f-language", "python")
-    page.click('#ex-list li[data-i="0"]')
+    start_with_language(page, setup_screen, start, "python")
     ex = check_current_exercise(page, exercises)
     assert ex["language"] == "python"
     expect(page.locator("#ex-list li.active .st-ok")).to_have_count(1)
 
 
-def test_sql_solution_passes_every_test(ready_page, exercises):
+def test_sql_solution_passes_every_test(ready_page, exercises, setup_screen, start):
     if not any(ex["language"] == "sql" for ex in exercises.values()):
         pytest.skip("no SQL exercise in the bank")
     page = ready_page
-    page.select_option("#f-language", "sql")
-    page.click('#ex-list li[data-i="0"]')
+    start_with_language(page, setup_screen, start, "sql")
     ex = check_current_exercise(page, exercises)
     assert ex["language"] == "sql"
 
 
-def test_stop_interrupts_an_infinite_loop_and_python_keeps_working(ready_page, pyodide_timeout):
+def test_stop_interrupts_an_infinite_loop_and_python_keeps_working(ready_page, pyodide_timeout, setup_screen, start):
     page = ready_page
     assert page.evaluate("self.crossOriginIsolated") is True
-    page.select_option("#f-language", "python")
-    page.click('#ex-list li[data-i="0"]')
+    start_with_language(page, setup_screen, start, "python")
     page.evaluate("code => window.tt.editor.setValue(code)", "while True:\n    pass\n")
     page.click("#btn-run")
     expect(page.locator("#btn-stop")).to_be_enabled()

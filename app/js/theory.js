@@ -1,10 +1,10 @@
-/* Interview tab: theory question, free-text answer, grading through the API (or offline recording), history by theme. */
+/* Interview mode: parameters on the setup screen, theory question, free-text answer, grading through the API (or offline recording), history by theme. */
 (() => {
   'use strict';
   const { $, $$, PROFILE, loadJSON, saveJSON, escapeHtml, fmtTime, fmtDate, shuffle, renderMd, NS } = window.TT;
   const KEY = { prefs: NS + 'theory.prefs' };
   const api = path => '/api/theory/' + path + (PROFILE ? (path.includes('?') ? '&' : '?') + 'profile=' + encodeURIComponent(PROFILE) : '');
-  const st = { questions: [], byId: {}, sections: [], history: [], status: { available: false, reason: '' }, current: null, timer: null, timerLeft: 0, started: 0, loaded: false };
+  const st = { questions: [], byId: {}, sections: [], history: [], status: { available: false, reason: '' }, current: null, fromHistory: false, timer: null, timerLeft: 0, started: 0, loaded: false };
   const SRC_LABEL = q => q.id.startsWith('fg-') ? 'AI engineering field guide' : 'data-science-interviews';
 
   async function load() {
@@ -25,8 +25,8 @@
   const hasGrid = q => Array.isArray(q.key_points) && q.key_points.length > 0;
   const scoreOf = a => a.grade ? a.grade.score : null;
 
-  // ------------------------------------------------------------ home + history
-  function renderHome() {
+  // ------------------------------------------------------------ setup panel (#setup-theory) and history page (#th-home)
+  function renderSetup() {
     if (!st.loaded) return;
     const prefs = loadJSON(KEY.prefs, { sections: [], onlyNew: true, timer: '180' });
     const counts = {};
@@ -43,7 +43,10 @@
     stb.innerHTML = st.status.available
       ? `Online grading: ${escapeHtml(st.status.model)}`
       : `Offline mode: ${escapeHtml(st.status.reason)}`;
-
+    $('#th-msg').textContent = '';
+  }
+  function renderHistory() {
+    if (!st.loaded) return;
     const graded = st.history.filter(a => a.grade), pending = st.history.filter(a => !a.grade);
     const avg = graded.length ? (graded.reduce((s, a) => s + a.grade.score, 0) / graded.length).toFixed(1) : '–';
     const nGrid = st.questions.filter(hasGrid).length;
@@ -67,9 +70,9 @@
 
     $('#th-history').innerHTML = [...st.history].reverse().slice(0, 30).map(a => {
       const q = st.byId[a.qid] || {}, sc = scoreOf(a);
-      return `<li data-id="${escapeHtml(a.id)}"><span class="muted">${fmtDate(a.at)}</span><span class="score-pill ${sc === null ? 'pending' : sc >= 7 ? 'good' : sc >= 4 ? 'mid' : 'bad'}">${sc === null ? 'pending' : sc + '/10'}</span><span class="t">${escapeHtml(q.question || a.qid)}</span><span class="muted small">${escapeHtml(q.section || '')}</span></li>`;
+      return `<li data-id="${escapeHtml(a.id)}"><button type="button" class="th-item"><span class="muted">${fmtDate(a.at)}</span><span class="score-pill ${sc === null ? 'pending' : sc >= 7 ? 'good' : sc >= 4 ? 'mid' : 'bad'}">${sc === null ? 'pending' : sc + '/10'}</span><span class="t">${escapeHtml(q.question || a.qid)}</span><span class="muted small">${escapeHtml(q.section || '')}</span></button></li>`;
     }).join('') || '<li class="muted">No answer yet.</li>';
-    $$('#th-history li[data-id]').forEach(li => li.onclick = () => openAnswer(li.dataset.id));
+    $$('#th-history li[data-id]').forEach(li => $('.th-item', li).onclick = () => openAnswer(li.dataset.id));
   }
   const selectedSections = () => $$('#th-sections input:checked').map(i => i.value);
 
@@ -83,11 +86,12 @@
     // prefer questions that have a grid (gradable)
     const withGrid = pool.filter(hasGrid);
     if (withGrid.length) pool = withGrid;
-    if (!pool.length) { $('#th-msg').textContent = 'No question for this selection.'; return; }
+    if (!pool.length) { $('#th-msg').textContent = 'No question for this selection.'; return false; }
     showQuestion(shuffle(pool)[0].id);
+    return true;
   }
   function showQuestion(qid) {
-    const q = st.byId[qid]; st.current = { q, answerId: null };
+    const q = st.byId[qid]; st.current = { q, answerId: null }; st.fromHistory = false;
     show('question');
     $('#th-q-section').textContent = q.section;
     $('#th-q-source').textContent = SRC_LABEL(q) + (q.difficulty ? ' · ' + q.difficulty : '');
@@ -165,7 +169,7 @@
   function openAnswer(id) {
     const rec = st.history.find(a => a.id === id); if (!rec) return;
     const q = st.byId[rec.qid]; if (!q) return;
-    st.current = { q, answerId: id };
+    st.current = { q, answerId: id }; st.fromHistory = true;
     show('question'); stopTimer();
     $('#th-q-section').textContent = q.section; $('#th-q-source').textContent = SRC_LABEL(q);
     $('#th-q-fr').textContent = q.question;
@@ -186,17 +190,28 @@
   }
 
   // ------------------------------------------------------------ init
-  $('#th-next').onclick = () => { stopTimer(); pickQuestion(); };
-  $('#th-next2').onclick = () => { stopTimer(); pickQuestion(); };
+  // Next or Skip: another question of the same selection; back to the setup screen when it has none left to give.
+  const nextQuestion = () => { stopTimer(); if (!pickQuestion()) window.TTAPP.openSetup(); };
+  $('#th-next2').onclick = nextQuestion;
   $('#th-submit').onclick = submit;
-  $('#th-skip').onclick = () => { stopTimer(); pickQuestion(); };
-  $('#th-back').onclick = () => { stopTimer(); st.current = null; renderHome(); show('home'); };
+  $('#th-skip').onclick = nextQuestion;
+  // Back: to the history page when the answer was reopened from it, else to the setup screen.
+  $('#th-back').onclick = () => { if (st.fromHistory) { leave(); openHistory(); } else window.TTAPP.openSetup(); };
   $('#th-regrade').onclick = regrade;
   $('#th-all').onclick = () => { const boxes = $$('#th-sections input'); const all = boxes.every(b => b.checked); boxes.forEach(b => b.checked = !all); };
   $('#th-answer').addEventListener('keydown', e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && !$('#th-actions').classList.contains('hidden')) { e.preventDefault(); submit(); } });
+  function leave() { stopTimer(); st.current = null; }
+  async function openHistory() {
+    renderHistory(); show('home');
+    try { await refreshHistory(); } catch (e) { console.warn(e); }
+    renderHistory();
+  }
+  // start: a question from the setup panel (false when the selection is empty); openHistory: the history page; leave: stop the timer.
   window.TTTHEORY = {
-    open: async () => { if (!st.loaded) return; try { await load(); } catch (e) { console.warn(e); } if (!st.current) { renderHome(); show('home'); } },
+    start: () => { stopTimer(); return pickQuestion(); },
+    openHistory,
+    leave,
     state: st,
   };
-  load().then(() => { renderHome(); show('home'); }).catch(e => { $('#th-home').innerHTML = `<h2>Interview unavailable</h2><p>${escapeHtml(e.message)}</p>`; });
+  load().then(() => { renderSetup(); renderHistory(); show('home'); }).catch(e => { $('#th-msg').textContent = 'Interview unavailable: ' + e.message; $('#th-home').innerHTML = `<h2>Interview unavailable</h2><p>${escapeHtml(e.message)}</p>`; });
 })();

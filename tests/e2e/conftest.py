@@ -3,7 +3,8 @@
 Every module here carries the `e2e` marker, excluded by default (`addopts` in pyproject.toml), and skips when the
 `e2e` extra is not installed. Run the suite with `python -m pytest -q -m e2e tests/e2e`.
 
-The page is opened with `?profile=e2e`: progress lives in a separate localStorage namespace and interview answers
+The page opens on its setup screen: the `start` fixture picks a mode there and presses Start, `setup_screen` goes back
+to it. The page is opened with `?profile=e2e`: progress lives in a separate localStorage namespace and interview answers
 in `data/theory/e2e/`, which is removed when the session ends, so the user's own data is never touched. The server
 reads a temporary settings file (`SPARRING_CONFIG`) with `grader.backend = offline` and the free port, so the user's
 own `config.json` is never read and no quota is spent whatever it contains; as defense in depth the server also gets
@@ -92,6 +93,42 @@ def pyodide_timeout() -> int:
 def app_url() -> str:
     """The page with the test profile: a separate storage namespace, nothing of the user's own progress."""
     return f"/?profile={PROFILE}"
+
+
+def open_setup(page, mode: str | None = None) -> None:
+    """Back to the setup screen from wherever the page is (the Setup button of the training screens).
+
+    With `mode`, also select that mode's tab so its panel and controls are visible.
+    """
+    from playwright.sync_api import expect
+
+    if page.locator("#btn-setup").is_visible():
+        page.click("#btn-setup")
+    expect(page.locator("#view-setup")).to_be_visible()
+    if mode:
+        page.click(f'.tab[data-mode="{mode}"]')
+        expect(page.locator(f"#setup-{mode}")).to_be_visible()
+
+
+def start_mode(page, mode: str) -> None:
+    """Pick a mode on the setup screen, press Start and wait for its training screen."""
+    from playwright.sync_api import expect
+
+    open_setup(page, mode)
+    page.click("#btn-start")
+    expect(page.locator(f"#view-{mode}")).to_be_visible()
+
+
+@pytest.fixture(scope="session")
+def setup_screen():
+    """Callable: `setup_screen(page, mode=None)` shows the setup screen, on the given mode's panel when asked."""
+    return open_setup
+
+
+@pytest.fixture(scope="session")
+def start():
+    """Callable: `start(page, mode)` starts a session of `exercises`, `qcm` or `theory` from the setup screen."""
+    return start_mode
 
 
 @pytest.fixture(scope="session", autouse=True)
