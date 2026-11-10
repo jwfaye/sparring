@@ -1,2 +1,2 @@
 # Server with the Anthropic API grading backend; mirrors the "api" extra of pyproject.toml.
-anthropic==2.3.0
+anthropic==2.6.0
